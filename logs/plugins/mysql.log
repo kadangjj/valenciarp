@@ -1,0 +1,224 @@
+[11/16/25 05:07:48] [ERROR] cache_get_value_name: field 'email' not found
+[11/16/25 05:07:48] [ERROR] cache_get_value_name_int: field 'IsLoggedIn' not found
+[11/16/25 05:07:48] [ERROR] error #1054 while executing query "SELECT IsLoggedIn FROM playerucp WHERE UCP = 'kadangjj'": Unknown column 'IsLoggedIn' in 'field list'
+[11/16/25 05:53:48] [ERROR] cache_get_value_name_int: invalid row index '0' (number of rows: '0')
+[11/16/25 05:54:27] [ERROR] error #1054 while executing query "UPDATE `players` SET `Gun1` = '0', `Gun2` = '0', `Gun3` = '0', `Gun4` = '0', `Gun5` = '0', `Gun6` = '0', `Gun7` = '0', `Gun8` = '0', `Gun9` = '0', `Gun10` = '0', `Gun11` = '0', `Gun12` = '0', `Gun13` = '0', `Ammo1` = '0', `Ammo2` = '0', `Ammo3` = '0', `Ammo4` = '0', `Ammo5` = '0', `Ammo6` = '0', `Ammo7` = '0', `Ammo8` = '0', `Ammo9` = '0', `Ammo10` = '0', `Ammo11` = '0', `Ammo12` = '0', `Ammo13` = '0', `username` = 'Lieva_Duscha', `adminname` = 'None', `twittername` = '', `ip` = '127.0.0.1', `admin` = '0', `servermod` = '0', `eventmod` = '0', `factionmod` = '0', `familymod` = '0', `helper` = '0', `level` = '1', `levelup` = '0', `vip` = '0', `vip_time` = '0', `gold` = '0', `money` = '50000', `redmoney` = '0', `bmoney` = '100000', `brek` = '118686', `starterpack` = '0', `phone` = '0', `phonestatus` = '0', `phonekuota` = '0', `phonecredit` = '0', `phonebook` = '0', `twitter` = '0', `twitterstatus` = '0', `wt` = '0', `hours` = '0', `minutes` = '0', `seconds` = '24', `paycheck` = '24', `skin` = '2', `facskin` = '0', `gender` = '1', `age` = '12/02/1999', `indoor` = '-1', `inhouse` = '-1', `inbiz` = '-1', `infamily` = '-1', `posx` = '1716.112915', `posy` = '-1880.071533', `posz` = '-9.700000', `posa` = '270.000000', `interior` = '0', `world` = '0', `health` = '100.000000', `armour` = '0.000000', `hunger` = '100', `energy` = '100', `sick` = '0', `hospital` = '0', `injured` = '0', `duty` = '0', `dutytime` = '0', `faction` = '0', `factionrank` = '0', `factionlead` = '0', `family` = '-1', `familyrank` = '0', `jail` = '0', `jail_time` = '0', `arrest` = '0', `arrest_time` = '0', `suspect` = '0', `suspect_time` = '0', `ask_time` = '0', `warn` = '0', `job` = '0', `job2` = '0', `jobtime` = '0', `sidejobtime` = '0', `sidejob_bustime` = '0', `sidejob_forkliftertime` = '0', `sidejob_mowertime` = '0', `sidejob_sweepertime` = '0', `exitjob` = '0', `taxitime` = '0', `robtime` = '0', `myricous` = '0', `medicine` = '0', `medkit` = '0', `mask` = '0', `helmet` = '0', `snack` = '0', `sprunk` = '0', `gas` = '0', `bandage` = '0', `gps` = '0', `material` = '0', `component` = '0', `food` = '0', `seed` = '0', `potato` = '0', `wheat` = '0', `orange` = '0', `price1` = '0', `price2` = '0', `price3` = '0', `price4` = '0', `marijuana` = '0', `plant` = '0', `plant_time` = '0', `fishtool` = '0', `fish` = '0', `worm` = '0', `idcard` = '0', `idcard_time` = '0', `drivelic` = '0', `drivelic_time` = '0', `weaponlic` = '0', `weaponlic_time` = '0', `hbemode` = '1', `togpm` = '0', `toglog` = '0', `togads` = '0', `togwt` = '0', `trucker_level` = '1', `trucker_levelup` = '0', `kepala` = '100', `perut` = '100', `lengankiri` = '100', `lengankanan` = '100', `kakikiri` = '100', `kakikanan` = '100', `kurir` = '0', `sparepart` = '0', `senter` = '0', `boombox` = '0', `last_login` = CURRENT_TIMESTAMP() WHERE `reg_id` = '1'": Unknown column 'trucker_level' in 'field list'
+[11/16/25 05:56:56] [ERROR] error #1054 while executing query "UPDATE `players` SET `Gun1` = '0', `Gun2` = '0', `Gun3` = '0', `Gun4` = '0', `Gun5` = '0', `Gun6` = '0', `Gun7` = '0', `Gun8` = '0', `Gun9` = '0', `Gun10` = '0', `Gun11` = '0', `Gun12` = '0', `Gun13` = '0', `Ammo1` = '0', `Ammo2` = '0', `Ammo3` = '0', `Ammo4` = '0', `Ammo5` = '0', `Ammo6` = '0', `Ammo7` = '0', `Ammo8` = '0', `Ammo9` = '0', `Ammo10` = '0', `Ammo11` = '0', `Ammo12` = '0', `Ammo13` = '0', `username` = 'Lieva_Duscha', `adminname` = 'None', `twittername` = '', `ip` = '255.255.255.255', `admin` = '0', `servermod` = '0', `eventmod` = '0', `factionmod` = '0', `familymod` = '0', `helper` = '0', `level` = '1', `levelup` = '0', `vip` = '0', `vip_time` = '0', `gold` = '0', `money` = '50000', `redmoney` = '0', `bmoney` = '100000', `brek` = '118686', `starterpack` = '0', `phone` = '0', `phonestatus` = '0', `phonekuota` = '0', `phonecredit` = '0', `phonebook` = '0', `twitter` = '0', `twitterstatus` = '0', `wt` = '0', `hours` = '0', `minutes` = '2', `seconds` = '38', `paycheck` = '158', `skin` = '2', `facskin` = '0', `gender` = '1', `age` = '12/02/1999', `indoor` = '-1', `inhouse` = '-1', `inbiz` = '-1', `infamily` = '-1', `posx` = '1730.626465', `posy` = '-1854.070679', `posz` = '13.714063', `posa` = '99.028481', `interior` = '0', `world` = '0', `health` = '100.000000', `armour` = '0.000000', `hunger` = '100', `energy` = '99', `sick` = '0', `hospital` = '0', `injured` = '0', `duty` = '0', `dutytime` = '0', `faction` = '0', `factionrank` = '0', `factionlead` = '0', `family` = '-1', `familyrank` = '0', `jail` = '0', `jail_time` = '0', `arrest` = '0', `arrest_time` = '0', `suspect` = '0', `suspect_time` = '0', `ask_time` = '0', `warn` = '0', `job` = '0', `job2` = '0', `jobtime` = '0', `sidejobtime` = '0', `sidejob_bustime` = '0', `sidejob_forkliftertime` = '0', `sidejob_mowertime` = '0', `sidejob_sweepertime` = '0', `exitjob` = '0', `taxitime` = '0', `robtime` = '0', `myricous` = '0', `medicine` = '0', `medkit` = '0', `mask` = '0', `helmet` = '0', `snack` = '0', `sprunk` = '0', `gas` = '0', `bandage` = '0', `gps` = '0', `material` = '0', `component` = '0', `food` = '0', `seed` = '0', `potato` = '0', `wheat` = '0', `orange` = '0', `price1` = '0', `price2` = '0', `price3` = '0', `price4` = '0', `marijuana` = '0', `plant` = '0', `plant_time` = '0', `fishtool` = '0', `fish` = '0', `worm` = '0', `idcard` = '0', `idcard_time` = '0', `drivelic` = '0', `drivelic_time` = '0', `weaponlic` = '0', `weaponlic_time` = '0', `hbemode` = '3', `togpm` = '0', `toglog` = '0', `togads` = '0', `togwt` = '0', `trucker_level` = '1', `trucker_levelup` = '0', `kepala` = '100', `perut` = '100', `lengankiri` = '100', `lengankanan` = '100', `kakikiri` = '100', `kakikanan` = '100', `kurir` = '0', `sparepart` = '0', `senter` = '0', `boombox` = '0', `last_login` = CURRENT_TIMESTAMP() WHERE `reg_id` = '1'": Unknown column 'trucker_level' in 'field list'
+[11/16/25 05:59:28] [ERROR] cache_get_value_name_int: no active cache
+[11/16/25 05:59:31] [ERROR] cache_get_value_name_int: no active cache
+[11/16/25 05:59:44] [ERROR] cache_get_value_name_int: no active cache
+[11/16/25 06:01:01] [ERROR] cache_get_value_name_int: no active cache
+[11/16/25 06:01:56] [ERROR] cache_get_value_name_int: no active cache
+[11/16/25 06:06:21] [ERROR] cache_get_value_name_int: no active cache
+[11/16/25 06:09:25] [ERROR] cache_get_value_name_int: no active cache
+[11/16/25 06:09:28] [ERROR] cache_get_value_name_int: no active cache
+[11/16/25 06:11:23] [ERROR] cache_get_value_name_int: no active cache
+[11/16/25 06:13:41] [ERROR] cache_get_value_name_int: no active cache
+[11/16/25 06:13:42] [ERROR] cache_get_value_name_int: field 'etoll' not found
+[11/16/25 06:13:42] [ERROR] cache_get_value_name_int: field 'boombox' not found
+[11/16/25 06:44:19] [ERROR] CCallback::Execute - invalid AMX instance
+[11/16/25 06:44:19] [ERROR] CCallback::Execute - invalid AMX instance
+[11/16/25 06:44:32] [WARNING] duplicate connection detected: handle id 1 already exists with host = '127.0.0.1', username = 'root' and database = 'test'
+[11/16/25 06:44:38] [ERROR] cache_get_value_name_int: no active cache
+[11/16/25 06:47:11] [ERROR] cache_get_value_name_int: no active cache
+[11/16/25 06:48:28] [ERROR] cache_get_value_name_int: invalid row index '0' (number of rows: '0')
+[11/16/25 06:57:37] [ERROR] CCallback::Execute - invalid AMX instance
+[11/16/25 06:57:37] [ERROR] CCallback::Execute - invalid AMX instance
+[11/16/25 06:57:50] [WARNING] duplicate connection detected: handle id 1 already exists with host = '127.0.0.1', username = 'root' and database = 'test'
+[11/16/25 06:57:54] [ERROR] cache_get_value_name_int: no active cache
+[11/16/25 06:59:58] [ERROR] CCallback::Execute - invalid AMX instance
+[11/16/25 06:59:58] [ERROR] CCallback::Execute - invalid AMX instance
+[11/16/25 07:00:11] [WARNING] duplicate connection detected: handle id 1 already exists with host = '127.0.0.1', username = 'root' and database = 'test'
+[11/16/25 07:00:15] [ERROR] cache_get_value_name_int: no active cache
+[11/16/25 07:04:08] [ERROR] CCallback::Execute - invalid AMX instance
+[11/16/25 07:04:08] [ERROR] CCallback::Execute - invalid AMX instance
+[11/16/25 07:04:21] [WARNING] duplicate connection detected: handle id 1 already exists with host = '127.0.0.1', username = 'root' and database = 'test'
+[11/16/25 07:04:25] [ERROR] cache_get_value_name_int: no active cache
+[11/16/25 07:09:45] [ERROR] CCallback::Execute - invalid AMX instance
+[11/16/25 07:09:45] [ERROR] CCallback::Execute - invalid AMX instance
+[11/16/25 07:09:58] [WARNING] duplicate connection detected: handle id 1 already exists with host = '127.0.0.1', username = 'root' and database = 'test'
+[11/16/25 07:10:47] [ERROR] cache_get_value_name_int: no active cache
+[11/16/25 07:11:52] [ERROR] CCallback::Execute - invalid AMX instance
+[11/16/25 07:11:52] [ERROR] CCallback::Execute - invalid AMX instance
+[11/16/25 07:12:05] [WARNING] duplicate connection detected: handle id 1 already exists with host = '127.0.0.1', username = 'root' and database = 'test'
+[11/16/25 07:12:10] [ERROR] cache_get_value_name_int: no active cache
+[11/16/25 07:25:57] [ERROR] cache_get_value_name_int: no active cache
+[11/16/25 11:27:57] [ERROR] cache_get_value_name_int: no active cache
+[11/16/25 11:28:00] [ERROR] cache_get_value_name_int: field 'panels' not found
+[11/16/25 11:28:00] [ERROR] cache_get_value_name_int: field 'doors' not found
+[11/16/25 11:28:00] [ERROR] cache_get_value_name_int: field 'lights' not found
+[11/16/25 11:28:00] [ERROR] cache_get_value_name_int: field 'tires' not found
+[11/16/25 11:28:00] [ERROR] cache_get_value_name_int: field 'fish' not found
+[11/16/25 12:00:53] [ERROR] CCallback::Execute - invalid AMX instance
+[11/16/25 12:00:53] [ERROR] CCallback::Execute - invalid AMX instance
+[11/16/25 12:01:06] [WARNING] duplicate connection detected: handle id 1 already exists with host = '127.0.0.1', username = 'root' and database = 'test'
+[11/16/25 12:01:10] [ERROR] cache_get_value_name_int: no active cache
+[11/16/25 12:01:11] [ERROR] cache_get_value_name_int: field 'panels' not found
+[11/16/25 12:01:11] [ERROR] cache_get_value_name_int: field 'doors' not found
+[11/16/25 12:01:11] [ERROR] cache_get_value_name_int: field 'lights' not found
+[11/16/25 12:01:11] [ERROR] cache_get_value_name_int: field 'tires' not found
+[11/16/25 12:01:11] [ERROR] cache_get_value_name_int: field 'fish' not found
+[11/16/25 12:01:11] [ERROR] cache_get_value_name_int: field 'panels' not found
+[11/16/25 12:01:11] [ERROR] cache_get_value_name_int: field 'doors' not found
+[11/16/25 12:01:11] [ERROR] cache_get_value_name_int: field 'lights' not found
+[11/16/25 12:01:11] [ERROR] cache_get_value_name_int: field 'tires' not found
+[11/16/25 12:01:11] [ERROR] cache_get_value_name_int: field 'fish' not found
+[11/16/25 12:51:43] [ERROR] CCallback::Execute - invalid AMX instance
+[11/16/25 12:51:43] [ERROR] CCallback::Execute - invalid AMX instance
+[11/16/25 12:51:56] [WARNING] duplicate connection detected: handle id 1 already exists with host = '127.0.0.1', username = 'root' and database = 'test'
+[11/16/25 12:51:59] [ERROR] cache_get_value_name_int: no active cache
+[11/16/25 12:52:00] [ERROR] cache_get_value_name_int: field 'panels' not found
+[11/16/25 12:52:00] [ERROR] cache_get_value_name_int: field 'doors' not found
+[11/16/25 12:52:00] [ERROR] cache_get_value_name_int: field 'lights' not found
+[11/16/25 12:52:00] [ERROR] cache_get_value_name_int: field 'tires' not found
+[11/16/25 12:52:00] [ERROR] cache_get_value_name_int: field 'fish' not found
+[11/16/25 12:52:00] [ERROR] cache_get_value_name_int: field 'panels' not found
+[11/16/25 12:52:00] [ERROR] cache_get_value_name_int: field 'doors' not found
+[11/16/25 12:52:00] [ERROR] cache_get_value_name_int: field 'lights' not found
+[11/16/25 12:52:00] [ERROR] cache_get_value_name_int: field 'tires' not found
+[11/16/25 12:52:00] [ERROR] cache_get_value_name_int: field 'fish' not found
+[11/16/25 14:47:53] [ERROR] cache_get_value_name: invalid row index '0' (number of rows: '0')
+[11/16/25 14:47:53] [ERROR] cache_get_value_name: invalid row index '0' (number of rows: '0')
+[11/16/25 14:47:53] [ERROR] cache_get_value_name: invalid row index '0' (number of rows: '0')
+[11/16/25 14:47:53] [ERROR] cache_get_value_name_int: invalid row index '0' (number of rows: '0')
+[11/16/25 14:49:39] [ERROR] cache_get_value_name_int: no active cache
+[11/16/25 14:49:41] [ERROR] cache_get_value_name_int: field 'panels' not found
+[11/16/25 14:49:41] [ERROR] cache_get_value_name_int: field 'doors' not found
+[11/16/25 14:49:41] [ERROR] cache_get_value_name_int: field 'lights' not found
+[11/16/25 14:49:41] [ERROR] cache_get_value_name_int: field 'tires' not found
+[11/16/25 14:49:41] [ERROR] cache_get_value_name_int: field 'fish' not found
+[11/16/25 14:49:41] [ERROR] cache_get_value_name_int: field 'panels' not found
+[11/16/25 14:49:41] [ERROR] cache_get_value_name_int: field 'doors' not found
+[11/16/25 14:49:41] [ERROR] cache_get_value_name_int: field 'lights' not found
+[11/16/25 14:49:41] [ERROR] cache_get_value_name_int: field 'tires' not found
+[11/16/25 14:49:41] [ERROR] cache_get_value_name_int: field 'fish' not found
+[11/16/25 15:10:12] [ERROR] CCallback::Execute - invalid AMX instance
+[11/16/25 15:10:12] [ERROR] CCallback::Execute - invalid AMX instance
+[11/16/25 15:10:25] [WARNING] duplicate connection detected: handle id 1 already exists with host = '127.0.0.1', username = 'root' and database = 'test'
+[11/16/25 15:10:29] [ERROR] cache_get_value_name_int: no active cache
+[11/16/25 15:10:30] [ERROR] cache_get_value_name_int: field 'panels' not found
+[11/16/25 15:10:30] [ERROR] cache_get_value_name_int: field 'doors' not found
+[11/16/25 15:10:30] [ERROR] cache_get_value_name_int: field 'lights' not found
+[11/16/25 15:10:30] [ERROR] cache_get_value_name_int: field 'tires' not found
+[11/16/25 15:10:30] [ERROR] cache_get_value_name_int: field 'fish' not found
+[11/16/25 15:10:30] [ERROR] cache_get_value_name_int: field 'panels' not found
+[11/16/25 15:10:30] [ERROR] cache_get_value_name_int: field 'doors' not found
+[11/16/25 15:10:30] [ERROR] cache_get_value_name_int: field 'lights' not found
+[11/16/25 15:10:30] [ERROR] cache_get_value_name_int: field 'tires' not found
+[11/16/25 15:10:30] [ERROR] cache_get_value_name_int: field 'fish' not found
+[11/16/25 16:24:15] [ERROR] cache_get_value_name_int: no active cache
+[11/16/25 16:24:15] [ERROR] cache_get_value_name_int: field 'panels' not found
+[11/16/25 16:24:15] [ERROR] cache_get_value_name_int: field 'doors' not found
+[11/16/25 16:24:15] [ERROR] cache_get_value_name_int: field 'lights' not found
+[11/16/25 16:24:15] [ERROR] cache_get_value_name_int: field 'tires' not found
+[11/16/25 16:24:15] [ERROR] cache_get_value_name_int: field 'fish' not found
+[11/16/25 16:24:15] [ERROR] cache_get_value_name_int: field 'panels' not found
+[11/16/25 16:24:15] [ERROR] cache_get_value_name_int: field 'doors' not found
+[11/16/25 16:24:15] [ERROR] cache_get_value_name_int: field 'lights' not found
+[11/16/25 16:24:15] [ERROR] cache_get_value_name_int: field 'tires' not found
+[11/16/25 16:24:15] [ERROR] cache_get_value_name_int: field 'fish' not found
+[11/16/25 16:39:00] [ERROR] cache_get_value_name_int: no active cache
+[11/16/25 16:39:02] [ERROR] cache_get_value_name_int: field 'panels' not found
+[11/16/25 16:39:02] [ERROR] cache_get_value_name_int: field 'doors' not found
+[11/16/25 16:39:02] [ERROR] cache_get_value_name_int: field 'lights' not found
+[11/16/25 16:39:02] [ERROR] cache_get_value_name_int: field 'tires' not found
+[11/16/25 16:39:02] [ERROR] cache_get_value_name_int: field 'fish' not found
+[11/16/25 16:39:02] [ERROR] cache_get_value_name_int: field 'panels' not found
+[11/16/25 16:39:02] [ERROR] cache_get_value_name_int: field 'doors' not found
+[11/16/25 16:39:02] [ERROR] cache_get_value_name_int: field 'lights' not found
+[11/16/25 16:39:02] [ERROR] cache_get_value_name_int: field 'tires' not found
+[11/16/25 16:39:02] [ERROR] cache_get_value_name_int: field 'fish' not found
+[11/16/25 16:41:19] [ERROR] CCallback::Execute - invalid AMX instance
+[11/16/25 16:41:19] [ERROR] CCallback::Execute - invalid AMX instance
+[11/16/25 16:41:33] [WARNING] duplicate connection detected: handle id 1 already exists with host = '127.0.0.1', username = 'root' and database = 'test'
+[11/16/25 16:41:38] [ERROR] cache_get_value_name_int: no active cache
+[11/16/25 16:41:38] [ERROR] cache_get_value_name_int: field 'panels' not found
+[11/16/25 16:41:38] [ERROR] cache_get_value_name_int: field 'doors' not found
+[11/16/25 16:41:38] [ERROR] cache_get_value_name_int: field 'lights' not found
+[11/16/25 16:41:38] [ERROR] cache_get_value_name_int: field 'tires' not found
+[11/16/25 16:41:38] [ERROR] cache_get_value_name_int: field 'fish' not found
+[11/16/25 16:41:38] [ERROR] cache_get_value_name_int: field 'panels' not found
+[11/16/25 16:41:38] [ERROR] cache_get_value_name_int: field 'doors' not found
+[11/16/25 16:41:38] [ERROR] cache_get_value_name_int: field 'lights' not found
+[11/16/25 16:41:38] [ERROR] cache_get_value_name_int: field 'tires' not found
+[11/16/25 16:41:38] [ERROR] cache_get_value_name_int: field 'fish' not found
+[11/16/25 16:48:13] [ERROR] CCallback::Execute - invalid AMX instance
+[11/16/25 16:48:13] [ERROR] CCallback::Execute - invalid AMX instance
+[11/16/25 16:48:26] [WARNING] duplicate connection detected: handle id 1 already exists with host = '127.0.0.1', username = 'root' and database = 'test'
+[11/16/25 16:48:28] [ERROR] cache_get_value_name_int: no active cache
+[11/16/25 16:48:29] [ERROR] cache_get_value_name_int: field 'panels' not found
+[11/16/25 16:48:29] [ERROR] cache_get_value_name_int: field 'doors' not found
+[11/16/25 16:48:29] [ERROR] cache_get_value_name_int: field 'lights' not found
+[11/16/25 16:48:29] [ERROR] cache_get_value_name_int: field 'tires' not found
+[11/16/25 16:48:29] [ERROR] cache_get_value_name_int: field 'fish' not found
+[11/16/25 16:48:29] [ERROR] cache_get_value_name_int: field 'panels' not found
+[11/16/25 16:48:29] [ERROR] cache_get_value_name_int: field 'doors' not found
+[11/16/25 16:48:29] [ERROR] cache_get_value_name_int: field 'lights' not found
+[11/16/25 16:48:29] [ERROR] cache_get_value_name_int: field 'tires' not found
+[11/16/25 16:48:29] [ERROR] cache_get_value_name_int: field 'fish' not found
+[11/16/25 17:05:31] [ERROR] CCallback::Execute - invalid AMX instance
+[11/16/25 17:05:31] [ERROR] CCallback::Execute - invalid AMX instance
+[11/16/25 17:05:44] [WARNING] duplicate connection detected: handle id 1 already exists with host = '127.0.0.1', username = 'root' and database = 'test'
+[11/16/25 17:05:47] [ERROR] cache_get_value_name_int: no active cache
+[11/16/25 17:05:48] [ERROR] cache_get_value_name_int: field 'panels' not found
+[11/16/25 17:05:48] [ERROR] cache_get_value_name_int: field 'doors' not found
+[11/16/25 17:05:48] [ERROR] cache_get_value_name_int: field 'lights' not found
+[11/16/25 17:05:48] [ERROR] cache_get_value_name_int: field 'tires' not found
+[11/16/25 17:05:48] [ERROR] cache_get_value_name_int: field 'fish' not found
+[11/16/25 17:05:48] [ERROR] cache_get_value_name_int: field 'panels' not found
+[11/16/25 17:05:48] [ERROR] cache_get_value_name_int: field 'doors' not found
+[11/16/25 17:05:48] [ERROR] cache_get_value_name_int: field 'lights' not found
+[11/16/25 17:05:48] [ERROR] cache_get_value_name_int: field 'tires' not found
+[11/16/25 17:05:48] [ERROR] cache_get_value_name_int: field 'fish' not found
+[11/16/25 17:15:08] [ERROR] CCallback::Execute - invalid AMX instance
+[11/16/25 17:15:08] [ERROR] CCallback::Execute - invalid AMX instance
+[11/16/25 17:15:21] [WARNING] duplicate connection detected: handle id 1 already exists with host = '127.0.0.1', username = 'root' and database = 'test'
+[11/16/25 17:15:24] [ERROR] cache_get_value_name_int: no active cache
+[11/16/25 17:15:25] [ERROR] cache_get_value_name_int: field 'panels' not found
+[11/16/25 17:15:25] [ERROR] cache_get_value_name_int: field 'doors' not found
+[11/16/25 17:15:25] [ERROR] cache_get_value_name_int: field 'lights' not found
+[11/16/25 17:15:25] [ERROR] cache_get_value_name_int: field 'tires' not found
+[11/16/25 17:15:25] [ERROR] cache_get_value_name_int: field 'fish' not found
+[11/16/25 17:15:25] [ERROR] cache_get_value_name_int: field 'panels' not found
+[11/16/25 17:15:25] [ERROR] cache_get_value_name_int: field 'doors' not found
+[11/16/25 17:15:25] [ERROR] cache_get_value_name_int: field 'lights' not found
+[11/16/25 17:15:25] [ERROR] cache_get_value_name_int: field 'tires' not found
+[11/16/25 17:15:25] [ERROR] cache_get_value_name_int: field 'fish' not found
+[11/16/25 17:59:59] [ERROR] CCallback::Execute - invalid AMX instance
+[11/16/25 17:59:59] [ERROR] CCallback::Execute - invalid AMX instance
+[11/16/25 18:00:13] [WARNING] duplicate connection detected: handle id 1 already exists with host = '127.0.0.1', username = 'root' and database = 'test'
+[11/16/25 18:00:19] [ERROR] cache_get_value_name_int: no active cache
+[11/16/25 18:00:20] [ERROR] cache_get_value_name_int: field 'panels' not found
+[11/16/25 18:00:20] [ERROR] cache_get_value_name_int: field 'doors' not found
+[11/16/25 18:00:20] [ERROR] cache_get_value_name_int: field 'lights' not found
+[11/16/25 18:00:20] [ERROR] cache_get_value_name_int: field 'tires' not found
+[11/16/25 18:00:20] [ERROR] cache_get_value_name_int: field 'fish' not found
+[11/16/25 18:00:20] [ERROR] cache_get_value_name_int: field 'panels' not found
+[11/16/25 18:00:20] [ERROR] cache_get_value_name_int: field 'doors' not found
+[11/16/25 18:00:20] [ERROR] cache_get_value_name_int: field 'lights' not found
+[11/16/25 18:00:20] [ERROR] cache_get_value_name_int: field 'tires' not found
+[11/16/25 18:00:20] [ERROR] cache_get_value_name_int: field 'fish' not found
+[11/16/25 18:00:55] [ERROR] CCallback::Execute - invalid AMX instance
+[11/16/25 18:00:55] [ERROR] CCallback::Execute - invalid AMX instance
+[11/16/25 18:01:08] [WARNING] duplicate connection detected: handle id 1 already exists with host = '127.0.0.1', username = 'root' and database = 'test'
+[11/16/25 18:02:25] [ERROR] cache_get_value_name_int: no active cache
+[11/16/25 18:02:26] [ERROR] cache_get_value_name_int: field 'panels' not found
+[11/16/25 18:02:26] [ERROR] cache_get_value_name_int: field 'doors' not found
+[11/16/25 18:02:26] [ERROR] cache_get_value_name_int: field 'lights' not found
+[11/16/25 18:02:26] [ERROR] cache_get_value_name_int: field 'tires' not found
+[11/16/25 18:02:26] [ERROR] cache_get_value_name_int: field 'fish' not found
+[11/16/25 18:02:26] [ERROR] cache_get_value_name_int: field 'panels' not found
+[11/16/25 18:02:26] [ERROR] cache_get_value_name_int: field 'doors' not found
+[11/16/25 18:02:26] [ERROR] cache_get_value_name_int: field 'lights' not found
+[11/16/25 18:02:26] [ERROR] cache_get_value_name_int: field 'tires' not found
+[11/16/25 18:02:26] [ERROR] cache_get_value_name_int: field 'fish' not found
+[11/16/25 18:31:29] [ERROR] CCallback::Execute - invalid AMX instance
+[11/16/25 18:31:29] [ERROR] CCallback::Execute - invalid AMX instance
+[11/16/25 18:31:42] [WARNING] duplicate connection detected: handle id 1 already exists with host = '127.0.0.1', username = 'root' and database = 'test'
+[11/16/25 18:31:56] [ERROR] cache_get_value_name_int: no active cache
+[11/16/25 19:05:44] [ERROR] cache_get_value_name_int: no active cache
+[11/16/25 19:40:02] [ERROR] CCallback::Execute - invalid AMX instance
+[11/16/25 19:40:02] [ERROR] CCallback::Execute - invalid AMX instance
+[11/16/25 19:40:15] [WARNING] duplicate connection detected: handle id 1 already exists with host = '127.0.0.1', username = 'root' and database = 'test'
+[11/16/25 19:40:22] [ERROR] cache_get_value_name_int: no active cache
+[11/17/25 16:21:22] [ERROR] cache_get_value_name_int: no active cache

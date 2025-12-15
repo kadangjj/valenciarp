@@ -1,0 +1,3 @@
+[11/17/25 16:21:22] [plugins/mysql] cache_get_value_name_int: no active cache
+ channel id '0'
+[11/17/25 16:21:23] [plugins/discord-connector] DCC_SendChannelMessage: invalid channel id '0'

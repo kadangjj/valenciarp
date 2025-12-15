@@ -1,0 +1,7 @@
+[01/09/2024 - 14:03:21] - [VEH]: testing membeli kendaraan seharga $14,000 model Sultan(560)!
+[01/09/2024 - 14:17:35] - [BIZ]: testing membeli bisnis id 0 seharga $1,000!
+[01/09/2024 - 14:22:15] - [BIZ]: testing menjual business id 0 seharga $500!
+[02/09/2024 - 11:58:17] - [BIZ]: Testing Anjay membeli bisnis id 1 seharga $1!
+[02/09/2024 - 13:02:11] - [VEH]: Testing Anjay membeli kendaraan seharga $4,000 model Flatbed(455)!
+[16/11/2025 - 07:37:13] - [BIZ]: Lieva Duscha membeli bisnis id 0 seharga $20,000.00!
+[16/11/2025 - 07:48:22] - [VEH]: Lieva Duscha membeli kendaraan seharga $3,000.00 model Sadler(543)!

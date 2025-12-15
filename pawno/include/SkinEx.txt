@@ -1,0 +1,61 @@
+//Made by lokii.
+ 
+#include <streamer> //credits to incognito.
+ 
+/*
+native SetPlayerSkinEx(playerid, skinid);
+*/
+ 
+static p_skin_obj[MAX_PLAYERS][2];
+ 
+forward DIS(playerid);
+ 
+public DIS(playerid)
+{
+	TogglePlayerControllable(playerid, 1);
+	DestroyDynamicObject(p_skin_obj[playerid][0]);
+	return DestroyDynamicObject(p_skin_obj[playerid][1]);
+}
+ 
+public OnPlayerDisconnect(playerid, reason)
+{
+	DestroyDynamicObject(p_skin_obj[playerid][0]);
+	DestroyDynamicObject(p_skin_obj[playerid][1]);
+ 
+    #if defined SE_OnPlayerDisconnect
+        SE_OnPlayerDisconnect(playerid);
+    #endif
+    return 1;
+}
+#if defined _ALS_OnPlayerDisconnect
+    #undef OnPlayerDisconnect
+#else
+    #define _ALS_OnPlayerDisconnect
+#endif
+#define OnPlayerDisconnect SE_OnPlayerDisconnect
+#if defined SE_OnPlayerDisconnect
+    forward SE_OnPlayerDisconnect(playerid, reason);
+#endif
+ 
+stock SetPlayerSkinEx(playerid, skinid)
+{
+	new Float:e_skin_x, Float:e_skin_y, Float:e_skin_z;
+	GetPlayerPos(playerid, e_skin_x, e_skin_y, e_skin_z);
+	TogglePlayerControllable(playerid, 0);
+	p_skin_obj[playerid][0] = CreateDynamicObject(18671, e_skin_x, e_skin_y, e_skin_z-2.5, 0.0, 0.0, 0.0, GetPlayerVirtualWorld(playerid), GetPlayerInterior(playerid), -1, 100.0, STREAMER_OBJECT_DD, -1, 0);
+	p_skin_obj[playerid][1] = CreateDynamicObject(18728, e_skin_x, e_skin_y, e_skin_z-1.5, 0.0, 0.0, 0.0, GetPlayerVirtualWorld(playerid), GetPlayerInterior(playerid), -1, 100.0, STREAMER_OBJECT_DD, -1, 0);
+	SetTimerEx("DIS", 1000, false, "i", playerid);
+	SetPlayerSkin(playerid, skinid);
+	Streamer_Update(playerid); 
+    return 1;
+}
+ 
+#if defined _ALS_SetPlayerSkin
+    #undef SetPlayerSkin
+#else
+    #define _ALS_SetPlayerSkin
+#endif
+#define SetPlayerSkin SetPlayerSkinEx
+ 
+ 
+//EOF.
