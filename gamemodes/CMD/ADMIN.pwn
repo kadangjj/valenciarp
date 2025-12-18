@@ -1,3 +1,4 @@
+
 CMD:acmds(playerid)
 {
 	if(pData[playerid][pAdmin] < 1)
@@ -77,87 +78,142 @@ CMD:arelease(playerid, params[])
 	return true;
 }
 
+//-----[ COMMANDS ]-----
 CMD:makequiz(playerid, params[])
 {
 	if(pData[playerid][pAdmin] < 1)
-        return Error(playerid, "Kamu harus menjadi Admin");
+		return Error(playerid, "Kamu harus menjadi Admin");
+	
+	new tmp[128], string[256], str[256], pr;
+	if(sscanf(params, "s[128]S()[256]", tmp, str))
 	{
-		new tmp[128], string[256], str[256], pr;
-		if(sscanf(params, "s", tmp)) {
-			Usage(playerid, "/makequiz [option]");
-			Usage(playerid, "question, answer, price, end");
-			Info(playerid, "Tolong buat jawabannya dulu.");
-			return 1;
-		}
-		if(!strcmp(tmp, "question", true, 8))
-		{
-			if(sscanf(params, "s[128]s[256]", tmp, str)) return Usage(playerid, "/makequiz question [question]");
-			if (quiz == 1) return Error(playerid, "Kuis sudah dimulai kamu bisa mengakhirinya dengan /makequiz end.");
-			if (answermade == 0) return Error(playerid, "tolong buat jawaban dulu...");
-			if (qprs == 0) return Error(playerid, "Tolong tambahkan hadiah terlebih dahulu.");
-			format(string, sizeof(string), "{7fffd4}[QUIZ]: {ffff00}%s?, Hadiah "GREEN_E"$%s", str, FormatMoney(qprs));
-			SendClientMessageToAll(0xFFFF00FF, string);
-			SendClientMessageToAll(-1,"{ffff00}Anda bisa memberi jawaban dengan menggunakan /answer.");
-			quiz = 1;
-			new dc[500];
-			format(dc, sizeof(dc),  "```[QUIZ]%s telah membuat quiz dengan hadiah sebesar $%s```", ReturnName(playerid), FormatMoney(qprs));
-			SendDiscordMessage(1, dc);
-		}
-		else if(!strcmp(tmp, "answer", true, 6))
-		{
-			if(sscanf(params, "s[128]s[256]", tmp, str)) return Usage(playerid, "/makequiz answer [answer]");
-			if (quiz == 1) return Info(playerid, "Kuis sudah dimulai kamu bisa mengakhirinya dengan /makequiz end.");
-			answers = str;
-			answermade = 1;
-			format(string, sizeof(string), "Anda telah membuat jawaban, {00FF00}%s.", str);
-			SendClientMessage(playerid, 0xFFFFFFFF, string);
-		}
-		else if(!strcmp(tmp, "price", true, 5))
-		{
-			if(sscanf(params, "s[128]d", tmp, pr)) return Usage(playerid, "/makequiz price [amount]");
-			if (quiz == 1) return Error(playerid, "Kuis sudah dimulai kamu bisa mengakhirinya dengan / makequiz end.");
-			if (answermade == 0) return Error(playerid, " Membuat jawabannya lebih dulu...");
-			if (pr < 100 || pr > 1000000) return Error(playerid, "Jumlah tidak bisa kurang dari $1.00 dan lebih dari $10,000.00");
-			pr *= 100;
-			qprs = pr;
-			format(string, sizeof(string), "Anda telah menempatkan {00FF00}$%d sebagai jumlah hadiah untuk kuis.", FormatMoney(pr));
-			SendClientMessage(playerid, 0xFFFFFFFF, string);
-		}
-		else if(!strcmp(tmp, "end", true, 3))
-		{
-			if (quiz == 0) return Error(playerid, "Sayangnya tidak ada kuis dari admin server.");
-			SendClientMessageToAll(0xFF0000FF, "Sayangnya Admin server telah mengakhiri kuis tersebut.");
-			answermade = 0;
-			quiz = 0;
-			qprs = 0;
-			answers = "";
-		}
+		Usage(playerid, "/makequiz [option]");
+		Info(playerid, "OPTIONS: question, answer, price, end");
+		Info(playerid, "Urutan: 1. answer -> 2. price -> 3. question");
+		return 1;
 	}
-	//else return PermissionError(playerid);
+	
+	if(!strcmp(tmp, "question", true))
+	{
+		if(sscanf(params, "s[128]s[256]", tmp, str)) 
+			return Usage(playerid, "/makequiz question [pertanyaan]");
+		
+		if(quiz == 1) 
+			return Error(playerid, "Kuis sudah dimulai! Akhiri dulu dengan /makequiz end");
+		
+		if(answermade == 0) 
+			return Error(playerid, "Buat jawaban dulu dengan /makequiz answer");
+		
+		if(qprs == 0) 
+			return Error(playerid, "Tambahkan hadiah dulu dengan /makequiz price");
+		
+		format(string, sizeof(string), "{7fffd4}[QUIZ]: {ffff00}%s?", str);
+		SendClientMessageToAll(0xFFFF00FF, string);
+		format(string, sizeof(string), "{ffff00}Hadiah: "GREEN_E"$%s {ffff00}| Jawab dengan /answer [jawaban]", FormatMoney(qprs));
+		SendClientMessageToAll(0xFFFF00FF, string);
+		
+		quiz = 1;
+		
+		new dc[500];
+		format(dc, sizeof(dc), "```[QUIZ] %s membuat quiz dengan hadiah $%s```", ReturnName(playerid), FormatMoney(qprs));
+		SendDiscordMessage(1, dc);
+	}
+	else if(!strcmp(tmp, "answer", true))
+	{
+		if(sscanf(params, "s[128]s[256]", tmp, str)) 
+			return Usage(playerid, "/makequiz answer [jawaban]");
+		
+		if(quiz == 1) 
+			return Error(playerid, "Kuis sudah dimulai! Akhiri dulu dengan /makequiz end");
+		
+		format(answers, 256, "%s", str);
+		answermade = 1;
+		
+		format(string, sizeof(string), "Jawaban berhasil dibuat: {00FF00}%s", str);
+		SendClientMessage(playerid, -1, string);
+		Info(playerid, "Selanjutnya set hadiah dengan /makequiz price [amount]");
+	}
+	else if(!strcmp(tmp, "price", true))
+	{
+		if(sscanf(params, "s[128]d", tmp, pr)) 
+			return Usage(playerid, "/makequiz price [jumlah]");
+		
+		if(quiz == 1) 
+			return Error(playerid, "Kuis sudah dimulai! Akhiri dulu dengan /makequiz end");
+		
+		if(answermade == 0) 
+			return Error(playerid, "Buat jawaban dulu dengan /makequiz answer");
+		
+		if(pr < 1 || pr > 10000) 
+			return Error(playerid, "Hadiah minimal $1 dan maksimal $10,000");
+		
+		pr *= 100; // Convert ke cents
+		qprs = pr;
+		
+		format(string, sizeof(string), "Hadiah berhasil diset: {00FF00}$%s", FormatMoney(pr));
+		SendClientMessage(playerid, -1, string);
+		Info(playerid, "Sekarang buat pertanyaan dengan /makequiz question [pertanyaan]");
+	}
+	else if(!strcmp(tmp, "end", true))
+	{
+		if(quiz == 0) 
+			return Error(playerid, "Tidak ada kuis yang sedang berjalan");
+		
+		SendClientMessageToAll(0xFF0000FF, "[QUIZ]: Admin telah mengakhiri kuis");
+		
+		// Reset semua variable
+		answermade = 0;
+		quiz = 0;
+		qprs = 0;
+		answers[0] = EOS; // Clear string
+		
+		Info(playerid, "Kuis berhasil diakhiri");
+	}
+	else
+	{
+		Error(playerid, "Option tidak valid! Gunakan: question, answer, price, end");
+	}
 	return 1;
 }
 
 CMD:answer(playerid, params[])
 {
 	new tmp[256], string[256];
-	if (quiz == 0) return Error(playerid, "Sayangnya tidak ada kuis dari admin server.");
-	if (sscanf(params, "s[256]", tmp)) return Usage(playerid, "/answer [jawaban]");
-	if(strcmp(tmp, answers, true)==0)
+	
+	if(quiz == 0) 
+		return Error(playerid, "Tidak ada kuis yang sedang berjalan");
+	
+	if(sscanf(params, "s[256]", tmp)) 
+		return Usage(playerid, "/answer [jawaban]");
+	
+	// Jawaban benar (case insensitive)
+	if(!strcmp(tmp, answers, true))
 	{
 		GivePlayerMoneyEx(playerid, qprs);
-		format(string, sizeof(string), "[QUIZ]: %s telah memberikan jawaban yang benar '%s' dari kuis dan mendapatkan hadiah "GREEN_E"$%d", ReturnName(playerid), answers, qprs);
+		
+		format(string, sizeof(string), "[QUIZ]: %s menjawab dengan benar '%s' dan mendapat "GREEN_E"$%s!", 
+			ReturnName(playerid), answers, FormatMoney(qprs));
 		SendClientMessageToAll(0xFFFF00FF, string);
+		
+		// Reset quiz
 		answermade = 0;
 		quiz = 0;
 		qprs = 0;
-		answers = "";
+		answers[0] = EOS;
+		
+		// Discord notification
+		new dc[500];
+		format(dc, sizeof(dc), "```[QUIZ] %s menjawab dengan benar dan mendapat $%s```", 
+			ReturnName(playerid), FormatMoney(qprs));
+		SendDiscordMessage(1, dc);
 	}
 	else
 	{
-		Error(playerid,"Jawaban yang salah coba keberuntungan Anda lain kali.");
+		Error(playerid, "Jawaban salah! Coba lagi.");
 	}
 	return 1;
 }
+
 
 CMD:masked(playerid, params[])
 {
@@ -316,42 +372,55 @@ CMD:adminjail(playerid, params[])
 //---------------------------[ Admin Level 1 ]--------------------
 CMD:aduty(playerid, params[])
 {
-	if(pData[playerid][pAdmin] < 1)
-		if(pData[playerid][pHelper] == 0)
-			return PermissionError(playerid);
-			
-	if(!strcmp(pData[playerid][pAdminname], "None"))
-		return Error(playerid, "Kamu harus setting Nama Admin mu!");
-	
-	if(!pData[playerid][pAdminDuty])
+    // Permission Check
+    if(pData[playerid][pAdmin] < 1 && pData[playerid][pHelper] == 0)
+        return PermissionError(playerid);
+    
+    // Admin Name Check
+    if(!strcmp(pData[playerid][pAdminname], "None"))
+        return Error(playerid, "Kamu harus setting Nama Admin mu terlebih dahulu!");
+    
+    // Toggle Admin Duty ON
+    if(!pData[playerid][pAdminDuty])
     {
-		if(pData[playerid][pAdmin] > 0)
-		{
-			SetPlayerColor(playerid, 0xFF000000);
-			pData[playerid][pAdminDuty] = 1;
-			SetPlayerName(playerid, pData[playerid][pAdminname]);
-			SendStaffMessage(COLOR_ADMCMD, "* %s telah on duty admin.", pData[playerid][pName]);
-		}
-		else
-		{
-			SetPlayerColor(playerid, COLOR_GREEN);
-			pData[playerid][pAdminDuty] = 1;
-			SetPlayerName(playerid, pData[playerid][pAdminname]);
-			SendStaffMessage(COLOR_ADMCMD, "* %s telah on helper duty.", pData[playerid][pName]);
-		}
+        pData[playerid][pAdminDuty] = 1;
+        SetPlayerName(playerid, pData[playerid][pAdminname]);
+        defer LabelAdmin(playerid);
+        
+        if(pData[playerid][pAdmin] > 0)
+        {
+            SetPlayerColor(playerid, COLOR_RED);
+            SendStaffMessage(COLOR_ARWIN, "* %s telah on duty admin.", pData[playerid][pName]);
+        }
+        else // Helper
+        {
+            SetPlayerColor(playerid, COLOR_GREEN);
+            SendStaffMessage(COLOR_ARWIN, "* %s telah on helper duty.", pData[playerid][pName]);
+        }
     }
+    // Toggle Admin Duty OFF
     else
     {
-        if(pData[playerid][pFaction] != -1 && pData[playerid][pOnDuty]) 
-            SetFactionColor(playerid);
-        else 
-            SetPlayerColor(playerid, COLOR_WHITE);
-                
-        SetPlayerName(playerid, pData[playerid][pName]);
         pData[playerid][pAdminDuty] = 0;
-        SendStaffMessage(COLOR_ADMCMD, "* %s telah off admin duty.", pData[playerid][pName]);
+        SetPlayerName(playerid, pData[playerid][pName]);
+        
+        // Reset Color
+        if(pData[playerid][pFaction] != -1 && pData[playerid][pOnDuty])
+            SetFactionColor(playerid);
+        else
+            SetPlayerColor(playerid, COLOR_WHITE);
+        
+        // Reset Label
+        if(IsValidDynamic3DTextLabel(PlayerLabel[playerid]))
+        {
+            new labeltext[128];
+            format(labeltext, sizeof(labeltext), "%s (%d)", GetRPName(playerid), playerid);
+            UpdateDynamic3DTextLabelText(PlayerLabel[playerid], COLOR_WHITE, labeltext);
+        }
+        
+        SendStaffMessage(COLOR_ARWIN, "* %s telah off admin duty.", pData[playerid][pName]);
     }
-	return 1;
+    return 1;
 }
 
 CMD:asay(playerid, params[]) 
@@ -535,7 +604,23 @@ CMD:id(playerid, params[])
 
     new Float:packetLoss = NetStats_PacketLossPercent(otherid);
     
-    SendClientMessageEx(playerid, COLOR_ARWIN, "[ID:%d] "WHITE_E"%s (level %d), Ping: %d, Client: %s, Packets lost: %.2f%%", otherid, ReturnName(otherid), pData[otherid][pLevel], GetPlayerPing(otherid), clientVersion, packetLoss);
+    // Hitung playing time sejak login
+    new playingTime = gettime() - pData[otherid][pConnectTime];
+    new hours = playingTime / 3600;
+    new minutes = (playingTime % 3600) / 60;
+    
+    new timeStr[32];
+    if(hours > 0)
+    {
+        format(timeStr, sizeof(timeStr), "%d hour%s %d min%s", hours, (hours > 1) ? ("s") : (""), minutes, (minutes > 1) ? ("s") : (""));
+    }
+    else
+    {
+        format(timeStr, sizeof(timeStr), "%d minute%s", minutes, (minutes > 1) ? ("s") : (""));
+    }
+
+    SendClientMessageEx(playerid, COLOR_ARWIN, "[ID:%d] "WHITE_E"%s (level %d), Ping: %d, Client: %s, Playing Time: %s, Packets Lost: %.2f%%", otherid, ReturnName(otherid), pData[otherid][pLevel], GetPlayerPing(otherid), clientVersion, timeStr, packetLoss);
+    
     return 1;
 }
 
@@ -781,6 +866,13 @@ CMD:spec(playerid, params[])
         SetSpawnInfo(playerid, 0, pData[playerid][pSkin], pData[playerid][pPosX], pData[playerid][pPosY], pData[playerid][pPosZ], pData[playerid][pPosA], 0, 0, 0, 0, 0, 0);
         TogglePlayerSpectating(playerid, false);
 		pData[playerid][pSpec] = -1;
+		PlayerTextDrawHide(playerid, SpecBG[playerid]);
+		PlayerTextDrawHide(playerid, SpecName[playerid]);
+		PlayerTextDrawHide(playerid, SpecCash[playerid]);
+		PlayerTextDrawHide(playerid, SpecHP[playerid]);
+		PlayerTextDrawHide(playerid, SpecAP[playerid]);
+		PlayerTextDrawHide(playerid, SpecInt[playerid]);
+		PlayerTextDrawHide(playerid, SpecWorld[playerid]);
 
         return Servers(playerid, "You are no longer in spectator mode.");
     }
@@ -789,7 +881,7 @@ CMD:spec(playerid, params[])
         return Usage(playerid, "/spectate [playerid/PartOfName] - Type '/spec off' to stop spectating.");
 
     if(!IsPlayerConnected(otherid))
-        return Error(playerid, "The player has not logged in yet!");
+        return Error(playerid, "Player belum masuk!");
 		
 	if(otherid == playerid)
 		return Error(playerid, "You can't spectate yourself bro..");
@@ -823,18 +915,82 @@ CMD:spec(playerid, params[])
 		if(GetPlayerState(otherid) == PLAYER_STATE_DRIVER)
 	    {
 	    	Servers(playerid, "You are now spectating %s(%i) who is driving a %s(%d).", pData[otherid][pName], otherid, GetVehicleModelName(GetVehicleModel(vID)), vID);
+			new string[212];
+			format(string, 212, "~g~%s (%d)", ReturnName(otherid), otherid);
+			PlayerTextDrawSetString(playerid, SpecName[playerid], string);
+			format(string, 212, "~w~Cash: ~y~$%s", FormatMoney(pData[otherid][pMoney]));
+			PlayerTextDrawSetString(playerid, SpecCash[playerid], string);
+			format(string, 212, "~w~HP: ~y~%.1f", pData[otherid][pHealth]);
+			PlayerTextDrawSetString(playerid, SpecHP[playerid], string);
+			format(string, 212, "~w~AP: ~y~%.1f", pData[otherid][pArmour]);
+			PlayerTextDrawSetString(playerid, SpecAP[playerid], string);
+			format(string, 212, "~w~Int: ~y~%d", GetPlayerInterior(otherid));
+			PlayerTextDrawSetString(playerid, SpecInt[playerid], string);
+			format(string, 212, "~w~World: ~y~%d", GetPlayerVirtualWorld(otherid));
+			PlayerTextDrawSetString(playerid, SpecWorld[playerid], string);
+			
+			PlayerTextDrawShow(playerid, SpecBG[playerid]);
+			PlayerTextDrawShow(playerid, SpecName[playerid]);
+			PlayerTextDrawShow(playerid, SpecCash[playerid]);
+			PlayerTextDrawShow(playerid, SpecHP[playerid]);
+			PlayerTextDrawShow(playerid, SpecAP[playerid]);
+			PlayerTextDrawShow(playerid, SpecInt[playerid]);
+			PlayerTextDrawShow(playerid, SpecWorld[playerid]);	
 		}
 		else
 		{
 		    Servers(playerid, "You are now spectating %s(%i) who is a passenger in %s(%d).", pData[otherid][pName], otherid, GetVehicleModelName(GetVehicleModel(vID)), vID);
+			new string[212];
+			format(string, 212, "~g~%s (%d)", ReturnName(otherid), otherid);
+			PlayerTextDrawSetString(playerid, SpecName[playerid], string);
+			format(string, 212, "~w~Cash: ~y~$%s", FormatMoney(pData[otherid][pMoney]));
+			PlayerTextDrawSetString(playerid, SpecCash[playerid], string);
+			format(string, 212, "~w~HP: ~y~%.1f", pData[otherid][pHealth]);
+			PlayerTextDrawSetString(playerid, SpecHP[playerid], string);
+			format(string, 212, "~w~AP: ~y~%.1f", pData[otherid][pArmour]);
+			PlayerTextDrawSetString(playerid, SpecAP[playerid], string);
+			format(string, 212, "~w~Int: ~y~%d", GetPlayerInterior(otherid));
+			PlayerTextDrawSetString(playerid, SpecInt[playerid], string);
+			format(string, 212, "~w~World: ~y~%d", GetPlayerVirtualWorld(otherid));
+			PlayerTextDrawSetString(playerid, SpecWorld[playerid], string);
+			
+			PlayerTextDrawShow(playerid, SpecBG[playerid]);
+			PlayerTextDrawShow(playerid, SpecName[playerid]);
+			PlayerTextDrawShow(playerid, SpecCash[playerid]);
+			PlayerTextDrawShow(playerid, SpecHP[playerid]);
+			PlayerTextDrawShow(playerid, SpecAP[playerid]);
+			PlayerTextDrawShow(playerid, SpecInt[playerid]);
+			PlayerTextDrawShow(playerid, SpecWorld[playerid]);
 		}
 	}
     else
 	{
         PlayerSpectatePlayer(playerid, otherid);
+		new string[212];
+		format(string, 212, "~g~%s (%d)", ReturnName(otherid), otherid);
+		PlayerTextDrawSetString(playerid, SpecName[playerid], string);
+		format(string, 212, "~w~Cash: ~y~$%s", FormatMoney(pData[otherid][pMoney]));
+		PlayerTextDrawSetString(playerid, SpecCash[playerid], string);
+		format(string, 212, "~w~HP: ~y~%.1f", pData[otherid][pHealth]);
+		PlayerTextDrawSetString(playerid, SpecHP[playerid], string);
+		format(string, 212, "~w~AP: ~y~%.1f", pData[otherid][pArmour]);
+		PlayerTextDrawSetString(playerid, SpecAP[playerid], string);
+		format(string, 212, "~w~Int: ~y~%d", GetPlayerInterior(otherid));
+		PlayerTextDrawSetString(playerid, SpecInt[playerid], string);
+		format(string, 212, "~w~World: ~y~%d", GetPlayerVirtualWorld(otherid));
+		PlayerTextDrawSetString(playerid, SpecWorld[playerid], string);
+		
+		PlayerTextDrawShow(playerid, SpecBG[playerid]);
+		PlayerTextDrawShow(playerid, SpecName[playerid]);
+		PlayerTextDrawShow(playerid, SpecCash[playerid]);
+		PlayerTextDrawShow(playerid, SpecHP[playerid]);
+		PlayerTextDrawShow(playerid, SpecAP[playerid]);
+		PlayerTextDrawShow(playerid, SpecInt[playerid]);
+		PlayerTextDrawShow(playerid, SpecWorld[playerid]);
+
 	}
 	pData[otherid][playerSpectated]++;
-    SendStaffMessage(COLOR_RED, "%s now spectating %s (ID: %d).", pData[playerid][pAdminname], pData[otherid][pName], otherid);
+    SendStaffMessage(COLOR_ARWIN, "%s now spectating %s (ID: %d).", pData[playerid][pAdminname], pData[otherid][pName], otherid);
     Servers(playerid, "You are now spectating %s (ID: %d).", pData[otherid][pName], otherid);
     pData[playerid][pSpec] = otherid;
     return 1;
@@ -1472,88 +1628,127 @@ CMD:kick(playerid, params[])
 CMD:ban(playerid, params[])
 {
 	if(pData[playerid][pAdmin] < 2)
-			return PermissionError(playerid);
+		return PermissionError(playerid);
 
 	new ban_time, datez, tmp[60], otherid;
 	if(sscanf(params, "uds[60]", otherid, datez, tmp))
 	{
-	    Usage(playerid, "/tempban <ID/Name> <time (in days) 0 for permanent> <reason> ");
-	    return true;
+		Usage(playerid, "/ban <ID/Name> <time (in days) 0 for permanent> <reason>");
+		return 1;
 	}
 	
 	if(!IsPlayerConnected(otherid))
-        return Error(playerid, "The player has not logged in yet!");
+		return Error(playerid, "The player is not connected!");
 	
- 	if(datez < 0) Error(playerid, "Please input a valid ban time.");
-	if(pData[playerid][pAdmin] < 2)
+	if(datez < 0) 
+		return Error(playerid, "Please input a valid ban time (0 for permanent, 1+ for days).");
+	
+	// Admin level 2-3 hanya bisa ban 1-10 hari atau permanent
+	if(pData[playerid][pAdmin] < 4)
 	{
-		if(datez > 10 || datez <= 0) return Error(playerid, "Anda hanya dapat membanned selama 1-10 hari!");
+		if(datez > 10 && datez != 0) 
+			return Error(playerid, "You can only ban for 1-10 days or permanent (0)!");
 	}
-	/*if(otherid == playerid)
-	    return Error(playerid, "You are not able to ban yourself!");*/
+	
+	// Tidak bisa ban admin level lebih tinggi
 	if(pData[otherid][pAdmin] > pData[playerid][pAdmin])
 	{
-		Servers(otherid, "** %s(%i) has just tried to ban you!", pData[playerid][pName], playerid);
- 		Error(playerid, "You are not able to ban a admin with a higher level than you!");
- 		return true;
-   	}
-	new PlayerIP[16], giveplayer[24];
+		Servers(otherid, "** %s(%d) has just tried to ban you!", pData[playerid][pName], playerid);
+		return Error(playerid, "You cannot ban an admin with a higher level than you!");
+	}
 	
-   	//SetPlayerPosition(otherid, 405.1100,2474.0784,35.7369,360.0000);
+	new PlayerIP[16], giveplayer[24];
 	GetPlayerName(otherid, giveplayer, sizeof(giveplayer));
 	GetPlayerIp(otherid, PlayerIP, sizeof(PlayerIP));
 
-	if(!strcmp(tmp, "ab", true)) tmp = "Airbreak";
-	else if(!strcmp(tmp, "ad", true)) tmp = "Advertising";
-	else if(!strcmp(tmp, "ads", true)) tmp = "Advertising";
-	else if(!strcmp(tmp, "hh", true)) tmp = "Health Hacks";
-	else if(!strcmp(tmp, "wh", true)) tmp = "Weapon Hacks";
-	else if(!strcmp(tmp, "sh", true)) tmp = "Speed Hacks";
-	else if(!strcmp(tmp, "mh", true)) tmp = "Money Hacks";
-	else if(!strcmp(tmp, "rh", true)) tmp = "Ram Hacks";
-	else if(!strcmp(tmp, "ah", true)) tmp = "Ammo Hacks";
+	// Shortcut alasan ban
+	if(!strcmp(tmp, "ab", true)) format(tmp, sizeof(tmp), "Airbreak");
+	else if(!strcmp(tmp, "ad", true) || !strcmp(tmp, "ads", true)) format(tmp, sizeof(tmp), "Advertising");
+	else if(!strcmp(tmp, "hh", true)) format(tmp, sizeof(tmp), "Health Hacks");
+	else if(!strcmp(tmp, "wh", true)) format(tmp, sizeof(tmp), "Weapon Hacks");
+	else if(!strcmp(tmp, "sh", true)) format(tmp, sizeof(tmp), "Speed Hacks");
+	else if(!strcmp(tmp, "mh", true)) format(tmp, sizeof(tmp), "Money Hacks");
+	else if(!strcmp(tmp, "rh", true)) format(tmp, sizeof(tmp), "Ram Hacks");
+	else if(!strcmp(tmp, "ah", true)) format(tmp, sizeof(tmp), "Ammo Hacks");
+	else if(!strcmp(tmp, "tp", true)) format(tmp, sizeof(tmp), "Teleport Hacks");
+	else if(!strcmp(tmp, "cb", true)) format(tmp, sizeof(tmp), "Cleo/Sobeit");
+	else if(!strcmp(tmp, "macro", true)) format(tmp, sizeof(tmp), "Using Macro");
+	else if(!strcmp(tmp, "bug", true)) format(tmp, sizeof(tmp), "Bug Abuse");
+	else if(!strcmp(tmp, "troll", true)) format(tmp, sizeof(tmp), "Trolling");
+	
+	new dialogMsg[700];
+	
+	// Hitung waktu ban
 	if(datez != 0)
 	{
+		ban_time = gettime() + (datez * 86400);
+		
+		// Broadcast
 		SendClientMessageToAllEx(COLOR_ADMCMD, "AdmCmd: Admin %s has banned player %s for %d days.", pData[playerid][pAdminname], giveplayer, datez);
 		SendClientMessageToAllEx(COLOR_ADMCMD, "Reason: %s", tmp);
-
+		
+		// Log
 		new str[150];
-		format(str,sizeof(str),"Admin: %s banned %s selama %d hari Alasan: %s!", GetRPName(playerid), GetRPName(otherid), datez, tmp);
+		format(str, sizeof(str), "[BAN] %s banned %s for %d days. Reason: %s", GetRPName(playerid), GetRPName(otherid), datez, tmp);
 		LogServer("Admin", str);
-		new dc[500];
-		format(dc, sizeof(dc),  "```\nServer: Admin %s has banned player %s for %d days. [Reason: %s]", pData[playerid][pAdminname], giveplayer, datez, tmp);
-		SendDiscordMessage(3, dc);
-	}
-	else
-	{
-		SendClientMessageToAllEx(COLOR_ADMCMD, "AdmCmd: Admin %s has banned permanently player %s.", pData[playerid][pAdminname], giveplayer);
-		SendClientMessageToAllEx(COLOR_ADMCMD, "Reason: %s", tmp);
-
-		new str[150];
-		format(str,sizeof(str),"Admin: %s banned permanen %s Alasan: %s!", GetRPName(playerid), GetRPName(otherid), tmp);
-		LogServer("Admin", str);
-		new dc[500];
-		format(dc, sizeof(dc),  "```\nServer: Admin %s Server: {ffff00}Admin %s has banned permanently player %s.  [Reason: %s]```", pData[playerid][pAdminname], giveplayer, tmp);
+		
+		// Discord
+		new dc[512];
+		format(dc, sizeof(dc), "```\n[BAN] Admin %s has banned %s for %d days.\nReason: %s\nIP: %s```", 
+			pData[playerid][pAdminname], giveplayer, datez, tmp, PlayerIP);
 		SendDiscordMessage(3, dc);
 		
+		// Dialog message - FIXED: Build string step by step
+		format(dialogMsg, sizeof(dialogMsg), "{FF0000}YOU HAVE BEEN TEMPORARILY BANNED!\n\n");
+		format(dialogMsg, sizeof(dialogMsg), "%s{FFFFFF}Account: {FFFF00}%s\n", dialogMsg, giveplayer);
+		format(dialogMsg, sizeof(dialogMsg), "%s{FFFFFF}Admin: {00FF00}%s\n", dialogMsg, pData[playerid][pAdminname]);
+		format(dialogMsg, sizeof(dialogMsg), "%s{FFFFFF}Duration: {FF6347}%d days\n", dialogMsg, datez);
+		format(dialogMsg, sizeof(dialogMsg), "%s{FFFFFF}Reason: {FF0000}%s\n\n", dialogMsg, tmp);
+		format(dialogMsg, sizeof(dialogMsg), "%s{FFFF00}You can appeal this ban by contacting an administrator.", dialogMsg);
 	}
-	//SetPlayerPosition(otherid, 227.46, 110.0, 999.02, 360.0000, 10);
-	BanPlayerMSG(otherid, playerid, tmp);
- 	if(datez != 0)
-    {
-		Servers(otherid, "This is a "RED_E"TEMP-BAN {ffff00}that will last for %d days.", datez);
-		ban_time = gettime() + (datez * 86400);
-	}
-	else
+	else // Permanent ban
 	{
-		Servers(otherid, "This is a "RED_E"Permanent Banned {ffff00}please contack admin for unbanned!.", datez);
-		ban_time = datez;
+		ban_time = 0;
+		
+		// Broadcast
+		SendClientMessageToAllEx(COLOR_ADMCMD, "AdmCmd: Admin %s has permanently banned player %s.", pData[playerid][pAdminname], giveplayer);
+		SendClientMessageToAllEx(COLOR_ADMCMD, "Reason: %s", tmp);
+		
+		// Log
+		new str[150];
+		format(str, sizeof(str), "[BAN] %s permanently banned %s. Reason: %s", GetRPName(playerid), GetRPName(otherid), tmp);
+		LogServer("Admin", str);
+		
+		// Discord
+		new dc[512];
+		format(dc, sizeof(dc), "```\n[PERMANENT BAN] Admin %s has permanently banned %s.\nReason: %s\nIP: %s```", 
+			pData[playerid][pAdminname], giveplayer, tmp, PlayerIP);
+		SendDiscordMessage(3, dc);
+		
+		// Dialog message - FIXED: Build string step by step
+		format(dialogMsg, sizeof(dialogMsg), "{FF0000}YOU HAVE BEEN PERMANENTLY BANNED!\n\n");
+		format(dialogMsg, sizeof(dialogMsg), "%s{FFFFFF}Account: {FFFF00}%s\n", dialogMsg, giveplayer);
+		format(dialogMsg, sizeof(dialogMsg), "%s{FFFFFF}Admin: {00FF00}%s\n", dialogMsg, pData[playerid][pAdminname]);
+		format(dialogMsg, sizeof(dialogMsg), "%s{FFFFFF}Duration: {FF0000}PERMANENT\n", dialogMsg);
+		format(dialogMsg, sizeof(dialogMsg), "%s{FFFFFF}Reason: {FF0000}%s\n\n", dialogMsg, tmp);
+		format(dialogMsg, sizeof(dialogMsg), "%s{FFFF00}You can appeal this ban by contacting an administrator.\n", dialogMsg);
+		format(dialogMsg, sizeof(dialogMsg), "%s{FFFFFF}Discord: {00BFFF}discord.gg/valencia", dialogMsg);
 	}
-	new query[248];
-	mysql_format(g_SQL, query, sizeof(query), "INSERT INTO banneds(name, ip, admin, reason, ban_date, ban_expire) VALUES ('%s', '%s', '%s', '%s', %i, %d)", giveplayer, PlayerIP, pData[playerid][pAdminname], tmp, gettime(), ban_time);
+	
+	// Show ban dialog
+	ShowPlayerDialog(otherid, DIALOG_UNUSED, DIALOG_STYLE_MSGBOX, "{FF0000}BANNED FROM SERVER", dialogMsg, "Close", "");
+	
+	// Insert ke database
+	new query[512];
+	mysql_format(g_SQL, query, sizeof(query), 
+		"INSERT INTO banneds (name, ip, admin, reason, ban_date, ban_expire) VALUES ('%e', '%e', '%e', '%e', %d, %d)", 
+		giveplayer, PlayerIP, pData[playerid][pAdminname], tmp, gettime(), ban_time);
 	mysql_tquery(g_SQL, query);
+	
+	// Kick langsung
 	KickEx(otherid);
-	return true;
+	
+	return 1;
 }
 
 CMD:banucp(playerid, params[])
@@ -2439,12 +2634,19 @@ CMD:resetweap(playerid, params[])
 
 CMD:gmx(playerid, params[])
 {
-	if(pData[playerid][pAdmin] < 6)
+    if(pData[playerid][pAdmin] < 6)
         return PermissionError(playerid);
-	
-	SendClientMessageToAllEx(COLOR_ARWIN, "GMX: "RED_E"%s "WHITE_E"has postponed the server restart.", pData[playerid][pAdminname]);
-
-	return GameModeExit();
+    
+    // Tampilkan dialog konfirmasi
+    ShowPlayerDialog(playerid, DIALOG_GMX_CONFIRM, DIALOG_STYLE_MSGBOX, 
+        "{FF0000}Confirm GMX", 
+        "{FFFF00}WARNING!\n\n\
+        {FFFFFF}You will perform a server restart (GMX).\n\
+        All players will be kicked and the server will restart.\n\n\
+        {FF0000}Are you sure?", 
+        "Yes, Restart", "Cancel");
+    
+    return 1;
 }
 
 CMD:setlevel(playerid, params[])
@@ -3278,52 +3480,16 @@ CMD:setplate(playerid, params[])
 }
 
 
-CMD:settwittername(playerid, params[])
-{
-	if(pData[playerid][pAdmin] < 2)
-		return PermissionError(playerid);
-	
-	new aname[128], otherid, query[128], string[63];
-	if(sscanf(params, "us[128]", otherid, aname))
-	{
-	    Usage(playerid, "/settwittername <ID/Name> <Twitter name>");
-	    return true;
-	}
-	
-	format(string, sizeof(string), "%s", aname);
-	pData[otherid][pRegTwitter] = 1;
-	mysql_format(g_SQL, query, sizeof(query), "SELECT twittername FROM players WHERE twittername='%s'", aname);
-	mysql_tquery(g_SQL, query, "a_ChangeTwitterName", "iis", otherid, playerid, aname);
-	return 1;
-}
-
-CMD:setadminname(playerid, params[])
-{
-	if(pData[playerid][pAdmin] < 2)
-		return PermissionError(playerid);
-	
-	new aname[128], otherid, query[128];
-	if(sscanf(params, "us[128]", otherid, aname))
-	{
-	    Usage(playerid, "/setadminname <ID/Name> <admin name>");
-	    return true;
-	}
-	
-	mysql_format(g_SQL, query, sizeof(query), "SELECT adminname FROM players WHERE adminname='%s'", aname);
-	mysql_tquery(g_SQL, query, "a_ChangeAdminName", "iis", otherid, playerid, aname);
-	return 1;
-}
-
 CMD:setmoney(playerid, params[])
 {
 	if(pData[playerid][pAdmin] < 5)
 		return PermissionError(playerid);
 		
 	new cash[32], otherid, tmp[64], totalcash[25];
-	if(sscanf(params, "us[32", otherid, cash))
+	if(sscanf(params, "us[32]", otherid, cash)) // FIXED: Tambah ] di sscanf
 	{
 	    Usage(playerid, "/setmoney <ID/Name> <money>");
-	    return true;
+	    return 1;
 	}
 	format(totalcash, sizeof(totalcash), "%d00", strval(cash));
 
@@ -3334,14 +3500,15 @@ CMD:setmoney(playerid, params[])
 	GivePlayerMoneyEx(otherid, strval(totalcash));
 	
 	Servers(playerid, "Kamu telah mengset uang %s(%d) menjadi %s!", pData[otherid][pName], otherid, FormatMoney(strval(totalcash)));
-	Servers(otherid, "Admin %s telah mengset uang anda menjadi %s!",pData[playerid][pAdminname], FormatMoney(strval(totalcash)));
+	Servers(otherid, "Admin %s telah mengset uang anda menjadi %s!", pData[playerid][pAdminname], FormatMoney(strval(totalcash)));
 
 	new str[150];
-	format(str,sizeof(str),"Admin: %s menyetel uang $%s ke %s!", GetRPName(playerid), FormatMoney(strval(totalcash))), GetRPName(otherid);
+	format(str, sizeof(str), "Admin: %s menyetel uang $%s ke %s!", GetRPName(playerid), FormatMoney(strval(totalcash)), GetRPName(otherid)); // FIXED: Hapus ))
+
 	LogServer("Admin", str);
 
 	new dc[500];
-	format(dc, sizeof(dc),  "```[ADMCMD] Admin: %s menyetel uang $%s ke %s```", GetRPName(playerid), FormatMoney(strval(totalcash))), GetRPName(otherid);
+	format(dc, sizeof(dc), "```[ADMCMD] Admin: %s menyetel uang $%s ke %s```", GetRPName(playerid), FormatMoney(strval(totalcash)), GetRPName(otherid)); // FIXED: Hapus ))
 	SendDiscordMessage(1, dc);
 	
 	format(tmp, sizeof(tmp), "%d", strval(totalcash));
@@ -3355,10 +3522,10 @@ CMD:givemoney(playerid, params[])
 		return PermissionError(playerid);
 		
 	new cash[32], otherid, tmp[64], totalcash[25];
-	if(sscanf(params, "us[32", otherid, cash))
+	if(sscanf(params, "us[32]", otherid, cash)) // FIXED
 	{
 	    Usage(playerid, "/givemoney <ID/Name> <money>");
-	    return true;
+	    return 1;
 	}
 	format(totalcash, sizeof(totalcash), "%d00", strval(cash));
 
@@ -3371,11 +3538,12 @@ CMD:givemoney(playerid, params[])
 	Servers(otherid, "Admin %s telah memberikan uang kepada anda dengan jumlah %s!", pData[playerid][pAdminname], FormatMoney(strval(totalcash)));
 
 	new str[150];
-	format(str,sizeof(str),"Admin: %s memberikan uang $%s ke %s!", GetRPName(playerid), FormatMoney(strval(totalcash))), GetRPName(otherid);
+	format(str, sizeof(str), "Admin: %s memberikan uang $%s ke %s!", GetRPName(playerid), FormatMoney(strval(totalcash)), GetRPName(otherid)); // FIXED
+
 	LogServer("Admin", str);
 
 	new dc[500];
-	format(dc, sizeof(dc),  "```[ADMCMD] Admin: %s memberikan uang $%s ke %s```", GetRPName(playerid), FormatMoney(strval(totalcash))), GetRPName(otherid);
+	format(dc, sizeof(dc), "```[ADMCMD] Admin: %s memberikan uang $%s ke %s```", GetRPName(playerid), FormatMoney(strval(totalcash)), GetRPName(otherid)); // FIXED
 	SendDiscordMessage(1, dc);
 	
 	format(tmp, sizeof(tmp), "%d", strval(totalcash));
@@ -3385,42 +3553,35 @@ CMD:givemoney(playerid, params[])
 
 CMD:givemoneyall(playerid, params[])
 {
-    // Cek apakah pemain memiliki hak admin level 5
-    if (pData[playerid][pAdmin] < 5)
+    if(pData[playerid][pAdmin] < 5)
         return PermissionError(playerid);
         
-    // Inisialisasi variabel untuk menyimpan jumlah uang
     new cash[32], totalcash[25];
 
-    // Validasi input untuk memastikan parameter yang dimasukkan benar
-    if (sscanf(params, "s[32]", cash))
+    if(sscanf(params, "s[32]", cash))
     {
         Usage(playerid, "/givemoneyall <money>");
         return 1;
     }
 
-    // Format totalcash untuk mengalikan jumlah dengan 100
     format(totalcash, sizeof(totalcash), "%d00", strval(cash));
 
-    // Validasi jumlah uang tidak melebihi batas maksimum, misalnya $1,000,000
-    if (strval(totalcash) > 1000000)
+    if(strval(totalcash) > 1000000)
         return Error(playerid, "You cannot give more than $10,000.00 to all players.");
 
-    // Memberikan uang kepada semua player yang online
     foreach(new pid : Player)
     {
-        GivePlayerMoneyEx(pid, strval(totalcash)); // Berikan uang ke setiap player
-        Servers(pid, "Admin %s telah memberikan "GREEN_E"$%s"WHITE_E" kepada semua player online.", pData[playerid][pAdminname], FormatMoney(strval(totalcash))); // Kirim pesan ke setiap player
-        
-        // Log pemberian uang di server
-        new str[150];
-        format(str, sizeof(str), "Admin %s memberikan uang sejumlah "GREEN_E"$%s"WHITE_E" kepada semua player.", GetRPName(playerid), FormatMoney(strval(totalcash)));
-        LogServer("Admin", str); // Simpan log pemberian uang
-
-		new dc[500];
-		format(dc, sizeof(dc),  "```[ADMCMD] Admin %s memberikan uang sejumlah $%s kepada semua player.```",  GetRPName(playerid), FormatMoney(strval(totalcash)));
-		SendDiscordMessage(1, dc);
+        GivePlayerMoneyEx(pid, strval(totalcash));
+        Servers(pid, "Admin %s telah memberikan "GREEN_E"$%s"WHITE_E" kepada semua player online.", pData[playerid][pAdminname], FormatMoney(strval(totalcash)));
     }
+    
+    new str[150];
+    format(str, sizeof(str), "Admin %s memberikan uang sejumlah $%s kepada semua player.", GetRPName(playerid), FormatMoney(strval(totalcash))); // FIXED: Pindah keluar loop
+    LogServer("Admin", str);
+
+    new dc[500];
+    format(dc, sizeof(dc), "```[ADMCMD] Admin %s memberikan uang sejumlah $%s kepada semua player.```", GetRPName(playerid), FormatMoney(strval(totalcash))); // FIXED
+    SendDiscordMessage(1, dc);
     
     return 1;
 }
@@ -3431,26 +3592,27 @@ CMD:setbankmoney(playerid, params[])
 		return PermissionError(playerid);
 		
 	new cash[32], otherid, tmp[64], totalcash[25];
-	if(sscanf(params, "us[32", otherid, cash))
+	if(sscanf(params, "us[32]", otherid, cash)) // FIXED
 	{
 	    Usage(playerid, "/setbankmoney <ID/Name> <money>");
-	    return true;
+	    return 1;
 	}
 	format(totalcash, sizeof(totalcash), "%d00", strval(cash));
 
     if(!IsPlayerConnected(otherid))
         return Error(playerid, "The player has not logged in yet!");
 	
-	pData[playerid][pBankMoney] = strval(totalcash);
+	pData[otherid][pBankMoney] = strval(totalcash); // FIXED: Pakai otherid bukan playerid
 	
-	Servers(playerid, "Kamu telah mengset uang rekening banki %s(%d) menjadi %s!", pData[otherid][pName], otherid, FormatMoney(strval(totalcash)));
-	Servers(otherid, "Admin %s telah mengset uang rekening bank anda menjadi %s!",pData[playerid][pAdminname], FormatMoney(strval(totalcash)));
+	Servers(playerid, "Kamu telah mengset uang rekening bank %s(%d) menjadi %s!", pData[otherid][pName], otherid, FormatMoney(strval(totalcash)));
+	Servers(otherid, "Admin %s telah mengset uang rekening bank anda menjadi %s!", pData[playerid][pAdminname], FormatMoney(strval(totalcash)));
+	
 	new str[150];
-	format(str,sizeof(str),"Admin: %s menyetel uang bank %s ke %s!", GetRPName(playerid), FormatMoney(strval(totalcash))), GetRPName(otherid);
+	format(str, sizeof(str), "Admin: %s menyetel uang bank $%s ke %s!", GetRPName(playerid), FormatMoney(strval(totalcash)), GetRPName(otherid)); // FIXED
 	LogServer("Admin", str);
 	
 	new dc[500];
-	format(dc, sizeof(dc),  "```[ADMCMD] Admin %s menyetel uang bank $%s ke %s", GetRPName(playerid), FormatMoney(strval(totalcash))), GetRPName(otherid);
+	format(dc, sizeof(dc), "```[ADMCMD] Admin %s menyetel uang bank $%s ke %s```", GetRPName(playerid), FormatMoney(strval(totalcash)), GetRPName(otherid)); // FIXED
 	SendDiscordMessage(1, dc);
 
 	format(tmp, sizeof(tmp), "%d", strval(totalcash));
@@ -3464,48 +3626,31 @@ CMD:givebankmoney(playerid, params[])
 		return PermissionError(playerid);
 		
 	new cash[32], otherid, tmp[64], totalcash[25];
-	if(sscanf(params, "us[32", otherid, cash))
+	if(sscanf(params, "us[32]", otherid, cash)) // FIXED
 	{
 	    Usage(playerid, "/givebankmoney <ID/Name> <money>");
-	    return true;
+	    return 1;
 	}
 	format(totalcash, sizeof(totalcash), "%d00", strval(cash));
 
     if(!IsPlayerConnected(otherid))
         return Error(playerid, "The player has not logged in yet!");
 	
-	pData[playerid][pBankMoney] +=strval(totalcash);
+	pData[otherid][pBankMoney] += strval(totalcash); // FIXED: Pakai otherid
 	
-	Servers(playerid, "Kamu telah memberikan uang rekening bank %s(%d) dengan jumlah %s!", pData[otherid][pName], otherid,FormatMoney(strval(totalcash)));
+	Servers(playerid, "Kamu telah memberikan uang rekening bank %s(%d) dengan jumlah %s!", pData[otherid][pName], otherid, FormatMoney(strval(totalcash)));
 	Servers(otherid, "Admin %s telah memberikan uang rekening bank kepada anda dengan jumlah %s!", pData[playerid][pAdminname], FormatMoney(strval(totalcash)));
 
 	new str[150];
-	format(str,sizeof(str),"Admin: %s memberikan uang bank %s ke %s!", GetRPName(playerid), FormatMoney(strval(totalcash))), GetRPName(otherid);
+	format(str, sizeof(str), "Admin: %s memberikan uang bank $%s ke %s!", GetRPName(playerid), FormatMoney(strval(totalcash)), GetRPName(otherid)); // FIXED
 	LogServer("Admin", str);
 
 	new dc[500];
-	format(dc, sizeof(dc),  "```[ADMCMD] Admin %s mmemberikan uang bank $%s ke %s", GetRPName(playerid), FormatMoney(strval(totalcash))), GetRPName(otherid);
+	format(dc, sizeof(dc), "```[ADMCMD] Admin %s memberikan uang bank $%s ke %s```", GetRPName(playerid), FormatMoney(strval(totalcash)), GetRPName(otherid)); // FIXED
 	SendDiscordMessage(1, dc);
 	
 	format(tmp, sizeof(tmp), "%d", strval(totalcash));
 	StaffCommandLog("GIVEBANKMONEY", playerid, otherid, tmp);
-	return 1;
-}
-
-CMD:setvw(playerid, params[])
-{
-	if(pData[playerid][pAdmin] < 3)
-        return PermissionError(playerid);
-	
-	new jumlah, otherid;
-	if(sscanf(params, "ud", otherid, jumlah))
-        return Usage(playerid, "/setvw [playerid id/name] <virtual world>");
-	
-	if(!IsPlayerConnected(otherid))
-        return Error(playerid, "The player has not logged in yet!");
-		
-	SetPlayerVirtualWorld(otherid, jumlah);
-	Servers(otherid, "Admin %s telah men set Virtual World anda", pData[playerid][pAdminname]);
 	return 1;
 }
 
@@ -3762,7 +3907,7 @@ CMD:agive(playerid, params[])
 
 CMD:setprice(playerid, params[])
 {
-	if(pData[playerid][pAdmin] < 5)
+	if(pData[playerid][pAdmin] < 7)
         return PermissionError(playerid);
 		
 	new name[64], string[128];

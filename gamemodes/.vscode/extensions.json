@@ -1,6 +1,7 @@
 {
     "recommendations": [
         "openmp.pawn-development",
-        "chase.pawn-language"
+        "chase.pawn-language",
+        "icrawl.discord-vscode"
     ]
 }

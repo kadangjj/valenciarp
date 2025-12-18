@@ -273,7 +273,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 				}
 				case 2:
 				{
-					ShowPlayerDialog(playerid, DIALOG_HBEMODE, DIALOG_STYLE_LIST, "HBE Mode", """Simple\n""Modern\n""Simple v2\n""Disable", "Chosee", "Close");
+					ShowPlayerDialog(playerid, DIALOG_HBEMODE, DIALOG_STYLE_LIST, "HBE Mode", """Simple\n""Modern\n""Minimalist\n""Disable", "Chosee", "Close");
 				}
 				
 				case 3:
@@ -343,9 +343,17 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					{
 						TextDrawShowForPlayer(playerid, TDEditor_TD[txd]);
 					}
+
+					PlayerTextDrawShow(playerid, NAV[playerid][0]);
+					PlayerTextDrawShow(playerid, NAV[playerid][1]);
+					PlayerTextDrawShow(playerid, NAV[playerid][2]);
+					PlayerTextDrawShow(playerid, NAV[playerid][3]);
+					PlayerTextDrawShow(playerid, NAV[playerid][4]);
+					PlayerTextDrawShow(playerid, NAV[playerid][5]);
+					PlayerTextDrawShow(playerid, NAV[playerid][6]);
+
+					TextDrawShowForPlayer(playerid, DollarCents);
 					
-					TextDrawShowForPlayer(playerid, TextDate);
-					TextDrawShowForPlayer(playerid, TextTime);
 				}
 				
 				case 1: // Modern
@@ -390,12 +398,20 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					{
 						TextDrawShowForPlayer(playerid, TDEditor_TD[txd]);
 					}
+
+					PlayerTextDrawShow(playerid, NAV[playerid][0]);
+					PlayerTextDrawShow(playerid, NAV[playerid][1]);
+					PlayerTextDrawShow(playerid, NAV[playerid][2]);
+					PlayerTextDrawShow(playerid, NAV[playerid][3]);
+					PlayerTextDrawShow(playerid, NAV[playerid][4]);
+					PlayerTextDrawShow(playerid, NAV[playerid][5]);
+					PlayerTextDrawShow(playerid, NAV[playerid][6]);
+
+					TextDrawShowForPlayer(playerid, DollarCents);
 					
-					TextDrawShowForPlayer(playerid, TextDate);
-					TextDrawShowForPlayer(playerid, TextTime);
 				}
 				
-				case 2: // Simple v2
+				case 2: // Minimalist
 				{
 					// Hide semua HBE dulu
 					HidePlayerProgressBar(playerid, pData[playerid][sphungrybar]);
@@ -421,7 +437,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					PlayerTextDrawHide(playerid, DPcoin[playerid]);
 					PlayerTextDrawHide(playerid, DPmoney[playerid]);
 					
-					// Set mode & show Simple v2 HBE
+					// Set mode & show Minimalist HBE
 					pData[playerid][pHBEMode] = 3;
 					
 					PlayerTextDrawShow(playerid, PlayerTD[playerid][0]);
@@ -429,9 +445,18 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					PlayerTextDrawShow(playerid, PlayerTD[playerid][3]);
 					PlayerTextDrawShow(playerid, JGMHUNGER[playerid]);
 					PlayerTextDrawShow(playerid, JGMTHIRST[playerid]);
-					
-					TextDrawShowForPlayer(playerid, TextDate);
-					TextDrawShowForPlayer(playerid, TextTime);
+
+					// Hud Compas
+					PlayerTextDrawShow(playerid, NAV[playerid][0]);
+					PlayerTextDrawShow(playerid, NAV[playerid][1]);
+					PlayerTextDrawShow(playerid, NAV[playerid][2]);
+					PlayerTextDrawShow(playerid, NAV[playerid][3]);
+					PlayerTextDrawShow(playerid, NAV[playerid][4]);
+					PlayerTextDrawShow(playerid, NAV[playerid][5]);
+					PlayerTextDrawShow(playerid, NAV[playerid][6]);
+
+					TextDrawShowForPlayer(playerid, DollarCents);
+						
 				}
 				
 				case 3: // Disable
@@ -467,8 +492,16 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					PlayerTextDrawHide(playerid, JGMHUNGER[playerid]);
 					PlayerTextDrawHide(playerid, JGMTHIRST[playerid]);
 					
-					TextDrawHideForPlayer(playerid, TextDate);
-					TextDrawHideForPlayer(playerid, TextTime);
+					TextDrawHideForPlayer(playerid, DollarCents);
+
+					// Hud Compas
+					PlayerTextDrawHide(playerid, NAV[playerid][0]);
+					PlayerTextDrawHide(playerid, NAV[playerid][1]);
+					PlayerTextDrawHide(playerid, NAV[playerid][2]);
+					PlayerTextDrawHide(playerid, NAV[playerid][3]);
+					PlayerTextDrawHide(playerid, NAV[playerid][4]);
+					PlayerTextDrawHide(playerid, NAV[playerid][5]);
+					PlayerTextDrawHide(playerid, NAV[playerid][6]);
 				}
 			}
 		}
@@ -973,19 +1006,6 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					mysql_format(g_SQL, query, sizeof(query), "UPDATE bisnis SET prod='%d', money='%d' WHERE ID='%d'", bData[bizid][bProd], bData[bizid][bMoney], bizid);
 					mysql_tquery(g_SQL, query);
 				}
-				case 4: // E-Toll (tetap 1 karena isi saldo)
-				{
-					GivePlayerMoneyEx(playerid, -price);
-					pData[playerid][pEToll] = 200;
-					SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s telah membeli saldo E-Toll seharga $%s", ReturnName(playerid), FormatMoney(price));
-					bData[bizid][bProd]--;
-					bData[bizid][bMoney] += Server_Percent(price);
-					Server_AddPercent(price);
-					
-					new query[128];
-					mysql_format(g_SQL, query, sizeof(query), "UPDATE bisnis SET prod='%d', money='%d' WHERE ID='%d'", bData[bizid][bProd], bData[bizid][bMoney], bizid);
-					mysql_tquery(g_SQL, query);
-				}
 			}
 			
 			// Hapus PVar setelah selesai
@@ -1100,12 +1120,37 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 				if(price == 0)
 					return Error(playerid, "Harga produk belum di setel oleh pemilik bisnis");
 				
+				// E-TOLL LANGSUNG BELI (TANPA QUANTITY)
+				if(listitem == 4) // E-Toll
+				{
+					if(pData[playerid][pEToll] == 1)
+						return Error(playerid, "Kamu sudah memiliki kartu E-Toll!");
+					
+					if(GetPlayerMoney(playerid) < price)
+						return Error(playerid, "Uang kamu tidak cukup!");
+					
+					GivePlayerMoneyEx(playerid, -price);
+					pData[playerid][pEToll] = 1;
+					SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s telah membeli kartu E-Toll seharga $%s", ReturnName(playerid), FormatMoney(price));
+					Info(playerid, "Kamu sekarang bisa melewati semua tol secara gratis dengan kartu E-Toll!");
+					
+					bData[bizid][bProd]--;
+					bData[bizid][bMoney] += Server_Percent(price);
+					Server_AddPercent(price);
+					
+					new query[128];
+					mysql_format(g_SQL, query, sizeof(query), "UPDATE bisnis SET prod='%d', money='%d' WHERE ID='%d'", bData[bizid][bProd], bData[bizid][bMoney], bizid);
+					mysql_tquery(g_SQL, query);
+					return 1;
+				}
+				
+				// ITEM LAIN PAKAI QUANTITY
 				// Simpan listitem untuk digunakan di dialog selanjutnya
 				SetPVarInt(playerid, "BuyProdItem", listitem);
 				SetPVarInt(playerid, "BuyProdPrice", price);
 				
 				new dialogStr[256];
-				format(dialogStr, sizeof(dialogStr), ""WHITE_E"Product: "YELLOW_E"%s "WHITE_E"| Price: "GREEN_E"$%s \n\n"GREY_E"Enter the quantity you want to buy:", GetProductName(listitem), FormatMoney(price));
+				format(dialogStr, sizeof(dialogStr), ""WHITE_E"Product: "YELLOW_E"%s "WHITE_E"| Price: "GREEN_E"$%s "WHITE_E"| Stock: "GREEN_E"%d\n\n"GREY_E"Enter the quantity you want to buy:", GetProductName(listitem), FormatMoney(price), bData[bizid][bProd]);
 				
 				ShowPlayerDialog(playerid, DIALOG_BUYPROD_QTY, DIALOG_STYLE_INPUT, "Purchase Quantity", dialogStr, "Buy", "Cancel");
 			}
@@ -10315,6 +10360,31 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 		}
 		return 1;
 	}
+	if(dialogid == DIALOG_TRACKTREE)
+	{
+		if(response)
+		{
+			new count = 0;
+			new selectedTree = -1;
+			
+			foreach(new i : Trees)
+			{
+				if(count == listitem)
+				{
+					selectedTree = i;
+					break;
+				}
+				count++;
+			}
+			
+			if(selectedTree == -1)
+				return Error(playerid, "Tree not found!");
+			
+			SetPlayerCheckpoint(playerid, TreeData[selectedTree][treeX], TreeData[selectedTree][treeY], TreeData[selectedTree][treeZ], 3.0);
+			Info(playerid, "Checkpoint has been set to the selected tree!");
+		}
+		return 1;
+	}
 	if(dialogid == DIALOG_HAULING)
 	{
 		if(response)
@@ -10380,11 +10450,15 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			{
 				type = "Equipment";
 			}
+			else if(bData[id][bType] == 5)
+			{
+				type = "Electronics";
+			}
 			else
 			{
 				type = "Unknow";
 			}
-			format(line9, sizeof(line9), "Silahkan anda membeli stock product di gudang!\n\nBisnis ID: %d\nBisnis Owner: %s\nBisnis Name: %s\nBisnis Type: %s\n\nSetelah itu ikuti checkpoint dan antarkan ke bisnis mission anda!",
+			format(line9, sizeof(line9), "{FFFFFF}Silahkan anda membeli stock product di gudang!\n\nBisnis ID: %d\nBisnis Owner: %s\nBisnis Name: %s\nBisnis Type: %s\n\nSetelah itu ikuti checkpoint dan antarkan ke bisnis mission anda!",
 			id, bData[id][bOwner], bData[id][bName], type);
 			SetPlayerRaceCheckpoint(playerid, 1, 1229.8157, 145.2586, 20.4609, 0.0, 0.0, 0.0, 3.5);
 			//SetPlayerCheckpoint(playerid, -279.67, -2148.42, 28.54, 3.5);
@@ -10847,13 +10921,17 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 	//dealer
 	if(dialogid == DEALER_BUYPROD)
 	{
-		static
-        did = -1,
-        price;
-			
+		static did = -1, price;
+		
 		if((did = GetNearbyDealer(playerid)) != -1 && response)
 		{
+			new dtype = dsData[did][dType];
+			if(dtype < 1 || dtype > 6) return 1;
+			if(listitem >= DealerVehicleCount[dtype]) return 1;
+			
 			price = dsData[did][dVehicle][listitem];
+			new model = DealerVehicleModels[dtype][listitem];
+			
 			new count = 0, limit = MAX_PLAYER_VEHICLE + pData[playerid][pVip];
 
 			if(pData[playerid][pMoney] < price)
@@ -10862,1209 +10940,37 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			if(dsData[did][dProduct] < 1)
 				return Error(playerid, "This Dealership is out of stock product.");
 
-				
 			foreach(new ii : PVehicles)
 			{
 				if(pvData[ii][cOwner] == pData[playerid][pID])
-				{
-					count ++;
-				}
+					count++;
 			}
+			
 			if(count >= limit)
 				return Error(playerid, "Slot kendaraan anda sudah penuh, silahkan jual beberapa kendaraan anda terlebih dahulu!");
 
-			if(dsData[did][dType] == 1)
-			{
-				switch(listitem)
-				{
-					case 0:
-					{
-						GivePlayerMoneyEx(playerid, -price);
-						new cQuery[1024];
-						new Float:x, Float:y, Float:z, Float:a;
-						new model, color1, color2;
-						color1 = 0;
-						color2 = 0;
-						model = 602;
-						x = dsData[did][dPX];
-						y = dsData[did][dPY];
-						z = dsData[did][dPZ];
-						a = 0.0;
-						mysql_format(g_SQL, cQuery, sizeof(cQuery), "INSERT INTO `vehicle` (`owner`, `model`, `color1`, `color2`, `price`, `x`, `y`, `z`, `a`) VALUES (%d, %d, %d, %d, %d, '%f', '%f', '%f', '%f')", pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						mysql_tquery(g_SQL, cQuery, "OnVehBuyPV", "ddddddffff", playerid, pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						dsData[did][dProduct]--;
-						dsData[did][dMoney] += price;
-						Dealer_Save(did);
-						Dealer_Refresh(did);
-						return 1;
-					}
-					case 1:
-					{
-						GivePlayerMoneyEx(playerid, -price);
-						new cQuery[1024];
-						new Float:x, Float:y, Float:z, Float:a;
-						new model, color1, color2;
-						color1 = 0;
-						color2 = 0;
-						model = 562;
-						x = dsData[did][dPX];
-						y = dsData[did][dPY];
-						z = dsData[did][dPZ];
-						a = 0.0;
-						mysql_format(g_SQL, cQuery, sizeof(cQuery), "INSERT INTO `vehicle` (`owner`, `model`, `color1`, `color2`, `price`, `x`, `y`, `z`, `a`) VALUES (%d, %d, %d, %d, %d, '%f', '%f', '%f', '%f')", pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						mysql_tquery(g_SQL, cQuery, "OnVehBuyPV", "ddddddffff", playerid, pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						dsData[did][dProduct]--;
-						dsData[did][dMoney] += price;
-						Dealer_Save(did);
-						Dealer_Refresh(did);						
-						return 1;
-					}
-					case 2:
-					{
-						GivePlayerMoneyEx(playerid, -price);
-						new cQuery[1024];
-						new Float:x, Float:y, Float:z, Float:a;
-						new model, color1, color2;
-						color1 = 0;
-						color2 = 0;
-						model = 561;
-						x = dsData[did][dPX];
-						y = dsData[did][dPY];
-						z = dsData[did][dPZ];
-						a = 0.0;
-						mysql_format(g_SQL, cQuery, sizeof(cQuery), "INSERT INTO `vehicle` (`owner`, `model`, `color1`, `color2`, `price`, `x`, `y`, `z`, `a`) VALUES (%d, %d, %d, %d, %d, '%f', '%f', '%f', '%f')", pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						mysql_tquery(g_SQL, cQuery, "OnVehBuyPV", "ddddddffff", playerid, pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						dsData[did][dProduct]--;
-						dsData[did][dMoney] += price;
-						Dealer_Save(did);
-						Dealer_Refresh(did);
-						return 1;
-					}
-					case 3:
-					{
-						GivePlayerMoneyEx(playerid, -price);
-						new cQuery[1024];
-						new Float:x, Float:y, Float:z, Float:a;
-						new model, color1, color2;
-						color1 = 0;
-						color2 = 0;
-						model = 560;
-						x = dsData[did][dPX];
-						y = dsData[did][dPY];
-						z = dsData[did][dPZ];
-						a = 0.0;
-						mysql_format(g_SQL, cQuery, sizeof(cQuery), "INSERT INTO `vehicle` (`owner`, `model`, `color1`, `color2`, `price`, `x`, `y`, `z`, `a`) VALUES (%d, %d, %d, %d, %d, '%f', '%f', '%f', '%f')", pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						mysql_tquery(g_SQL, cQuery, "OnVehBuyPV", "ddddddffff", playerid, pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						dsData[did][dProduct]--;
-						dsData[did][dMoney] += price;
-						Dealer_Save(did);
-						Dealer_Refresh(did);
-						return 1;
-					}
-					case 4:
-					{
-						GivePlayerMoneyEx(playerid, -price);
-						new cQuery[1024];
-						new Float:x, Float:y, Float:z, Float:a;
-						new model, color1, color2;
-						color1 = 0;
-						color2 = 0;
-						model = 559;
-						x = dsData[did][dPX];
-						y = dsData[did][dPY];
-						z = dsData[did][dPZ];
-						a = 0.0;
-						mysql_format(g_SQL, cQuery, sizeof(cQuery), "INSERT INTO `vehicle` (`owner`, `model`, `color1`, `color2`, `price`, `x`, `y`, `z`, `a`) VALUES (%d, %d, %d, %d, %d, '%f', '%f', '%f', '%f')", pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						mysql_tquery(g_SQL, cQuery, "OnVehBuyPV", "ddddddffff", playerid, pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						dsData[did][dProduct]--;
-						dsData[did][dMoney] += price;
-						Dealer_Save(did);
-						Dealer_Refresh(did);
-						return 1;
-					}
-					case 5:
-					{
-						GivePlayerMoneyEx(playerid, -price);
-						new cQuery[1024];
-						new Float:x, Float:y, Float:z, Float:a;
-						new model, color1, color2;
-						color1 = 0;
-						color2 = 0;
-						model = 565;
-						x = dsData[did][dPX];
-						y = dsData[did][dPY];
-						z = dsData[did][dPZ];
-						a = 0.0;
-						mysql_format(g_SQL, cQuery, sizeof(cQuery), "INSERT INTO `vehicle` (`owner`, `model`, `color1`, `color2`, `price`, `x`, `y`, `z`, `a`) VALUES (%d, %d, %d, %d, %d, '%f', '%f', '%f', '%f')", pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						mysql_tquery(g_SQL, cQuery, "OnVehBuyPV", "ddddddffff", playerid, pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						dsData[did][dProduct]--;
-						dsData[did][dMoney] += price;
-						Dealer_Save(did);
-						Dealer_Refresh(did);
-						return 1;
-					}
-					case 6:
-					{
-						GivePlayerMoneyEx(playerid, -price);
-						new cQuery[1024];
-						new Float:x, Float:y, Float:z, Float:a;
-						new model, color1, color2;
-						color1 = 0;
-						color2 = 0;
-						model = 558;
-						x = dsData[did][dPX];
-						y = dsData[did][dPY];
-						z = dsData[did][dPZ];
-						a = 0.0;
-						mysql_format(g_SQL, cQuery, sizeof(cQuery), "INSERT INTO `vehicle` (`owner`, `model`, `color1`, `color2`, `price`, `x`, `y`, `z`, `a`) VALUES (%d, %d, %d, %d, %d, '%f', '%f', '%f', '%f')", pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						mysql_tquery(g_SQL, cQuery, "OnVehBuyPV", "ddddddffff", playerid, pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						dsData[did][dProduct]--;
-						dsData[did][dMoney] += price;
-						Dealer_Save(did);
-						Dealer_Refresh(did);
-						return 1;
-					}
-					case 7:
-					{
-						GivePlayerMoneyEx(playerid, -price);
-						new cQuery[1024];
-						new Float:x, Float:y, Float:z, Float:a;
-						new model, color1, color2;
-						color1 = 0;
-						color2 = 0;
-						model = 480;
-						x = dsData[did][dPX];
-						y = dsData[did][dPY];
-						z = dsData[did][dPZ];
-						a = 0.0;
-						mysql_format(g_SQL, cQuery, sizeof(cQuery), "INSERT INTO `vehicle` (`owner`, `model`, `color1`, `color2`, `price`, `x`, `y`, `z`, `a`) VALUES (%d, %d, %d, %d, %d, '%f', '%f', '%f', '%f')", pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						mysql_tquery(g_SQL, cQuery, "OnVehBuyPV", "ddddddffff", playerid, pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						dsData[did][dProduct]--;
-						dsData[did][dMoney] += price;
-						Dealer_Save(did);
-						Dealer_Refresh(did);
-						return 1;
-					}
-				}
-			}
-			else if(dsData[did][dType] == 2)
-			{
-				switch(listitem)
-				{
-					case 0:
-					{
-						GivePlayerMoneyEx(playerid, -price);
-						new cQuery[1024];
-						new Float:x, Float:y, Float:z, Float:a;
-						new model, color1, color2;
-						color1 = 0;
-						color2 = 0;
-						model = 507;
-						x = dsData[did][dPX];
-						y = dsData[did][dPY];
-						z = dsData[did][dPZ];
-						a = 0.0;
-						mysql_format(g_SQL, cQuery, sizeof(cQuery), "INSERT INTO `vehicle` (`owner`, `model`, `color1`, `color2`, `price`, `x`, `y`, `z`, `a`) VALUES (%d, %d, %d, %d, %d, '%f', '%f', '%f', '%f')", pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						mysql_tquery(g_SQL, cQuery, "OnVehBuyPV", "ddddddffff", playerid, pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						dsData[did][dProduct]--;
-						dsData[did][dMoney] += price;
-						Dealer_Save(did);
-						Dealer_Refresh(did);
-						return 1;					
-					}
-					case 1:
-					{
-						GivePlayerMoneyEx(playerid, -price);
-						new cQuery[1024];
-						new Float:x, Float:y, Float:z, Float:a;
-						new model, color1, color2;
-						color1 = 0;
-						color2 = 0;
-						model = 445;
-						x = dsData[did][dPX];
-						y = dsData[did][dPY];
-						z = dsData[did][dPZ];
-						a = 0.0;
-						mysql_format(g_SQL, cQuery, sizeof(cQuery), "INSERT INTO `vehicle` (`owner`, `model`, `color1`, `color2`, `price`, `x`, `y`, `z`, `a`) VALUES (%d, %d, %d, %d, %d, '%f', '%f', '%f', '%f')", pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						mysql_tquery(g_SQL, cQuery, "OnVehBuyPV", "ddddddffff", playerid, pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						dsData[did][dProduct]--;
-						dsData[did][dMoney] += price;
-						Dealer_Save(did);
-						Dealer_Refresh(did);
-						return 1;					
-					}
-					case 2:
-					{
-						GivePlayerMoneyEx(playerid, -price);
-						new cQuery[1024];
-						new Float:x, Float:y, Float:z, Float:a;
-						new model, color1, color2;
-						color1 = 0;
-						color2 = 0;
-						model = 479;
-						x = dsData[did][dPX];
-						y = dsData[did][dPY];
-						z = dsData[did][dPZ];
-						a = 0.0;
-						mysql_format(g_SQL, cQuery, sizeof(cQuery), "INSERT INTO `vehicle` (`owner`, `model`, `color1`, `color2`, `price`, `x`, `y`, `z`, `a`) VALUES (%d, %d, %d, %d, %d, '%f', '%f', '%f', '%f')", pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						mysql_tquery(g_SQL, cQuery, "OnVehBuyPV", "ddddddffff", playerid, pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						dsData[did][dProduct]--;
-						dsData[did][dMoney] += price;
-						Dealer_Save(did);
-						Dealer_Refresh(did);
-						return 1;					
-					}
-					case 3:
-					{
-						GivePlayerMoneyEx(playerid, -price);
-						new cQuery[1024];
-						new Float:x, Float:y, Float:z, Float:a;
-						new model, color1, color2;
-						color1 = 0;
-						color2 = 0;
-						model = 507;
-						x = dsData[did][dPX];
-						y = dsData[did][dPY];
-						z = dsData[did][dPZ];
-						a = 0.0;
-						mysql_format(g_SQL, cQuery, sizeof(cQuery), "INSERT INTO `vehicle` (`owner`, `model`, `color1`, `color2`, `price`, `x`, `y`, `z`, `a`) VALUES (%d, %d, %d, %d, %d, '%f', '%f', '%f', '%f')", pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						mysql_tquery(g_SQL, cQuery, "OnVehBuyPV", "ddddddffff", playerid, pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						dsData[did][dProduct]--;
-						dsData[did][dMoney] += price;
-						Dealer_Save(did);
-						Dealer_Refresh(did);
-						return 1;					
-					}
-					case 4:
-					{
-						GivePlayerMoneyEx(playerid, -price);
-						new cQuery[1024];
-						new Float:x, Float:y, Float:z, Float:a;
-						new model, color1, color2;
-						color1 = 0;
-						color2 = 0;
-						model = 426;
-						x = dsData[did][dPX];
-						y = dsData[did][dPY];
-						z = dsData[did][dPZ];
-						a = 0.0;
-						mysql_format(g_SQL, cQuery, sizeof(cQuery), "INSERT INTO `vehicle` (`owner`, `model`, `color1`, `color2`, `price`, `x`, `y`, `z`, `a`) VALUES (%d, %d, %d, %d, %d, '%f', '%f', '%f', '%f')", pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						mysql_tquery(g_SQL, cQuery, "OnVehBuyPV", "ddddddffff", playerid, pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						dsData[did][dProduct]--;
-						dsData[did][dMoney] += price;
-						Dealer_Save(did);
-						Dealer_Refresh(did);
-						return 1;
-					}
-					case 5:
-					{
-						GivePlayerMoneyEx(playerid, -price);
-						new cQuery[1024];
-						new Float:x, Float:y, Float:z, Float:a;
-						new model, color1, color2;
-						color1 = 0;
-						color2 = 0;
-						model = 405;
-						x = dsData[did][dPX];
-						y = dsData[did][dPY];
-						z = dsData[did][dPZ];
-						a = 0.0;
-						mysql_format(g_SQL, cQuery, sizeof(cQuery), "INSERT INTO `vehicle` (`owner`, `model`, `color1`, `color2`, `price`, `x`, `y`, `z`, `a`) VALUES (%d, %d, %d, %d, %d, '%f', '%f', '%f', '%f')", pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						mysql_tquery(g_SQL, cQuery, "OnVehBuyPV", "ddddddffff", playerid, pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						dsData[did][dProduct]--;
-						dsData[did][dMoney] += price;
-						Dealer_Save(did);
-						Dealer_Refresh(did);
-						return 1;					
-					}
-					case 6:
-					{
-						GivePlayerMoneyEx(playerid, -price);
-						new cQuery[1024];
-						new Float:x, Float:y, Float:z, Float:a;
-						new model, color1, color2;
-						color1 = 0;
-						color2 = 0;
-						model = 529;
-						x = dsData[did][dPX];
-						y = dsData[did][dPY];
-						z = dsData[did][dPZ];
-						a = 0.0;
-						mysql_format(g_SQL, cQuery, sizeof(cQuery), "INSERT INTO `vehicle` (`owner`, `model`, `color1`, `color2`, `price`, `x`, `y`, `z`, `a`) VALUES (%d, %d, %d, %d, %d, '%f', '%f', '%f', '%f')", pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						mysql_tquery(g_SQL, cQuery, "OnVehBuyPV", "ddddddffff", playerid, pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						dsData[did][dProduct]--;
-						dsData[did][dMoney] += price;
-						Dealer_Save(did);
-						Dealer_Refresh(did);
-						return 1;					
-					}
-					case 7:
-					{
-						GivePlayerMoneyEx(playerid, -price);
-						new cQuery[1024];
-						new Float:x, Float:y, Float:z, Float:a;
-						new model, color1, color2;
-						color1 = 0;
-						color2 = 0;
-						model = 458;
-						x = dsData[did][dPX];
-						y = dsData[did][dPY];
-						z = dsData[did][dPZ];
-						a = 0.0;
-						mysql_format(g_SQL, cQuery, sizeof(cQuery), "INSERT INTO `vehicle` (`owner`, `model`, `color1`, `color2`, `price`, `x`, `y`, `z`, `a`) VALUES (%d, %d, %d, %d, %d, '%f', '%f', '%f', '%f')", pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						mysql_tquery(g_SQL, cQuery, "OnVehBuyPV", "ddddddffff", playerid, pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						dsData[did][dProduct]--;
-						dsData[did][dMoney] += price;
-						Dealer_Save(did);
-						Dealer_Refresh(did);
-						return 1;					
-					}
-					case 8:
-					{
-						GivePlayerMoneyEx(playerid, -price);
-						new cQuery[1024];
-						new Float:x, Float:y, Float:z, Float:a;
-						new model, color1, color2;
-						color1 = 0;
-						color2 = 0;
-						model = 540;
-						x = dsData[did][dPX];
-						y = dsData[did][dPY];
-						z = dsData[did][dPZ];
-						a = 0.0;
-						mysql_format(g_SQL, cQuery, sizeof(cQuery), "INSERT INTO `vehicle` (`owner`, `model`, `color1`, `color2`, `price`, `x`, `y`, `z`, `a`) VALUES (%d, %d, %d, %d, %d, '%f', '%f', '%f', '%f')", pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						mysql_tquery(g_SQL, cQuery, "OnVehBuyPV", "ddddddffff", playerid, pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						dsData[did][dProduct]--;
-						dsData[did][dMoney] += price;
-						Dealer_Save(did);
-						Dealer_Refresh(did);
-						return 1;					
-					}
-					case 9:
-					{
-						GivePlayerMoneyEx(playerid, -price);
-						new cQuery[1024];
-						new Float:x, Float:y, Float:z, Float:a;
-						new model, color1, color2;
-						color1 = 0;
-						color2 = 0;
-						model = 550;
-						x = dsData[did][dPX];
-						y = dsData[did][dPY];
-						z = dsData[did][dPZ];
-						a = 0.0;
-						mysql_format(g_SQL, cQuery, sizeof(cQuery), "INSERT INTO `vehicle` (`owner`, `model`, `color1`, `color2`, `price`, `x`, `y`, `z`, `a`) VALUES (%d, %d, %d, %d, %d, '%f', '%f', '%f', '%f')", pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						mysql_tquery(g_SQL, cQuery, "OnVehBuyPV", "ddddddffff", playerid, pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						dsData[did][dProduct]--;
-						dsData[did][dMoney] += price;
-						Dealer_Save(did);
-						Dealer_Refresh(did);
-						return 1;					
-					}																																				
-				}		
-			}
-			else if(dsData[did][dType] == 3)
-			{
-				switch(listitem)
-				{
-					case 0:
-					{
-						GivePlayerMoneyEx(playerid, -price);
-						new cQuery[1024];
-						new Float:x, Float:y, Float:z, Float:a;
-						new model, color1, color2;
-						color1 = 0;
-						color2 = 0;
-						model = 536;
-						x = dsData[did][dPX];
-						y = dsData[did][dPY];
-						z = dsData[did][dPZ];
-						a = 0.0;
-						mysql_format(g_SQL, cQuery, sizeof(cQuery), "INSERT INTO `vehicle` (`owner`, `model`, `color1`, `color2`, `price`, `x`, `y`, `z`, `a`) VALUES (%d, %d, %d, %d, %d, '%f', '%f', '%f', '%f')", pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						mysql_tquery(g_SQL, cQuery, "OnVehBuyPV", "ddddddffff", playerid, pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						dsData[did][dProduct]--;
-						dsData[did][dMoney] += price;
-						Dealer_Save(did);
-						Dealer_Refresh(did);
-						return 1;					
-					}
-					case 1:
-					{
-						GivePlayerMoneyEx(playerid, -price);
-						new cQuery[1024];
-						new Float:x, Float:y, Float:z, Float:a;
-						new model, color1, color2;
-						color1 = 0;
-						color2 = 0;
-						model = 575;
-						x = dsData[did][dPX];
-						y = dsData[did][dPY];
-						z = dsData[did][dPZ];
-						a = 0.0;
-						mysql_format(g_SQL, cQuery, sizeof(cQuery), "INSERT INTO `vehicle` (`owner`, `model`, `color1`, `color2`, `price`, `x`, `y`, `z`, `a`) VALUES (%d, %d, %d, %d, %d, '%f', '%f', '%f', '%f')", pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						mysql_tquery(g_SQL, cQuery, "OnVehBuyPV", "ddddddffff", playerid, pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						dsData[did][dProduct]--;
-						dsData[did][dMoney] += price;
-						Dealer_Save(did);
-						Dealer_Refresh(did);
-						return 1;					
-					}
-					case 2:
-					{
-						GivePlayerMoneyEx(playerid, -price);
-						new cQuery[1024];
-						new Float:x, Float:y, Float:z, Float:a;
-						new model, color1, color2;
-						color1 = 0;
-						color2 = 0;
-						model = 534;
-						x = dsData[did][dPX];
-						y = dsData[did][dPY];
-						z = dsData[did][dPZ];
-						a = 0.0;
-						mysql_format(g_SQL, cQuery, sizeof(cQuery), "INSERT INTO `vehicle` (`owner`, `model`, `color1`, `color2`, `price`, `x`, `y`, `z`, `a`) VALUES (%d, %d, %d, %d, %d, '%f', '%f', '%f', '%f')", pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						mysql_tquery(g_SQL, cQuery, "OnVehBuyPV", "ddddddffff", playerid, pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						dsData[did][dProduct]--;
-						dsData[did][dMoney] += price;
-						Dealer_Save(did);
-						Dealer_Refresh(did);
-						return 1;					
-					}
-					case 3:
-					{
-						GivePlayerMoneyEx(playerid, -price);
-						new cQuery[1024];
-						new Float:x, Float:y, Float:z, Float:a;
-						new model, color1, color2;
-						color1 = 0;
-						color2 = 0;
-						model = 567;
-						x = dsData[did][dPX];
-						y = dsData[did][dPY];
-						z = dsData[did][dPZ];
-						a = 0.0;
-						mysql_format(g_SQL, cQuery, sizeof(cQuery), "INSERT INTO `vehicle` (`owner`, `model`, `color1`, `color2`, `price`, `x`, `y`, `z`, `a`) VALUES (%d, %d, %d, %d, %d, '%f', '%f', '%f', '%f')", pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						mysql_tquery(g_SQL, cQuery, "OnVehBuyPV", "ddddddffff", playerid, pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						dsData[did][dProduct]--;
-						dsData[did][dMoney] += price;
-						Dealer_Save(did);
-						Dealer_Refresh(did);
-						return 1;					
-					}
-					case 4:
-					{
-						GivePlayerMoneyEx(playerid, -price);
-						new cQuery[1024];
-						new Float:x, Float:y, Float:z, Float:a;
-						new model, color1, color2;
-						color1 = 0;
-						color2 = 0;
-						model = 535;
-						x = dsData[did][dPX];
-						y = dsData[did][dPY];
-						z = dsData[did][dPZ];
-						a = 0.0;
-						mysql_format(g_SQL, cQuery, sizeof(cQuery), "INSERT INTO `vehicle` (`owner`, `model`, `color1`, `color2`, `price`, `x`, `y`, `z`, `a`) VALUES (%d, %d, %d, %d, %d, '%f', '%f', '%f', '%f')", pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						mysql_tquery(g_SQL, cQuery, "OnVehBuyPV", "ddddddffff", playerid, pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						dsData[did][dProduct]--;
-						dsData[did][dMoney] += price;
-						Dealer_Save(did);
-						Dealer_Refresh(did);
-						return 1;					
-					}
-					case 5:
-					{
-						GivePlayerMoneyEx(playerid, -price);
-						new cQuery[1024];
-						new Float:x, Float:y, Float:z, Float:a;
-						new model, color1, color2;
-						color1 = 0;
-						color2 = 0;
-						model = 566;
-						x = dsData[did][dPX];
-						y = dsData[did][dPY];
-						z = dsData[did][dPZ];
-						a = 0.0;
-						mysql_format(g_SQL, cQuery, sizeof(cQuery), "INSERT INTO `vehicle` (`owner`, `model`, `color1`, `color2`, `price`, `x`, `y`, `z`, `a`) VALUES (%d, %d, %d, %d, %d, '%f', '%f', '%f', '%f')", pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						mysql_tquery(g_SQL, cQuery, "OnVehBuyPV", "ddddddffff", playerid, pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						dsData[did][dProduct]--;
-						dsData[did][dMoney] += price;
-						Dealer_Save(did);
-						Dealer_Refresh(did);
-						return 1;					
-					}
-					case 6:
-					{
-						GivePlayerMoneyEx(playerid, -price);
-						new cQuery[1024];
-						new Float:x, Float:y, Float:z, Float:a;
-						new model, color1, color2;
-						color1 = 0;
-						color2 = 0;
-						model = 576;
-						x = dsData[did][dPX];
-						y = dsData[did][dPY];
-						z = dsData[did][dPZ];
-						a = 0.0;
-						mysql_format(g_SQL, cQuery, sizeof(cQuery), "INSERT INTO `vehicle` (`owner`, `model`, `color1`, `color2`, `price`, `x`, `y`, `z`, `a`) VALUES (%d, %d, %d, %d, %d, '%f', '%f', '%f', '%f')", pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						mysql_tquery(g_SQL, cQuery, "OnVehBuyPV", "ddddddffff", playerid, pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						dsData[did][dProduct]--;
-						dsData[did][dMoney] += price;
-						Dealer_Save(did);
-						Dealer_Refresh(did);
-						return 1;					
-					}
-					case 7:
-					{
-						GivePlayerMoneyEx(playerid, -price);
-						new cQuery[1024];
-						new Float:x, Float:y, Float:z, Float:a;
-						new model, color1, color2;
-						color1 = 0;
-						color2 = 0;
-						model = 412;
-						x = dsData[did][dPX];
-						y = dsData[did][dPY];
-						z = dsData[did][dPZ];
-						a = 0.0;
-						mysql_format(g_SQL, cQuery, sizeof(cQuery), "INSERT INTO `vehicle` (`owner`, `model`, `color1`, `color2`, `price`, `x`, `y`, `z`, `a`) VALUES (%d, %d, %d, %d, %d, '%f', '%f', '%f', '%f')", pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						mysql_tquery(g_SQL, cQuery, "OnVehBuyPV", "ddddddffff", playerid, pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						dsData[did][dProduct]--;
-						dsData[did][dMoney] += price;
-						Dealer_Save(did);
-						Dealer_Refresh(did);
-						return 1;					
-					}
-					case 8:
-					{
-						GivePlayerMoneyEx(playerid, -price);
-						new cQuery[1024];
-						new Float:x, Float:y, Float:z, Float:a;
-						new model, color1, color2;
-						color1 = 0;
-						color2 = 0;
-						model = 482;
-						x = dsData[did][dPX];
-						y = dsData[did][dPY];
-						z = dsData[did][dPZ];
-						a = 0.0;
-						mysql_format(g_SQL, cQuery, sizeof(cQuery), "INSERT INTO `vehicle` (`owner`, `model`, `color1`, `color2`, `price`, `x`, `y`, `z`, `a`) VALUES (%d, %d, %d, %d, %d, '%f', '%f', '%f', '%f')", pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						mysql_tquery(g_SQL, cQuery, "OnVehBuyPV", "ddddddffff", playerid, pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						dsData[did][dProduct]--;
-						dsData[did][dMoney] += price;
-						Dealer_Save(did);
-						Dealer_Refresh(did);
-						return 1;					
-					}
-					case 9:
-					{
-						GivePlayerMoneyEx(playerid, -price);
-						new cQuery[1024];
-						new Float:x, Float:y, Float:z, Float:a;
-						new model, color1, color2;
-						color1 = 0;
-						color2 = 0;
-						model = 413;
-						x = dsData[did][dPX];
-						y = dsData[did][dPY];
-						z = dsData[did][dPZ];
-						a = 0.0;
-						mysql_format(g_SQL, cQuery, sizeof(cQuery), "INSERT INTO `vehicle` (`owner`, `model`, `color1`, `color2`, `price`, `x`, `y`, `z`, `a`) VALUES (%d, %d, %d, %d, %d, '%f', '%f', '%f', '%f')", pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						mysql_tquery(g_SQL, cQuery, "OnVehBuyPV", "ddddddffff", playerid, pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						dsData[did][dProduct]--;
-						dsData[did][dMoney] += price;
-						Dealer_Save(did);
-						Dealer_Refresh(did);
-						return 1;					
-					}
-				}
-			}
-			else if(dsData[did][dType] == 4)
-			{
-				switch(listitem)
-				{
-					case 0:
-					{
-						GivePlayerMoneyEx(playerid, -price);
-						new cQuery[1024];
-						new Float:x, Float:y, Float:z, Float:a;
-						new model, color1, color2;
-						color1 = 0;
-						color2 = 0;
-						model = 581;
-						x = dsData[did][dPX];
-						y = dsData[did][dPY];
-						z = dsData[did][dPZ];
-						a = 0.0;
-						mysql_format(g_SQL, cQuery, sizeof(cQuery), "INSERT INTO `vehicle` (`owner`, `model`, `color1`, `color2`, `price`, `x`, `y`, `z`, `a`) VALUES (%d, %d, %d, %d, %d, '%f', '%f', '%f', '%f')", pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						mysql_tquery(g_SQL, cQuery, "OnVehBuyPV", "ddddddffff", playerid, pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						dsData[did][dProduct]--;
-						dsData[did][dMoney] += price;
-						Dealer_Save(did);
-						Dealer_Refresh(did);
-						return 1;
-					}
-					case 1:
-					{
-						GivePlayerMoneyEx(playerid, -price);
-						new cQuery[1024];
-						new Float:x, Float:y, Float:z, Float:a;
-						new model, color1, color2;
-						color1 = 0;
-						color2 = 0;
-						model = 462;
-						x = dsData[did][dPX];
-						y = dsData[did][dPY];
-						z = dsData[did][dPZ];
-						a = 0.0;
-						mysql_format(g_SQL, cQuery, sizeof(cQuery), "INSERT INTO `vehicle` (`owner`, `model`, `color1`, `color2`, `price`, `x`, `y`, `z`, `a`) VALUES (%d, %d, %d, %d, %d, '%f', '%f', '%f', '%f')", pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						mysql_tquery(g_SQL, cQuery, "OnVehBuyPV", "ddddddffff", playerid, pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						dsData[did][dProduct]--;
-						dsData[did][dMoney] += price;
-						Dealer_Save(did);
-						Dealer_Refresh(did);
-						return 1;					
-					}
-					case 2:
-					{
-						GivePlayerMoneyEx(playerid, -price);
-						new cQuery[1024];
-						new Float:x, Float:y, Float:z, Float:a;
-						new model, color1, color2;
-						color1 = 0;
-						color2 = 0;
-						model = 521;
-						x = dsData[did][dPX];
-						y = dsData[did][dPY];
-						z = dsData[did][dPZ];
-						a = 0.0;
-						mysql_format(g_SQL, cQuery, sizeof(cQuery), "INSERT INTO `vehicle` (`owner`, `model`, `color1`, `color2`, `price`, `x`, `y`, `z`, `a`) VALUES (%d, %d, %d, %d, %d, '%f', '%f', '%f', '%f')", pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						mysql_tquery(g_SQL, cQuery, "OnVehBuyPV", "ddddddffff", playerid, pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						dsData[did][dProduct]--;
-						dsData[did][dMoney] += price;
-						Dealer_Save(did);
-						Dealer_Refresh(did);
-						return 1;					
-					}
-					case 3:
-					{
-						GivePlayerMoneyEx(playerid, -price);
-						new cQuery[1024];
-						new Float:x, Float:y, Float:z, Float:a;
-						new model, color1, color2;
-						color1 = 0;
-						color2 = 0;
-						model = 463;
-						x = dsData[did][dPX];
-						y = dsData[did][dPY];
-						z = dsData[did][dPZ];
-						a = 0.0;
-						mysql_format(g_SQL, cQuery, sizeof(cQuery), "INSERT INTO `vehicle` (`owner`, `model`, `color1`, `color2`, `price`, `x`, `y`, `z`, `a`) VALUES (%d, %d, %d, %d, %d, '%f', '%f', '%f', '%f')", pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						mysql_tquery(g_SQL, cQuery, "OnVehBuyPV", "ddddddffff", playerid, pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						dsData[did][dProduct]--;
-						dsData[did][dMoney] += price;
-						Dealer_Save(did);
-						Dealer_Refresh(did);
-						return 1;					
-					}
-					case 4:
-					{
-						GivePlayerMoneyEx(playerid, -price);
-						new cQuery[1024];
-						new Float:x, Float:y, Float:z, Float:a;
-						new model, color1, color2;
-						color1 = 0;
-						color2 = 0;
-						model = 461;
-						x = dsData[did][dPX];
-						y = dsData[did][dPY];
-						z = dsData[did][dPZ];
-						a = 0.0;
-						mysql_format(g_SQL, cQuery, sizeof(cQuery), "INSERT INTO `vehicle` (`owner`, `model`, `color1`, `color2`, `price`, `x`, `y`, `z`, `a`) VALUES (%d, %d, %d, %d, %d, '%f', '%f', '%f', '%f')", pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						mysql_tquery(g_SQL, cQuery, "OnVehBuyPV", "ddddddffff", playerid, pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						dsData[did][dProduct]--;
-						dsData[did][dMoney] += price;
-						Dealer_Save(did);
-						Dealer_Refresh(did);
-						return 1;					
-					}
-					case 5:
-					{
-						GivePlayerMoneyEx(playerid, -price);
-						new cQuery[1024];
-						new Float:x, Float:y, Float:z, Float:a;
-						new model, color1, color2;
-						color1 = 0;
-						color2 = 0;
-						model = 468;
-						x = dsData[did][dPX];
-						y = dsData[did][dPY];
-						z = dsData[did][dPZ];
-						a = 0.0;
-						mysql_format(g_SQL, cQuery, sizeof(cQuery), "INSERT INTO `vehicle` (`owner`, `model`, `color1`, `color2`, `price`, `x`, `y`, `z`, `a`) VALUES (%d, %d, %d, %d, %d, '%f', '%f', '%f', '%f')", pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						mysql_tquery(g_SQL, cQuery, "OnVehBuyPV", "ddddddffff", playerid, pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						dsData[did][dProduct]--;
-						dsData[did][dMoney] += price;
-						Dealer_Save(did);
-						Dealer_Refresh(did);
-						return 1;					
-					}
-					case 6:
-					{
-						GivePlayerMoneyEx(playerid, -price);
-						new cQuery[1024];
-						new Float:x, Float:y, Float:z, Float:a;
-						new model, color1, color2;
-						color1 = 0;
-						color2 = 0;
-						model = 586;
-						x = dsData[did][dPX];
-						y = dsData[did][dPY];
-						z = dsData[did][dPZ];
-						a = 0.0;
-						mysql_format(g_SQL, cQuery, sizeof(cQuery), "INSERT INTO `vehicle` (`owner`, `model`, `color1`, `color2`, `price`, `x`, `y`, `z`, `a`) VALUES (%d, %d, %d, %d, %d, '%f', '%f', '%f', '%f')", pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						mysql_tquery(g_SQL, cQuery, "OnVehBuyPV", "ddddddffff", playerid, pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						dsData[did][dProduct]--;
-						dsData[did][dMoney] += price;
-						Dealer_Save(did);
-						Dealer_Refresh(did);
-						return 1;						
-					}																									
-				}
-			}
-			else if(dsData[did][dType] == 5)
-			{
-				switch(listitem)
-				{
-					case 0:
-					{
-						GivePlayerMoneyEx(playerid, -price);
-						new cQuery[1024];
-						new Float:x, Float:y, Float:z, Float:a;
-						new model, color1, color2;
-						color1 = 0;
-						color2 = 0;
-						model = 403;
-						x = dsData[did][dPX];
-						y = dsData[did][dPY];
-						z = dsData[did][dPZ];
-						a = 0.0;
-						mysql_format(g_SQL, cQuery, sizeof(cQuery), "INSERT INTO `vehicle` (`owner`, `model`, `color1`, `color2`, `price`, `x`, `y`, `z`, `a`) VALUES (%d, %d, %d, %d, %d, '%f', '%f', '%f', '%f')", pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						mysql_tquery(g_SQL, cQuery, "OnVehBuyPV", "ddddddffff", playerid, pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						dsData[did][dProduct]--;
-						dsData[did][dMoney] += price;
-						Dealer_Save(did);
-						Dealer_Refresh(did);
-						return 1;
-					}
-					case 1:
-					{
-						GivePlayerMoneyEx(playerid, -price);
-						new cQuery[1024];
-						new Float:x, Float:y, Float:z, Float:a;
-						new model, color1, color2;
-						color1 = 0;
-						color2 = 0;
-						model = 414;
-						x = dsData[did][dPX];
-						y = dsData[did][dPY];
-						z = dsData[did][dPZ];
-						a = 0.0;
-						mysql_format(g_SQL, cQuery, sizeof(cQuery), "INSERT INTO `vehicle` (`owner`, `model`, `color1`, `color2`, `price`, `x`, `y`, `z`, `a`) VALUES (%d, %d, %d, %d, %d, '%f', '%f', '%f', '%f')", pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						mysql_tquery(g_SQL, cQuery, "OnVehBuyPV", "ddddddffff", playerid, pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						dsData[did][dProduct]--;
-						dsData[did][dMoney] += price;
-						Dealer_Save(did);
-						Dealer_Refresh(did);
-						return 1;					
-					}
-					case 2:
-					{
-						GivePlayerMoneyEx(playerid, -price);
-						new cQuery[1024];
-						new Float:x, Float:y, Float:z, Float:a;
-						new model, color1, color2;
-						color1 = 0;
-						color2 = 0;
-						model = 455;
-						x = dsData[did][dPX];
-						y = dsData[did][dPY];
-						z = dsData[did][dPZ];
-						a = 0.0;
-						mysql_format(g_SQL, cQuery, sizeof(cQuery), "INSERT INTO `vehicle` (`owner`, `model`, `color1`, `color2`, `price`, `x`, `y`, `z`, `a`) VALUES (%d, %d, %d, %d, %d, '%f', '%f', '%f', '%f')", pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						mysql_tquery(g_SQL, cQuery, "OnVehBuyPV", "ddddddffff", playerid, pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						dsData[did][dProduct]--;
-						dsData[did][dMoney] += price;
-						Dealer_Save(did);
-						Dealer_Refresh(did);
-						return 1;					
-					}
-					case 3:
-					{
-						GivePlayerMoneyEx(playerid, -price);
-						new cQuery[1024];
-						new Float:x, Float:y, Float:z, Float:a;
-						new model, color1, color2;
-						color1 = 0;
-						color2 = 0;
-						model = 456;
-						x = dsData[did][dPX];
-						y = dsData[did][dPY];
-						z = dsData[did][dPZ];
-						a = 0.0;
-						mysql_format(g_SQL, cQuery, sizeof(cQuery), "INSERT INTO `vehicle` (`owner`, `model`, `color1`, `color2`, `price`, `x`, `y`, `z`, `a`) VALUES (%d, %d, %d, %d, %d, '%f', '%f', '%f', '%f')", pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						mysql_tquery(g_SQL, cQuery, "OnVehBuyPV", "ddddddffff", playerid, pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						dsData[did][dProduct]--;
-						dsData[did][dMoney] += price;
-						Dealer_Save(did);
-						Dealer_Refresh(did);
-						return 1;					
-					}
-					case 4:
-					{
-						GivePlayerMoneyEx(playerid, -price);
-						new cQuery[1024];
-						new Float:x, Float:y, Float:z, Float:a;
-						new model, color1, color2;
-						color1 = 0;
-						color2 = 0;
-						model = 498;
-						x = dsData[did][dPX];
-						y = dsData[did][dPY];
-						z = dsData[did][dPZ];
-						a = 0.0;
-						mysql_format(g_SQL, cQuery, sizeof(cQuery), "INSERT INTO `vehicle` (`owner`, `model`, `color1`, `color2`, `price`, `x`, `y`, `z`, `a`) VALUES (%d, %d, %d, %d, %d, '%f', '%f', '%f', '%f')", pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						mysql_tquery(g_SQL, cQuery, "OnVehBuyPV", "ddddddffff", playerid, pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						dsData[did][dProduct]--;
-						dsData[did][dMoney] += price;
-						Dealer_Save(did);
-						Dealer_Refresh(did);
-						return 1;					
-					}
-					case 5:
-					{
-						GivePlayerMoneyEx(playerid, -price);
-						new cQuery[1024];
-						new Float:x, Float:y, Float:z, Float:a;
-						new model, color1, color2;
-						color1 = 0;
-						color2 = 0;
-						model = 499;
-						x = dsData[did][dPX];
-						y = dsData[did][dPY];
-						z = dsData[did][dPZ];
-						a = 0.0;
-						mysql_format(g_SQL, cQuery, sizeof(cQuery), "INSERT INTO `vehicle` (`owner`, `model`, `color1`, `color2`, `price`, `x`, `y`, `z`, `a`) VALUES (%d, %d, %d, %d, %d, '%f', '%f', '%f', '%f')", pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						mysql_tquery(g_SQL, cQuery, "OnVehBuyPV", "ddddddffff", playerid, pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						dsData[did][dProduct]--;
-						dsData[did][dMoney] += price;
-						Dealer_Save(did);
-						Dealer_Refresh(did);
-						return 1;					
-					}
-					case 7:
-					{
-						GivePlayerMoneyEx(playerid, -price);
-						new cQuery[1024];
-						new Float:x, Float:y, Float:z, Float:a;
-						new model, color1, color2;
-						color1 = 0;
-						color2 = 0;
-						model = 515;
-						x = dsData[did][dPX];
-						y = dsData[did][dPY];
-						z = dsData[did][dPZ];
-						a = 0.0;
-						mysql_format(g_SQL, cQuery, sizeof(cQuery), "INSERT INTO `vehicle` (`owner`, `model`, `color1`, `color2`, `price`, `x`, `y`, `z`, `a`) VALUES (%d, %d, %d, %d, %d, '%f', '%f', '%f', '%f')", pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						mysql_tquery(g_SQL, cQuery, "OnVehBuyPV", "ddddddffff", playerid, pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						dsData[did][dProduct]--;
-						dsData[did][dMoney] += price;
-						Dealer_Save(did);
-						Dealer_Refresh(did);
-						return 1;						
-					}
-					case 8:
-					{
-						GivePlayerMoneyEx(playerid, -price);
-						new cQuery[1024];
-						new Float:x, Float:y, Float:z, Float:a;
-						new model, color1, color2;
-						color1 = 0;
-						color2 = 0;
-						model = 514;
-						x = dsData[did][dPX];
-						y = dsData[did][dPY];
-						z = dsData[did][dPZ];
-						a = 0.0;
-						mysql_format(g_SQL, cQuery, sizeof(cQuery), "INSERT INTO `vehicle` (`owner`, `model`, `color1`, `color2`, `price`, `x`, `y`, `z`, `a`) VALUES (%d, %d, %d, %d, %d, '%f', '%f', '%f', '%f')", pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						mysql_tquery(g_SQL, cQuery, "OnVehBuyPV", "ddddddffff", playerid, pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						dsData[did][dProduct]--;
-						dsData[did][dMoney] += price;
-						Dealer_Save(did);
-						Dealer_Refresh(did);
-						return 1;						
-					}
-					case 9:
-					{
-						GivePlayerMoneyEx(playerid, -price);
-						new cQuery[1024];
-						new Float:x, Float:y, Float:z, Float:a;
-						new model, color1, color2;
-						color1 = 0;
-						color2 = 0;
-						model = 423;
-						x = dsData[did][dPX];
-						y = dsData[did][dPY];
-						z = dsData[did][dPZ];
-						a = 0.0;
-						mysql_format(g_SQL, cQuery, sizeof(cQuery), "INSERT INTO `vehicle` (`owner`, `model`, `color1`, `color2`, `price`, `x`, `y`, `z`, `a`) VALUES (%d, %d, %d, %d, %d, '%f', '%f', '%f', '%f')", pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						mysql_tquery(g_SQL, cQuery, "OnVehBuyPV", "ddddddffff", playerid, pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						dsData[did][dProduct]--;
-						dsData[did][dMoney] += price;
-						Dealer_Save(did);
-						Dealer_Refresh(did);
-						return 1;						
-					}
-					case 10:
-					{
-						GivePlayerMoneyEx(playerid, -price);
-						new cQuery[1024];
-						new Float:x, Float:y, Float:z, Float:a;
-						new model, color1, color2;
-						color1 = 0;
-						color2 = 0;
-						model = 588;
-						x = dsData[did][dPX];
-						y = dsData[did][dPY];
-						z = dsData[did][dPZ];
-						a = 0.0;
-						mysql_format(g_SQL, cQuery, sizeof(cQuery), "INSERT INTO `vehicle` (`owner`, `model`, `color1`, `color2`, `price`, `x`, `y`, `z`, `a`) VALUES (%d, %d, %d, %d, %d, '%f', '%f', '%f', '%f')", pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						mysql_tquery(g_SQL, cQuery, "OnVehBuyPV", "ddddddffff", playerid, pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						dsData[did][dProduct]--;
-						dsData[did][dMoney] += price;
-						Dealer_Save(did);
-						Dealer_Refresh(did);
-						return 1;						
-					}																										
-				}
-			}
-			else if(dsData[did][dType] == 6)
-			{
-				switch(listitem)
-				{
-					case 0:
-					{
-						GivePlayerMoneyEx(playerid, -price);
-						new cQuery[1024];
-						new Float:x, Float:y, Float:z, Float:a;
-						new model, color1, color2;
-						color1 = 0;
-						color2 = 0;
-						model = 438;
-						x = dsData[did][dPX];
-						y = dsData[did][dPY];
-						z = dsData[did][dPZ];
-						a = 0.0;
-						mysql_format(g_SQL, cQuery, sizeof(cQuery), "INSERT INTO `vehicle` (`owner`, `model`, `color1`, `color2`, `price`, `x`, `y`, `z`, `a`) VALUES (%d, %d, %d, %d, %d, '%f', '%f', '%f', '%f')", pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						mysql_tquery(g_SQL, cQuery, "OnVehBuyPV", "ddddddffff", playerid, pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						dsData[did][dProduct]--;
-						dsData[did][dMoney] += price;
-						Dealer_Save(did);
-						Dealer_Refresh(did);
-						return 1;
-					}
-					case 1:
-					{
-						GivePlayerMoneyEx(playerid, -price);
-						new cQuery[1024];
-						new Float:x, Float:y, Float:z, Float:a;
-						new model, color1, color2;
-						color1 = 0;
-						color2 = 0;
-						model = 420;
-						x = dsData[did][dPX];
-						y = dsData[did][dPY];
-						z = dsData[did][dPZ];
-						a = 0.0;
-						mysql_format(g_SQL, cQuery, sizeof(cQuery), "INSERT INTO `vehicle` (`owner`, `model`, `color1`, `color2`, `price`, `x`, `y`, `z`, `a`) VALUES (%d, %d, %d, %d, %d, '%f', '%f', '%f', '%f')", pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						mysql_tquery(g_SQL, cQuery, "OnVehBuyPV", "ddddddffff", playerid, pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						dsData[did][dProduct]--;
-						dsData[did][dMoney] += price;
-						Dealer_Save(did);
-						Dealer_Refresh(did);
-						return 1;					
-					}
-					case 2:
-					{
-						GivePlayerMoneyEx(playerid, -price);
-						new cQuery[1024];
-						new Float:x, Float:y, Float:z, Float:a;
-						new model, color1, color2;
-						color1 = 0;
-						color2 = 0;
-						model = 525;
-						x = dsData[did][dPX];
-						y = dsData[did][dPY];
-						z = dsData[did][dPZ];
-						a = 0.0;
-						mysql_format(g_SQL, cQuery, sizeof(cQuery), "INSERT INTO `vehicle` (`owner`, `model`, `color1`, `color2`, `price`, `x`, `y`, `z`, `a`) VALUES (%d, %d, %d, %d, %d, '%f', '%f', '%f', '%f')", pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						mysql_tquery(g_SQL, cQuery, "OnVehBuyPV", "ddddddffff", playerid, pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						dsData[did][dProduct]--;
-						dsData[did][dMoney] += price;
-						Dealer_Save(did);
-						Dealer_Refresh(did);
-						return 1;					
-					}
-					case 3:
-					{
-						GivePlayerMoneyEx(playerid, -price);
-						new cQuery[1024];
-						new Float:x, Float:y, Float:z, Float:a;
-						new model, color1, color2;
-						color1 = 0;
-						color2 = 0;
-						model = 478;
-						x = dsData[did][dPX];
-						y = dsData[did][dPY];
-						z = dsData[did][dPZ];
-						a = 0.0;
-						mysql_format(g_SQL, cQuery, sizeof(cQuery), "INSERT INTO `vehicle` (`owner`, `model`, `color1`, `color2`, `price`, `x`, `y`, `z`, `a`) VALUES (%d, %d, %d, %d, %d, '%f', '%f', '%f', '%f')", pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						mysql_tquery(g_SQL, cQuery, "OnVehBuyPV", "ddddddffff", playerid, pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						dsData[did][dProduct]--;
-						dsData[did][dMoney] += price;
-						Dealer_Save(did);
-						Dealer_Refresh(did);
-						return 1;					
-					}
-					case 4:
-					{
-						GivePlayerMoneyEx(playerid, -price);
-						new cQuery[1024];
-						new Float:x, Float:y, Float:z, Float:a;
-						new model, color1, color2;
-						color1 = 0;
-						color2 = 0;
-						model = 543;
-						x = dsData[did][dPX];
-						y = dsData[did][dPY];
-						z = dsData[did][dPZ];
-						a = 0.0;
-						mysql_format(g_SQL, cQuery, sizeof(cQuery), "INSERT INTO `vehicle` (`owner`, `model`, `color1`, `color2`, `price`, `x`, `y`, `z`, `a`) VALUES (%d, %d, %d, %d, %d, '%f', '%f', '%f', '%f')", pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						mysql_tquery(g_SQL, cQuery, "OnVehBuyPV", "ddddddffff", playerid, pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						dsData[did][dProduct]--;
-						dsData[did][dMoney] += price;
-						Dealer_Save(did);
-						Dealer_Refresh(did);
-						return 1;					
-					}
-					case 5:
-					{
-						GivePlayerMoneyEx(playerid, -price);
-						new cQuery[1024];
-						new Float:x, Float:y, Float:z, Float:a;
-						new model, color1, color2;
-						color1 = 0;
-						color2 = 0;
-						model = 413;
-						x = dsData[did][dPX];
-						y = dsData[did][dPY];
-						z = dsData[did][dPZ];
-						a = 0.0;
-						mysql_format(g_SQL, cQuery, sizeof(cQuery), "INSERT INTO `vehicle` (`owner`, `model`, `color1`, `color2`, `price`, `x`, `y`, `z`, `a`) VALUES (%d, %d, %d, %d, %d, '%f', '%f', '%f', '%f')", pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						mysql_tquery(g_SQL, cQuery, "OnVehBuyPV", "ddddddffff", playerid, pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						dsData[did][dProduct]--;
-						dsData[did][dMoney] += price;
-						Dealer_Save(did);
-						Dealer_Refresh(did);
-						return 1;					
-					}
-					case 6:
-					{
-						GivePlayerMoneyEx(playerid, -price);
-						new cQuery[1024];
-						new Float:x, Float:y, Float:z, Float:a;
-						new model, color1, color2;
-						color1 = 0;
-						color2 = 0;
-						model = 422;
-						x = dsData[did][dPX];
-						y = dsData[did][dPY];
-						z = dsData[did][dPZ];
-						a = 0.0;
-						mysql_format(g_SQL, cQuery, sizeof(cQuery), "INSERT INTO `vehicle` (`owner`, `model`, `color1`, `color2`, `price`, `x`, `y`, `z`, `a`) VALUES (%d, %d, %d, %d, %d, '%f', '%f', '%f', '%f')", pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						mysql_tquery(g_SQL, cQuery, "OnVehBuyPV", "ddddddffff", playerid, pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						dsData[did][dProduct]--;
-						dsData[did][dMoney] += price;
-						Dealer_Save(did);
-						Dealer_Refresh(did);
-						return 1;					
-					}
-					case 7:
-					{
-						GivePlayerMoneyEx(playerid, -price);
-						new cQuery[1024];
-						new Float:x, Float:y, Float:z, Float:a;
-						new model, color1, color2;
-						color1 = 0;
-						color2 = 0;
-						model = 554;
-						x = dsData[did][dPX];
-						y = dsData[did][dPY];
-						z = dsData[did][dPZ];
-						a = 0.0;
-						mysql_format(g_SQL, cQuery, sizeof(cQuery), "INSERT INTO `vehicle` (`owner`, `model`, `color1`, `color2`, `price`, `x`, `y`, `z`, `a`) VALUES (%d, %d, %d, %d, %d, '%f', '%f', '%f', '%f')", pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						mysql_tquery(g_SQL, cQuery, "OnVehBuyPV", "ddddddffff", playerid, pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						dsData[did][dProduct]--;
-						dsData[did][dMoney] += price;
-						Dealer_Save(did);
-						Dealer_Refresh(did);
-						return 1;						
-					}
-					case 8:
-					{
-						GivePlayerMoneyEx(playerid, -price);
-						new cQuery[1024];
-						new Float:x, Float:y, Float:z, Float:a;
-						new model, color1, color2;
-						color1 = 0;
-						color2 = 0;
-						model = 482;
-						x = dsData[did][dPX];
-						y = dsData[did][dPY];
-						z = dsData[did][dPZ];
-						a = 0.0;
-						mysql_format(g_SQL, cQuery, sizeof(cQuery), "INSERT INTO `vehicle` (`owner`, `model`, `color1`, `color2`, `price`, `x`, `y`, `z`, `a`) VALUES (%d, %d, %d, %d, %d, '%f', '%f', '%f', '%f')", pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						mysql_tquery(g_SQL, cQuery, "OnVehBuyPV", "ddddddffff", playerid, pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						dsData[did][dProduct]--;
-						dsData[did][dMoney] += price;
-						Dealer_Save(did);
-						Dealer_Refresh(did);
-						return 1;						
-					}
-					case 9:
-					{
-						GivePlayerMoneyEx(playerid, -price);
-						new cQuery[1024];
-						new Float:x, Float:y, Float:z, Float:a;
-						new model, color1, color2;
-						color1 = 0;
-						color2 = 0;
-						model = 440;
-						x = dsData[did][dPX];
-						y = dsData[did][dPY];
-						z = dsData[did][dPZ];
-						a = 0.0;
-						mysql_format(g_SQL, cQuery, sizeof(cQuery), "INSERT INTO `vehicle` (`owner`, `model`, `color1`, `color2`, `price`, `x`, `y`, `z`, `a`) VALUES (%d, %d, %d, %d, %d, '%f', '%f', '%f', '%f')", pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						mysql_tquery(g_SQL, cQuery, "OnVehBuyPV", "ddddddffff", playerid, pData[playerid][pID], model, color1, color2, price, x, y, z, a);
-						dsData[did][dProduct]--;
-						dsData[did][dMoney] += price;
-						Dealer_Save(did);
-						Dealer_Refresh(did);
-						return 1;						
-					}																							
-				}
-			}
-		}				
+			// Proses pembelian
+			GivePlayerMoneyEx(playerid, -price);
+			
+			new cQuery[1024];
+			new Float:x, Float:y, Float:z, Float:a;
+			x = dsData[did][dPX];
+			y = dsData[did][dPY];
+			z = dsData[did][dPZ];
+			a = 0.0;
+			
+			mysql_format(g_SQL, cQuery, sizeof(cQuery), 
+				"INSERT INTO `vehicle` (`owner`, `model`, `color1`, `color2`, `price`, `x`, `y`, `z`, `a`) VALUES (%d, %d, 0, 0, %d, '%f', '%f', '%f', '%f')", 
+				pData[playerid][pID], model, price, x, y, z, a
+			);
+			mysql_tquery(g_SQL, cQuery, "OnVehBuyPV", "ddddddffff", playerid, pData[playerid][pID], model, 0, 0, price, x, y, z, a);
+			
+			dsData[did][dProduct]--;
+			dsData[did][dMoney] += price;
+			Dealer_Save(did);
+			Dealer_Refresh(did);
+		}
+		return 1;
 	}
 	if(dialogid == DEALER_MENU)
 	{
@@ -12707,7 +11613,30 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
         }
         return 1;
     }
-
+	if(dialogid == DIALOG_GMX_CONFIRM)
+    {
+        if(response) // Klik "Ya, Restart"
+        {
+            // Kirim pesan ke semua player
+            SendClientMessageToAllEx(COLOR_ARWIN, "GMX: "RED_E"%s "WHITE_E"has restarted the server.", pData[playerid][pAdminname]);
+            
+            // Log admin action
+            new str[128];
+            format(str, sizeof(str), "[GMX]: %s melakukan restart server!", pData[playerid][pAdminname]);
+            LogServer("Admin", str);
+            
+            // Countdown (opsional, untuk kasih waktu save data)
+            GameModeExit();
+            
+            // Atau langsung restart tanpa delay:
+            // GameModeExit();
+        }
+        else // Klik "Batal"
+        {
+            Info(playerid, "GMX Cancelled.");
+        }
+        return 1;
+    }
 	if(dialogid == DIALOG_BUYPV)
 	{
 		new vehicleid = GetPlayerVehicleID(playerid);
@@ -14688,7 +13617,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 				format(itemName, sizeof(itemName), "bandage");
 				SetPVarString(playerid, "SelectedItem", itemName);
 				ShowPlayerDialog(playerid, DIALOG_ITEM_ACTION, DIALOG_STYLE_LIST, "Item: Bandage", 
-					"Use Item\nGive Item", "Select", "Back");
+					"Use\nGive\nDrop", "Select", "Back");
 				return 1;
 			}
 			count++;
@@ -14700,7 +13629,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 				format(itemName, sizeof(itemName), "snack");
 				SetPVarString(playerid, "SelectedItem", itemName);
 				ShowPlayerDialog(playerid, DIALOG_ITEM_ACTION, DIALOG_STYLE_LIST, "Item: Snack", 
-					"Use Item\nGive Item", "Select", "Back");
+					"Use\nGive\nDrop", "Select", "Back");
 				return 1;
 			}
 			count++;
@@ -14712,7 +13641,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 				format(itemName, sizeof(itemName), "sprunk");
 				SetPVarString(playerid, "SelectedItem", itemName);
 				ShowPlayerDialog(playerid, DIALOG_ITEM_ACTION, DIALOG_STYLE_LIST, "Item: Sprunk", 
-					"Use Item\nGive Item", "Select", "Back");
+					"Use\nGive\nDrop", "Select", "Back");
 				return 1;
 			}
 			count++;
@@ -14724,7 +13653,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 				format(itemName, sizeof(itemName), "medicine");
 				SetPVarString(playerid, "SelectedItem", itemName);
 				ShowPlayerDialog(playerid, DIALOG_ITEM_ACTION, DIALOG_STYLE_LIST, "Item: Medicine", 
-					"Use Item\nGive Item", "Select", "Back");
+					"Use\nGive\nDrop", "Select", "Back");
 				return 1;
 			}
 			count++;
@@ -14739,7 +13668,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 				format(itemName, sizeof(itemName), "gas");
 				SetPVarString(playerid, "SelectedItem", itemName);
 				ShowPlayerDialog(playerid, DIALOG_ITEM_ACTION, DIALOG_STYLE_LIST, "Item: Gas", 
-					"Use Item", "Select", "Back");
+					"Use\nGive\nDrop", "Select", "Back");
 				return 1;
 			}
 			count++;
@@ -14779,7 +13708,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 				format(itemName, sizeof(itemName), "obat");
 				SetPVarString(playerid, "SelectedItem", itemName);
 				ShowPlayerDialog(playerid, DIALOG_ITEM_ACTION, DIALOG_STYLE_LIST, "Item: Obat", 
-					"Use Item\nGive Item", "Select", "Back");
+					"Use\nGive\nDrop", "Select", "Back");
 				return 1;
 			}
 			count++;
@@ -14791,15 +13720,38 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 				format(itemName, sizeof(itemName), "marijuana");
 				SetPVarString(playerid, "SelectedItem", itemName);
 				ShowPlayerDialog(playerid, DIALOG_ITEM_ACTION, DIALOG_STYLE_LIST, "Item: Marijuana", 
-					"Use Item\nGive Item", "Select", "Back");
+					"Use\nGive\nDrop", "Select", "Back");
 				return 1;
 			}
 			count++;
 		}
-		
+		// HANDLING WEAPONS - Loop through all weapon slots
+		new weaponid, ammo;
+		for(new i = 0; i < 13; i++)
+		{
+			GetPlayerWeaponData(playerid, i, weaponid, ammo);
+			if(weaponid > 0)
+			{
+				if(listitem == count)
+				{
+					// Simpan weapon data ke PVar
+					SetPVarInt(playerid, "SelectedWeaponID", weaponid);
+					SetPVarInt(playerid, "SelectedWeaponSlot", i);
+					SetPVarInt(playerid, "SelectedWeaponAmmo", ammo);
+					format(itemName, sizeof(itemName), "weapon_%d", weaponid);
+					SetPVarString(playerid, "SelectedItem", itemName);
+					
+					new dialogTitle[64];
+					format(dialogTitle, sizeof(dialogTitle), "Weapon: %s", ReturnWeaponName(weaponid));
+					ShowPlayerDialog(playerid, DIALOG_ITEM_ACTION, DIALOG_STYLE_LIST, dialogTitle, 
+						"Give\nDrop", "Select", "Back");
+					return 1;
+				}
+				count++;
+			}
+		}
 		return 1;
 	}
-	
 	if(dialogid == DIALOG_ITEM_ACTION)
 	{
 		if(!response) return DisplayItems(playerid, playerid);
@@ -14807,133 +13759,232 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 		new itemName[32];
 		GetPVarString(playerid, "SelectedItem", itemName, sizeof(itemName));
 		
-		if(listitem == 0) // Use Item
+		// Check if it's a weapon
+		new bool:isWeapon = false;
+		if(strfind(itemName, "weapon_", true) == 0)
+			isWeapon = true;
+		
+		// Tentukan capability setiap item
+		new bool:canUse = false;
+		new bool:canGive = false;
+		new bool:canDrop = true;
+		
+		// Weapon hanya bisa give dan drop (tidak bisa use karena sudah equipped)
+		if(isWeapon)
 		{
-			if(strcmp(itemName, "bandage", true) == 0) 
+			canUse = false;
+			canGive = true;
+			canDrop = true;
+		}
+		
+		// Items yang bisa di-use dan di-give
+		if(strcmp(itemName, "bandage", true) == 0 || strcmp(itemName, "snack", true) == 0 || 
+		strcmp(itemName, "sprunk", true) == 0 || strcmp(itemName, "medicine", true) == 0 ||
+		strcmp(itemName, "obat", true) == 0 || strcmp(itemName, "marijuana", true) == 0)
+		{
+			canUse = true;
+			canGive = true;
+		}
+		
+		// Gas hanya bisa di-use dan drop
+		if(strcmp(itemName, "gas", true) == 0)
+		{
+			canUse = true;
+			canGive = false;
+		}
+		
+		// Material, Component, Red Money hanya bisa give dan drop
+		if(strcmp(itemName, "material", true) == 0 || strcmp(itemName, "component", true) == 0 ||
+		strcmp(itemName, "redmoney", true) == 0)
+		{
+			canUse = false;
+			canGive = true;
+		}
+		
+		// Hitung index action berdasarkan capability
+		new actionIndex = 0;
+		
+		// USE ITEM
+		if(canUse) 
+		{
+			if(listitem == actionIndex)
 			{
-				if(pData[playerid][pBandage] < 1)
-					return Error(playerid, "You do not have bandage.");
-				
-				new Float:darah;
-				GetPlayerHealth(playerid, darah);
-				pData[playerid][pBandage]--;
-				SetPlayerHealthEx(playerid, darah+15);
-				Info(playerid, "You have successfully used bandage.");
-				InfoTD_MSG(playerid, 3000, "Restore +15 Health");
-			}
-			else if(strcmp(itemName, "snack", true) == 0) 
-			{
-				if(pData[playerid][pSnack] < 1)
-					return Error(playerid, "You do not have snack.");
-				
-				pData[playerid][pSnack]--;
-				pData[playerid][pHunger] += 15;
-				Info(playerid, "You have successfully used snack.");
-				InfoTD_MSG(playerid, 3000, "Restore +15 Hunger");
-				ApplyAnimation(playerid,"SMOKING","M_smkstnd_loop",2.1,0,0,0,0,0);
-			}
-			else if(strcmp(itemName, "sprunk", true) == 0) 
-			{
-				if(pData[playerid][pSprunk] < 1)
-					return Error(playerid, "You do not have sprunk.");
-				
-				pData[playerid][pSprunk]--;
-				pData[playerid][pEnergy] += 15;
-				Info(playerid, "You have successfully drunk sprunk.");
-				InfoTD_MSG(playerid, 3000, "Restore +15 Energy");
-				ApplyAnimation(playerid,"SMOKING","M_smkstnd_loop",2.1,0,0,0,0,0);
-			}
-			else if(strcmp(itemName, "gas", true) == 0) 
-			{
-				if(pData[playerid][pGas] < 1)
-					return Error(playerid, "You do not have gas.");
-					
-				if(IsPlayerInAnyVehicle(playerid))
-					return Error(playerid, "You must be outside the vehicle!");
-				
-				if(pData[playerid][pActivityTime] > 5) return Error(playerid, "You still have an activity progress!");
-				
-				new vehicleid = GetNearestVehicleToPlayer(playerid, 3.5, false);
-				if(IsValidVehicle(vehicleid))
+				if(strcmp(itemName, "bandage", true) == 0) 
 				{
-					new fuel = GetVehicleFuel(vehicleid);
-				
-					if(GetEngineStatus(vehicleid))
-						return Error(playerid, "Turn off vehicle engine.");
-				
-					if(fuel >= 999.0)
-						return Error(playerid, "This vehicle gas is full.");
-				
-					if(!IsEngineVehicle(vehicleid))
-						return Error(playerid, "This vehicle can't be refull.");
-
-					if(!GetHoodStatus(vehicleid))
-						return Error(playerid, "The hood must be opened before refull the vehicle.");
-
-					pData[playerid][pGas]--;
-					Info(playerid, "Don't move from your position or you will failed to refulling this vehicle.");
-					ApplyAnimation(playerid, "BD_FIRE", "wash_up", 4.1, 0, 0, 0, 0, 0, 1);
-					pData[playerid][pActivityStatus] = 1;
-					pData[playerid][pActivity] = SetTimerEx("RefullCar", 1000, true, "id", playerid, vehicleid);
-					PlayerTextDrawSetString(playerid, ActiveTD[playerid], "Refulling...");
-					PlayerTextDrawShow(playerid, ActiveTD[playerid]);
-					ShowPlayerProgressBar(playerid, pData[playerid][activitybar]);
-					return 1;
+					if(pData[playerid][pBandage] < 1)
+						return Error(playerid, "You do not have bandage.");
+					
+					new Float:darah;
+					GetPlayerHealth(playerid, darah);
+					pData[playerid][pBandage]--;
+					SetPlayerHealthEx(playerid, darah+15);
+					Info(playerid, "You have successfully used bandage.");
+					InfoTD_MSG(playerid, 3000, "Restore +15 Health");
+					ApplyAnimation(playerid, "BOMBER", "BOM_Plant", 4.1, 0, 0, 0, 0, 0);
 				}
+				else if(strcmp(itemName, "snack", true) == 0) 
+				{
+					if(pData[playerid][pSnack] < 1)
+						return Error(playerid, "You do not have snack.");
+					
+					pData[playerid][pSnack]--;
+					pData[playerid][pHunger] += 15;
+					Info(playerid, "You have successfully used snack.");
+					InfoTD_MSG(playerid, 3000, "Restore +15 Hunger");
+					ApplyAnimation(playerid,"SMOKING","M_smkstnd_loop",2.1,0,0,0,0,0);
+				}
+				else if(strcmp(itemName, "sprunk", true) == 0) 
+				{
+					if(pData[playerid][pSprunk] < 1)
+						return Error(playerid, "You do not have sprunk.");
+					
+					pData[playerid][pSprunk]--;
+					pData[playerid][pEnergy] += 15;
+					Info(playerid, "You have successfully drunk sprunk.");
+					InfoTD_MSG(playerid, 3000, "Restore +15 Energy");
+					ApplyAnimation(playerid,"SMOKING","M_smkstnd_loop",2.1,0,0,0,0,0);
+				}
+				else if(strcmp(itemName, "gas", true) == 0) 
+				{
+					if(pData[playerid][pGas] < 1)
+						return Error(playerid, "You do not have gas.");
+						
+					if(IsPlayerInAnyVehicle(playerid))
+						return Error(playerid, "You must be outside the vehicle!");
+					
+					if(pData[playerid][pActivityTime] > 5) 
+						return Error(playerid, "You still have an activity progress!");
+					
+					new vehicleid = GetNearestVehicleToPlayer(playerid, 3.5, false);
+					if(IsValidVehicle(vehicleid))
+					{
+						new fuel = GetVehicleFuel(vehicleid);
+					
+						if(GetEngineStatus(vehicleid))
+							return Error(playerid, "Turn off vehicle engine.");
+					
+						if(fuel >= 999.0)
+							return Error(playerid, "This vehicle gas is full.");
+					
+						if(!IsEngineVehicle(vehicleid))
+							return Error(playerid, "This vehicle can't be refull.");
+
+						if(!GetHoodStatus(vehicleid))
+							return Error(playerid, "The hood must be opened before refull the vehicle.");
+
+						pData[playerid][pGas]--;
+						Info(playerid, "Don't move from your position or you will failed to refulling this vehicle.");
+						ApplyAnimation(playerid, "BD_FIRE", "wash_up", 4.1, 0, 0, 0, 0, 0, 1);
+						pData[playerid][pActivityStatus] = 1;
+						pData[playerid][pActivity] = SetTimerEx("RefullCar", 1000, true, "id", playerid, vehicleid);
+						PlayerTextDrawSetString(playerid, ActiveTD[playerid], "Refulling...");
+						PlayerTextDrawShow(playerid, ActiveTD[playerid]);
+						ShowPlayerProgressBar(playerid, pData[playerid][activitybar]);
+						return 1;
+					}
+					else return Error(playerid, "No vehicle nearby!");
+				}
+				else if(strcmp(itemName, "medicine", true) == 0) 
+				{
+					if(pData[playerid][pMedicine] < 1)
+						return Error(playerid, "You do not have medicine.");
+					
+					pData[playerid][pMedicine]--;
+					pData[playerid][pSick] = 0;
+					pData[playerid][pSickTime] = 0;
+					SetPlayerDrunkLevel(playerid, 0);
+					Info(playerid, "You have used medicine.");
+					InfoTD_MSG(playerid, 3000, "Healed from sickness");
+					ApplyAnimation(playerid,"SMOKING","M_smkstnd_loop",2.1,0,0,0,0,0);
+				}
+				else if(strcmp(itemName, "obat", true) == 0) 
+				{
+					if(pData[playerid][pObat] < 1)
+						return Error(playerid, "You do not have Myricous Medicine.");
+					
+					pData[playerid][pObat]--;
+					pData[playerid][pSick] = 0;
+					pData[playerid][pSickTime] = 0;
+					pData[playerid][pHead] = 100;
+					pData[playerid][pPerut] = 100;
+					pData[playerid][pRHand] = 100;
+					pData[playerid][pLHand] = 100;
+					pData[playerid][pRFoot] = 100;
+					pData[playerid][pLFoot] = 100;
+					SetPlayerDrunkLevel(playerid, 0);
+					Info(playerid, "You have used Myricous Medicine.");
+					InfoTD_MSG(playerid, 3000, "All body parts healed!");
+					ApplyAnimation(playerid,"SMOKING","M_smkstnd_loop",2.1,0,0,0,0,0);
+				}
+				else if(strcmp(itemName, "marijuana", true) == 0) 
+				{
+					if(pData[playerid][pMarijuana] < 1)
+						return Error(playerid, "You dont have marijuana.");
+					
+					new Float:armor;
+					GetPlayerArmour(playerid, armor);
+					if(armor+10 > 90) 
+						return Error(playerid, "Over dosis!");
+					
+					pData[playerid][pMarijuana]--;
+					SetPlayerArmourEx(playerid, armor+10);
+					SetPlayerDrunkLevel(playerid, 4000);
+					Info(playerid, "You have used marijuana.");
+					InfoTD_MSG(playerid, 3000, "Armor +10");
+					ApplyAnimation(playerid,"SMOKING","M_smkstnd_loop",2.1,0,0,0,0,0);
+				}
+				return 1;
 			}
-			else if(strcmp(itemName, "medicine", true) == 0) 
-			{
-				if(pData[playerid][pMedicine] < 1)
-					return Error(playerid, "You do not have medicine.");
-				
-				pData[playerid][pMedicine]--;
-				pData[playerid][pSick] = 0;
-				pData[playerid][pSickTime] = 0;
-				SetPlayerDrunkLevel(playerid, 0);
-				Info(playerid, "You have used medicine.");
-				ApplyAnimation(playerid,"SMOKING","M_smkstnd_loop",2.1,0,0,0,0,0);
-			}
-			else if(strcmp(itemName, "obat", true) == 0) 
-			{
-				if(pData[playerid][pObat] < 1)
-					return Error(playerid, "You do not have Myricous Medicine.");
-				
-				pData[playerid][pObat]--;
-				pData[playerid][pSick] = 0;
-				pData[playerid][pSickTime] = 0;
-				pData[playerid][pHead] = 100;
-				pData[playerid][pPerut] = 100;
-				pData[playerid][pRHand] = 100;
-				pData[playerid][pLHand] = 100;
-				pData[playerid][pRFoot] = 100;
-				pData[playerid][pLFoot] = 100;
-				SetPlayerDrunkLevel(playerid, 0);
-				Info(playerid, "You have used Myricous Medicine.");
-				ApplyAnimation(playerid,"SMOKING","M_smkstnd_loop",2.1,0,0,0,0,0);
-			}
-			else if(strcmp(itemName, "marijuana", true) == 0) 
-			{
-				if(pData[playerid][pMarijuana] < 1)
-					return Error(playerid, "You dont have marijuana.");
-				
-				new Float:armor;
-				GetPlayerArmour(playerid, armor);
-				if(armor+10 > 90) return Error(playerid, "Over dosis!");
-				
-				pData[playerid][pMarijuana]--;
-				SetPlayerArmourEx(playerid, armor+10);
-				SetPlayerDrunkLevel(playerid, 4000);
-				ApplyAnimation(playerid,"SMOKING","M_smkstnd_loop",2.1,0,0,0,0,0);
-			}
+			actionIndex++;
 		}
-		else if(listitem == 1) // Give Item
+		
+		// GIVE ITEM
+		if(canGive)
 		{
-			ShowPlayerDialog(playerid, DIALOG_ITEM_GIVE_PLAYER, DIALOG_STYLE_INPUT, "Give Item", 
-				"Masukkan ID player yang ingin diberi item:", "Give", "Cancel");
+			if(listitem == actionIndex)
+			{
+				new dialogTitle[64];
+				if(isWeapon)
+				{
+					new weaponid = GetPVarInt(playerid, "SelectedWeaponID");
+					format(dialogTitle, sizeof(dialogTitle), "Give Weapon: %s", ReturnWeaponName(weaponid));
+				}
+				else
+				{
+					format(dialogTitle, sizeof(dialogTitle), "Give Item");
+				}
+				
+				ShowPlayerDialog(playerid, DIALOG_ITEM_GIVE_PLAYER, DIALOG_STYLE_INPUT, dialogTitle, 
+					"Masukkan ID player yang ingin diberi item:", "Give", "Cancel");
+				return 1;
+			}
+			actionIndex++;
 		}
+		
+		// DROP ITEM
+		if(canDrop)
+		{
+			if(listitem == actionIndex)
+			{
+				new dialogTitle[64];
+				if(isWeapon)
+				{
+					new weaponid = GetPVarInt(playerid, "SelectedWeaponID");
+					format(dialogTitle, sizeof(dialogTitle), "Drop Weapon: %s", ReturnWeaponName(weaponid));
+					ShowPlayerDialog(playerid, DIALOG_ITEM_DROP_AMOUNT, DIALOG_STYLE_INPUT, dialogTitle, 
+						"Masukkan jumlah ammo yang ingin di-drop (atau 0 untuk drop semua):", "Drop", "Cancel");
+				}
+				else
+				{
+					ShowPlayerDialog(playerid, DIALOG_ITEM_DROP_AMOUNT, DIALOG_STYLE_INPUT, "Drop Item", 
+						"Masukkan jumlah item yang ingin di-drop:", "Drop", "Cancel");
+				}
+				return 1;
+			}
+		}
+		
 		return 1;
 	}
-	
 	if(dialogid == DIALOG_ITEM_GIVE_PLAYER)
 	{
 		if(!response) return DisplayItems(playerid, playerid);
@@ -14972,6 +14023,41 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 		GetPVarString(playerid, "SelectedItem", itemName, sizeof(itemName));
 		targetid = GetPVarInt(playerid, "GiveItemTarget");
 		
+		// Check if it's a weapon
+		if(strfind(itemName, "weapon_", true) == 0)
+		{
+			new weaponid = GetPVarInt(playerid, "SelectedWeaponID");
+			//new weaponslot = GetPVarInt(playerid, "SelectedWeaponSlot");
+			new currentAmmo = GetPVarInt(playerid, "SelectedWeaponAmmo");
+			
+			if(amount < 1 || amount > currentAmmo)
+			{
+				Error(playerid, "Invalid ammo amount! (1-%d)", currentAmmo);
+				return DisplayItems(playerid, playerid);
+			}
+			
+			// Give weapon dengan ammo yang ditentukan
+			GivePlayerWeaponEx(targetid, weaponid, amount);
+			
+			// Kurangi atau hapus weapon dari pemberi
+			if(amount >= currentAmmo)
+			{
+				// Drop semua ammo, hapus weapon
+				RemovePlayerWeapon(playerid, weaponid);
+			}
+			else
+			{
+				// Kurangi ammo
+				SetPlayerAmmo(playerid, weaponid, currentAmmo - amount);
+			}
+			
+			Info(playerid, "Anda telah memberikan %s (%d ammo) kepada %s.", ReturnWeaponName(weaponid), amount, ReturnName(targetid));
+			Info(targetid, "%s telah memberikan %s (%d ammo) kepada anda.", ReturnName(playerid), ReturnWeaponName(weaponid), amount);
+			ApplyAnimation(playerid, "DEALER", "shop_pay", 4.0, 0, 0, 0, 0, 0);
+			ApplyAnimation(targetid, "DEALER", "shop_pay", 4.0, 0, 0, 0, 0, 0);
+			
+			return 1;
+		}
 		// Langsung proses give item
 		if(strcmp(itemName, "bandage", true) == 0) 
 		{
@@ -15085,6 +14171,123 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			ApplyAnimation(playerid, "DEALER", "shop_pay", 4.0, 0, 0, 0, 0, 0);
 			ApplyAnimation(targetid, "DEALER", "shop_pay", 4.0, 0, 0, 0, 0, 0);
 		}
+		
+		return 1;
+	}
+	// Dialog untuk input amount yang akan di-drop
+	if(dialogid == DIALOG_ITEM_DROP_AMOUNT)
+	{
+		if(!response) return DisplayItems(playerid, playerid);
+		
+		new amount;
+		if(sscanf(inputtext, "d", amount))
+			return ShowPlayerDialog(playerid, DIALOG_ITEM_DROP_AMOUNT, DIALOG_STYLE_INPUT, "Drop Item", 
+				"{FF0000}Error: Invalid amount!\n{FFFFFF}Masukkan jumlah item yang ingin di-drop:", "Drop", "Cancel");
+		
+		if(amount < 1 || amount > 500)
+			return ShowPlayerDialog(playerid, DIALOG_ITEM_DROP_AMOUNT, DIALOG_STYLE_INPUT, "Drop Item", 
+				"{FF0000}Error: Amount must be between 1 and 500!\n{FFFFFF}Masukkan jumlah item yang ingin di-drop:", "Drop", "Cancel");
+		
+		new itemName[32];
+		GetPVarString(playerid, "SelectedItem", itemName, sizeof(itemName));
+		
+		// Check if it's a weapon
+		if(strfind(itemName, "weapon_", true) == 0)
+		{
+			new weaponid = GetPVarInt(playerid, "SelectedWeaponID");
+			new currentAmmo = GetPVarInt(playerid, "SelectedWeaponAmmo");
+			
+			// Jika amount 0, drop semua
+			if(amount == 0)
+				amount = currentAmmo;
+			
+			if(amount < 1 || amount > currentAmmo)
+			{
+				Error(playerid, "Invalid ammo amount! (0-%d, 0=all)", currentAmmo);
+				return DisplayItems(playerid, playerid);
+			}
+			
+			// Drop weapon
+			new Float:x, Float:y, Float:z, Float:a;
+			GetPlayerPos(playerid, x, y, z);
+			GetPlayerFacingAngle(playerid, a);
+			
+			// Hitung posisi drop di depan player
+			x += (1.0 * floatsin(-a, degrees));
+			y += (1.0 * floatcos(-a, degrees));
+			
+			// Create dropped weapon (sesuaikan dengan sistem drop weapon Anda)
+			CreateDroppedWeapon(weaponid, amount, x, y, z, GetPlayerInterior(playerid), GetPlayerVirtualWorld(playerid));
+			
+			// Kurangi atau hapus weapon dari player
+			if(amount >= currentAmmo)
+			{
+				RemovePlayerWeapon(playerid, weaponid);
+				Info(playerid, "You dropped %s with %d ammo on the ground.", ReturnWeaponName(weaponid), amount);
+			}
+			else
+			{
+				SetPlayerAmmo(playerid, weaponid, currentAmmo - amount);
+				Info(playerid, "You dropped %d ammo for %s on the ground.", amount, ReturnWeaponName(weaponid));
+			}
+			
+			ApplyAnimation(playerid, "GRENADE", "WEAPON_throwu", 4.1, 0, 0, 0, 0, 0);
+			return 1;
+		}
+		// Check dan kurangi inventory
+		new bool:valid = false;
+		
+		if(strcmp(itemName, "bandage", true) == 0 && pData[playerid][pBandage] >= amount) {
+			pData[playerid][pBandage] -= amount;
+			valid = true;
+		}
+		else if(strcmp(itemName, "medicine", true) == 0 && pData[playerid][pMedicine] >= amount) {
+			pData[playerid][pMedicine] -= amount;
+			valid = true;
+		}
+		else if(strcmp(itemName, "snack", true) == 0 && pData[playerid][pSnack] >= amount) {
+			pData[playerid][pSnack] -= amount;
+			valid = true;
+		}
+		else if(strcmp(itemName, "sprunk", true) == 0 && pData[playerid][pSprunk] >= amount) {
+			pData[playerid][pSprunk] -= amount;
+			valid = true;
+		}
+		else if(strcmp(itemName, "redmoney", true) == 0 && pData[playerid][pRedMoney] >= amount) {
+			pData[playerid][pRedMoney] -= amount;
+			valid = true;
+		}
+		else if(strcmp(itemName, "material", true) == 0 && pData[playerid][pMaterial] >= amount) {
+			pData[playerid][pMaterial] -= amount;
+			valid = true;
+		}
+		else if(strcmp(itemName, "component", true) == 0 && pData[playerid][pComponent] >= amount) {
+			pData[playerid][pComponent] -= amount;
+			valid = true;
+		}
+		else if(strcmp(itemName, "marijuana", true) == 0 && pData[playerid][pMarijuana] >= amount) {
+			pData[playerid][pMarijuana] -= amount;
+			valid = true;
+		}
+		else if(strcmp(itemName, "obat", true) == 0 && pData[playerid][pObat] >= amount) {
+			pData[playerid][pObat] -= amount;
+			valid = true;
+		}
+		else if(strcmp(itemName, "gas", true) == 0 && pData[playerid][pGas] >= amount) {
+			pData[playerid][pGas] -= amount;
+			valid = true;
+		}
+		
+		if(!valid)
+			return Error(playerid, "You don't have enough %s!", GetItemDisplayName(itemName));
+		
+		// Drop item
+		new Float:x, Float:y, Float:z;
+		GetPlayerPos(playerid, x, y, z);
+		CreateDroppedItem(itemName, amount, x, y, z, GetPlayerInterior(playerid), GetPlayerVirtualWorld(playerid), true);
+		
+		ApplyAnimation(playerid, "GRENADE", "WEAPON_throwu", 4.1, 0, 0, 0, 0, 0);
+		Info(playerid, "You dropped %d %s on the ground.", amount, GetItemDisplayName(itemName));
 		
 		return 1;
 	}
@@ -16335,7 +15538,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					if(GetRestockBisnis() <= 0) return Error(playerid, "Mission sedang kosong.");
 					new id, count = GetRestockBisnis(), mission[400], type[32], lstr[512];
 					
-					strcat(mission,"No\tBusID\tBusType\tBusName\n",sizeof(mission));
+					strcat(mission,"No\tBusiness ID\tBusiness Type\tBusiness Name\n",sizeof(mission));
 					Loop(itt, (count + 1), 1)
 					{
 						id = ReturnRestockBisnisID(itt);
@@ -16353,7 +15556,11 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 						}
 						else if(bData[id][bType] == 4)
 						{
-							type= "Ammunation";
+							type= "Equipment";
+						}
+						else if(bData[id][bType] == 5)
+						{
+							type= "Electronics";
 						}
 						else
 						{
@@ -17226,34 +16433,35 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			}
 			case 2:
 			{
-				if(IsValidVehicle(pvData[vid][cVeh]))
+				// Cek kondisi khusus dulu sebelum cek IsValidVehicle
+				if(pvData[vid][cClaim] != 0)
+				{
+					Info(playerid, "Kendaraan kamu di kantor insurance!");
+				}
+				else if(pvData[vid][cStolen] != 0)
+				{
+					Info(playerid, "Kendaraan kamu rusak, kamu bisa memperbaikinya di kantor insurance!");
+				}
+				else if(pvData[vid][cPark] > 0) // Cek public parking
+				{
+					SetPlayerRaceCheckpoint(playerid, 1, pvData[vid][cPosX], pvData[vid][cPosY], pvData[vid][cPosZ], 0.0, 0.0, 0.0, 3.5);
+					pData[playerid][pTrackCar] = 1;
+					Info(playerid, "Ikuti checkpoint untuk menemukan kendaraan yang ada di dalam Public Parking!");
+				}
+				else if(IsValidVehicle(pvData[vid][cVeh])) // Kendaraan spawned
 				{
 					new palid = pvData[vid][cVeh];
-					new
-			        	Float:x,
-			        	Float:y,
-			        	Float:z;
+					new Float:x, Float:y, Float:z;
 
 					pData[playerid][pTrackCar] = 1;
 					GetVehiclePos(palid, x, y, z);
 					SetPlayerRaceCheckpoint(playerid, 1, x, y, z, 0.0, 0.0, 0.0, 3.5);
 					Info(playerid, "Ikuti checkpoint untuk menemukan kendaraan anda!");
 				}
-				else if(pvData[vid][cPark] > 0)
-				{
-					SetPlayerRaceCheckpoint(playerid, 1, pvData[vid][cPosX], pvData[vid][cPosY], pvData[vid][cPosZ], 0.0, 0.0, 0.0, 3.5);
-					Info(playerid, "Ikuti checkpoint untuk menemukan kendaraan yang ada di dalam Public parking!");
-				}
-				else if(pvData[vid][cClaim] != 0)
-				{
-					Info(playerid, "Kendaraan kamu di kantor insurance!");
-				}
-				else if(pvData[vid][cStolen] != 0)
-				{
-					Info(playerid, "Kendaraan kamu di rusak kamu bisa memperbaikinya di kantor insurance!");
-				}
 				else
-					return Error(playerid, "Kendaraanmu belum di spawn!");
+				{
+					Error(playerid, "Kendaraanmu belum di spawn! Gunakan /mypv untuk spawn kendaraan.");
+				}
 			}
 			case 3:
 			{

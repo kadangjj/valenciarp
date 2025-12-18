@@ -77,7 +77,6 @@ CMD:opengate(playerid, params[])
 {
     if(GetPlayerState(playerid) == PLAYER_STATE_SPECTATING) return 0;
 
-    new tollCost = 500;
     for(new i = 0; i < BARRIER_COUNT; i++)
     {
         if(IsPlayerInRangeOfPoint(playerid, 40.0, BarrierInfo[i][brPos_X], BarrierInfo[i][brPos_Y], BarrierInfo[i][brPos_Z])) // jarak dinaikkan
@@ -91,20 +90,19 @@ CMD:opengate(playerid, params[])
                 return Error(playerid, "Pintu tol sudah terbuka.");
             }
 
-            // cek saldo (eToll prioritas, lalu uang tunai)
-            if(pData[playerid][pEToll] >= tollCost)
+            // cek apakah punya kartu eToll (unlimited pass)
+            if(pData[playerid][pEToll] == 1) // Punya kartu eToll
             {
-                pData[playerid][pEToll] -= tollCost;
-                Toll(playerid, "Kamu telah membayar tol menggunakan saldo eToll.");
+                //Toll(playerid, "Kamu telah melewati tol menggunakan kartu eToll.");
             }
-            else if(pData[playerid][pMoney] >= tollCost)
+            else if(pData[playerid][pMoney] >= 500) // Bayar cash
             {
-                pData[playerid][pMoney] -= tollCost;
-                Toll(playerid, "Kamu telah membayar tol menggunakan Uang tunai.");
+                pData[playerid][pMoney] -= 500;
+                //Toll(playerid, "Kamu telah membayar toll menggunakan uang tunai.");
             }
             else
             {
-                return Error(playerid, "Kamu tidak memiliki cukup uang tunai atau saldo eToll untuk membayar tol!");
+                return Error(playerid, "Kamu tidak memiliki kartu eToll atau uang tunai yang cukup!");
             }
 
             MoveDynamicObject(gBarrier[i], BarrierInfo[i][brPos_X], BarrierInfo[i][brPos_Y], BarrierInfo[i][brPos_Z] + 0.7, BARRIER_SPEED, 0.0, 0.0, BarrierInfo[i][brPos_A] + 180.0);

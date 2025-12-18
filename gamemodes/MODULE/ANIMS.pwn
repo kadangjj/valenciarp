@@ -185,14 +185,6 @@ CMD:handsup(playerid, params[])
 	return 1;
 }
 
-CMD:piss(playerid, params[])
-{
-    if (!AnimationCheck(playerid))
-	    return Error(playerid, "You can't perform animations at the moment.");
-
-	SetPlayerSpecialAction(playerid, 68);
-	return 1;
-}
 alias:animcmds("animhelp", "anims", "animation", "anim")
 CMD:animcmds(playerid, params[])
 {

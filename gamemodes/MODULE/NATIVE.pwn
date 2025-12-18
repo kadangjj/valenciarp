@@ -468,6 +468,7 @@ ResetVariables(playerid)
 	pData[playerid][CarryingLumber] = false;
 	pData[playerid][CarryingBox] = false;
 	pData[playerid][EditingTreeID] = -1;
+	pData[playerid][EditingKadoID] = -1;
 	pData[playerid][pNewsGuest] = INVALID_PLAYER_ID;
 	pData[playerid][pFindEms] = INVALID_PLAYER_ID;
 	pData[playerid][pCall] = INVALID_PLAYER_ID;
@@ -504,6 +505,8 @@ ResetVariables(playerid)
 	SetPVarInt(playerid, "GiveUptime", 0);
 	
 	ResetVariableTazer(playerid);
+	ResetTagLabel(playerid);
+
 	
 	//Toys
     pData[playerid][PurchasedToy] = false;

@@ -333,6 +333,64 @@ CMD:gototree(playerid, params[])
 	return 1;
 }
 
+CMD:tracktree(playerid, params[])
+{
+	if(pData[playerid][pJob] != 3 && pData[playerid][pJob2] != 3)
+		return Error(playerid, "You are not a lumberjack!");
+	
+	new count = 0;
+	new list[2048];
+	new Float:px, Float:py, Float:pz;
+	GetPlayerPos(playerid, px, py, pz);
+	
+	// Header
+	format(list, sizeof(list), "Tree ID\tStatus\tDistance\n");
+	
+	foreach(new i : Trees)
+	{
+		count++;
+		
+		new Float:distance = GetPlayerDistanceFromPoint(playerid, TreeData[i][treeX], TreeData[i][treeY], TreeData[i][treeZ]);
+		new status[64];
+		
+		// Cek apakah sedang ditebang
+		if(TreeData[i][treeGettingCut] == true)
+		{
+			format(status, sizeof(status), "{FFAA00}Being Cut");
+		}
+		// Cek apakah sedang respawn dengan countdown
+		else if(TreeData[i][treeSeconds] > 0)
+		{
+			new remainingTime = TreeData[i][treeSeconds];
+			new minutes = remainingTime / 60;
+			new seconds = remainingTime % 60;
+			
+			format(status, sizeof(status), "{FF0000}Respawn %02d:%02d", minutes, seconds);
+		}
+		// Tree ready (treeLumber akan di-set saat respawn selesai, tapi function Anda set ke 0)
+		// Jadi kita cek: jika treeSeconds == 0 dan tidak sedang di-cut = Ready
+		else if(TreeData[i][treeSeconds] == 0 && TreeData[i][treeGettingCut] == false)
+		{
+			format(status, sizeof(status), "{00FF00}Ready");
+		}
+		// Fallback
+		else
+		{
+			format(status, sizeof(status), "{FF0000}Not Ready");
+		}
+		
+		format(list, sizeof(list), "%s{FFFFFF}Tree #%d\t%s\t{00FFFF}%.1fm\n",
+			list, i, status, distance);
+	}
+	
+	if(count == 0)
+		return Error(playerid, "No trees available in the server.");
+	
+	ShowPlayerDialog(playerid, DIALOG_TRACKTREE, DIALOG_STYLE_TABLIST_HEADERS, "Track Tree", list, "Track", "Cancel");
+	
+	return 1;
+}
+
 CMD:lumber(playerid, params[])
 {
 	if(pData[playerid][pJob] == 3 || pData[playerid][pJob2] == 3)

@@ -305,41 +305,44 @@ new Float:HelmetPos[300][9] =
 CMD:sb(playerid, params[]) return callcmd::seatbelt(playerid, params);
 CMD:seatbelt(playerid, params[])
 {
-    if(IsPlayerInAnyVehicle(playerid) == 0) return Error(playerid, "You are not in vehicles.");
+    if(!IsPlayerInAnyVehicle(playerid))
+        return Error(playerid, "You are not in a vehicle.");
 
-    if(IsPlayerInAnyVehicle(playerid) == 1 && pData[playerid][pSeatBelt] == 0)
-	{
-        if(IsABike(GetPlayerVehicleID(playerid)) && pData[playerid][pHelmetOn] == 0)
-		{
+    new vehicleid = GetPlayerVehicleID(playerid);
+    new isBike = IsABike(vehicleid);
+
+    // Seatbelt/Hemlet OFF -> ON
+    if(pData[playerid][pSeatBelt] == 0)
+    {
+        if(isBike && pData[playerid][pHelmetOn] == 0)
+        {
             SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s takes out a helmet and puts it on.", ReturnName(playerid));
             pData[playerid][pHelmetOn] = 1;
-			GivePlayerHelmet(playerid);
+            GivePlayerHelmet(playerid);
         }
         else
-		{
-			SendClientMessage(playerid, COLOR_ARWIN, "VEHICLE: "WHITE_E"Seatbelt "LB_E"ON");
-			//SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s takes out a seatbelt and puts it on.", ReturnName(playerid));
+        {
+            SendClientMessage(playerid, COLOR_ARWIN, "VEHICLE:{FFFFFF} Seatbelt {FFFF00}ON");
             pData[playerid][pSeatBelt] = 1;
         }
     }
-    else if(IsPlayerInAnyVehicle(playerid) == 1 && pData[playerid][pSeatBelt] == 1)
-	{
-        if(IsABike(GetPlayerVehicleID(playerid)) && pData[playerid][pHelmetOn] == 1)
-		{
+    // Seatbelt/Helmet ON -> OFF
+    else
+    {
+        if(isBike && pData[playerid][pHelmetOn] == 1)
+        {
             pData[playerid][pHelmetOn] = 0;
             SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s takes their helmet off and puts it away.", ReturnName(playerid));
-			RemovePlayerAttachedObject(playerid, 9);
+            RemovePlayerAttachedObject(playerid, 9);
         }
         else
-		{
-			SendClientMessage(playerid, COLOR_ARWIN, "VEHICLE: "WHITE_E"Seatbelt "RED_E"OFF");
-			//SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s takes their seatbelt off and puts it away.", ReturnName(playerid));
+        {
+            SendClientMessage(playerid, COLOR_ARWIN, "VEHICLE:{FFFFFF} Seatbelt {FF0000}OFF");
             pData[playerid][pSeatBelt] = 0;
         }
     }
     return 1;
 }
-
 
 CMD:helmet(playerid)
 {

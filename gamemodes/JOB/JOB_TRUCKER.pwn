@@ -166,6 +166,102 @@ CMD:mission(playerid, params[])
 	return 1;
 }
 
+CMD:mymission(playerid, params[])
+{
+	//new vehicleid = GetPlayerVehicleID(playerid);
+	
+	// Check for Business Mission
+	if(pData[playerid][pMission] > -1)
+	{
+		new id = pData[playerid][pMission];
+		
+		//if(GetPlayerState(playerid) != PLAYER_STATE_DRIVER || !IsATruck(vehicleid))
+			//return Error(playerid, "You must be driving a truck to view mission info.");
+		
+		new line[900];
+		new type[128];
+		new Float:distance;
+		
+		if(bData[id][bType] == 1)
+		{
+			type = "Fast Food";
+		}
+		else if(bData[id][bType] == 2)
+		{
+			type = "Market";
+		}
+		else if(bData[id][bType] == 3)
+		{
+			type = "Clothes";
+		}
+		else if(bData[id][bType] == 4)
+		{
+			type = "Equipment";
+		}
+		else if(bData[id][bType] == 5)
+		{
+			type = "Electronics";
+		}
+		else
+		{
+			type = "Unknown";
+		}
+		
+		// Calculate distance to business location
+		distance = GetPlayerDistanceFromPoint(playerid, bData[id][bExtposX], bData[id][bExtposY], bData[id][bExtposZ]);
+		
+		format(line, sizeof(line), "{FFFFFF}Active Business Restock Mission:\n\n\
+		Business ID: {00FF00}%d\n\
+		{FFFFFF}Business Owner: {FFFF00}%s\n\
+		{FFFFFF}Business Name: {00FFFF}%s\n\
+		{FFFFFF}Business Type: {FF6347}%s\n\
+		{FFFFFF}Distance to Checkpoint: {00FF00}%.2f meters\n\n\
+		{FFFFFF}Follow the red checkpoint to complete your mission!\n\
+		{FFD700}Tip: {FFFFFF}Make sure you have purchased products from the warehouse first.",
+		id, bData[id][bOwner], bData[id][bName], type, distance);
+		
+		ShowPlayerDialog(playerid, DIALOG_UNUSED, DIALOG_STYLE_MSGBOX, "My Mission Info", line, "Close", "");
+		
+		// Re-set checkpoint to make sure it's visible
+		SetPlayerRaceCheckpoint(playerid, 1, bData[id][bExtposX], bData[id][bExtposY], bData[id][bExtposZ], 0.0, 0.0, 0.0, 3.5);
+		
+		return 1;
+	}
+	// Check for Gas Station Hauling
+	else if(pData[playerid][pHauling] > -1)
+	{
+		new id = pData[playerid][pHauling];
+		
+		//if(GetPlayerState(playerid) != PLAYER_STATE_DRIVER || !IsAHaulTruck(vehicleid))
+			//return Error(playerid, "You must be driving a hauling truck to view hauling info.");
+		
+		new line[900];
+		new Float:distance;
+		
+		// Calculate distance to gas station location
+		distance = GetPlayerDistanceFromPoint(playerid, gsData[id][gsPosX], gsData[id][gsPosY], gsData[id][gsPosZ]);
+		
+		format(line, sizeof(line), "{FFFFFF}Active Gas Station Hauling Mission:\n\n\
+		Gas Station ID: {00FF00}%d\n\
+		{FFFFFF}Location: {FFFF00}%s\n\
+		{FFFFFF}Distance to Checkpoint: {00FF00}%.2f meters\n\n\
+		{FFFFFF}Follow the red checkpoint and deliver the gas oil trailer!\n\
+		{FFD700}Tip: {FFFFFF}Make sure your trailer is attached to your truck.",
+		id, GetLocation(gsData[id][gsPosX], gsData[id][gsPosY], gsData[id][gsPosZ]), distance);
+		
+		ShowPlayerDialog(playerid, DIALOG_UNUSED, DIALOG_STYLE_MSGBOX, "My Hauling Info", line, "Close", "");
+		
+		// Re-set checkpoint to gas station location
+		SetPlayerRaceCheckpoint(playerid, 1, gsData[id][gsPosX], gsData[id][gsPosY], gsData[id][gsPosZ], 0.0, 0.0, 0.0, 3.5);
+		
+		return 1;
+	}
+	else
+	{
+		return Error(playerid, "You don't have an active mission or hauling job.");
+	}
+}
+
 CMD:storeproduct(playerid, params[])
 {
 	if(pData[playerid][pJob] == 4 || pData[playerid][pJob2] == 4)

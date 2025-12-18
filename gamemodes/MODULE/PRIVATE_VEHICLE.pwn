@@ -549,7 +549,6 @@ public LoadPlayerVehicle(playerid)
 			pvData[i][cTogNeon] = 0;
 			cache_get_value_name_int(z, "price", pvData[i][cPrice]);
 			cache_get_value_name_int(z, "model", pvData[i][cModel]);
-			cache_get_value_name_int(z, "name", pvData[i][cName]);
 			cache_get_value_name(z, "plate", tempString);
 			format(pvData[i][cPlate], 16, tempString);
 			cache_get_value_name_int(z, "plate_time", pvData[i][cPlateTime]);
@@ -584,6 +583,9 @@ public LoadPlayerVehicle(playerid)
 			cache_get_value_name_int(z, "park", pvData[i][cPark]);
 			cache_get_value_name_int(z, "broken", pvData[i][cStolen]);
 			cache_get_value_name_int(z, "trunk", pvData[i][cTrunk]);
+			// PERBAIKAN: gunakan cache_get_value_name untuk string, bukan cache_get_value_name_int
+			cache_get_value_name(z, "name", tempString, sizeof(tempString));
+			format(pvData[i][cName], 24, tempString);
 			/*for(new x = 0; x < 17; x++)
 			{
 				format(tempString, sizeof(tempString), "mod%d", x);
@@ -694,7 +696,7 @@ Vehicle_Save(vehicleid)
 	Vehicle_GetStatus(vehicleid);
 	// SaveVehicleDamage(vehicleid);
 	new cQuery[3000];
-	format(cQuery, sizeof(cQuery), "UPDATE vehicle SET locked='%d', insu='%d', claim='%d', claim_time='%d', x='%f', y='%f', z='%f', a='%f', health='%f', panels='%d', doors='%d', lights='%d', tires='%d', fuel='%d', interior='%d', vw='%d', damage0='%d', damage1='%d', damage2='%d', damage3='%d', color1='%d', color2='%d', paintjob='%d', neon='%d', price='%d', model='%d', plate='%d', plate_time='%d', ticket='%d', mod0='%d', mod1='%d', mod2='%d', mod3='%d', mod4='%d', mod5='%d', mod6='%d', mod7='%d', mod8='%d', mod9='%d', mod10='%d', mod11='%d', mod12='%d', mod13='%d', mod14='%d', mod15='%d', mod16='%d', lumber='%d', metal='%d', coal='%d', product='%d', gasoil='%d',component='%d',fish='%d', box='%d', rental='%d', park='%d', broken='%d', trunk='%d',name='%d' WHERE id='%d'",
+	format(cQuery, sizeof(cQuery), "UPDATE vehicle SET locked='%d', insu='%d', claim='%d', claim_time='%d', x='%f', y='%f', z='%f', a='%f', health='%f', panels='%d', doors='%d', lights='%d', tires='%d', fuel='%d', interior='%d', vw='%d', damage0='%d', damage1='%d', damage2='%d', damage3='%d', color1='%d', color2='%d', paintjob='%d', neon='%d', price='%d', model='%d', plate='%d', plate_time='%d', ticket='%d', mod0='%d', mod1='%d', mod2='%d', mod3='%d', mod4='%d', mod5='%d', mod6='%d', mod7='%d', mod8='%d', mod9='%d', mod10='%d', mod11='%d', mod12='%d', mod13='%d', mod14='%d', mod15='%d', mod16='%d', lumber='%d', metal='%d', coal='%d', product='%d', gasoil='%d',component='%d',fish='%d', box='%d', rental='%d', park='%d', broken='%d', trunk='%d',name='%s' WHERE id='%d'",
 
 		pvData[vehicleid][cLocked],
 		pvData[vehicleid][cInsu],
@@ -1826,7 +1828,6 @@ CMD:mypv(playerid, params[])
 CMD:engine(playerid, params[])
 {
 	new vehicleid = GetPlayerVehicleID(playerid);
-	new vid = Vehicle_GetID(vehicleid); // atau cara kamu get vehicle data ID
 	if(IsPlayerInAnyVehicle(playerid) && GetPlayerState(playerid) == PLAYER_STATE_DRIVER)
 	{	
 		if(!IsEngineVehicle(vehicleid))
@@ -1834,19 +1835,30 @@ CMD:engine(playerid, params[])
 		
 		if(GetEngineStatus(vehicleid))
 		{
+			InfoTD_MSG(playerid, 4000, "Engine Off...");
 			EngineStatus(playerid, vehicleid);
-			//UpdatePlayerData(playerid);
 		}
 		else
 		{
-			//Info(playerid, "Anda mencoba menyalakan mesin kendaraan..");
-			new msg[128]; // pastikan cukup besar untuk nama player + nama kendaraan
-			format(msg, sizeof(msg), "** %s has started %s's engine", ReturnName(playerid), pvData[vid][cName]);
+			// Cari ID private vehicle
+			new vid = Vehicle_Nearest2(playerid);
+			new msg[128];
+			
+			// Cek apakah ini private vehicle dengan custom name
+			if(vid != -1 && strcmp(pvData[vid][cName], "None") != 0)
+			{
+				// Jika kendaraan private dengan custom name
+				format(msg, sizeof(msg), "** %s is starting %s's engine", ReturnName(playerid), pvData[vid][cName]);
+			}
+			else
+			{
+				// Untuk semua kendaraan lainnya (private tanpa custom name, faction, dll)
+				format(msg, sizeof(msg), "** %s is starting the vehicle's engine", ReturnName(playerid));
+			}
+			
 			SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, msg);
-
 			InfoTD_MSG(playerid, 4000, "Start Engine...");
 			SetTimerEx("EngineStatus", 3000, false, "id", playerid, vehicleid);
-			//UpdatePlayerData(playerid);
 		}
 	}
 	else return Error(playerid, "Anda harus mengendarai kendaraan!");
@@ -2147,7 +2159,7 @@ CMD:unrentpv(playerid, params[])
 CMD:givepv(playerid, params[])
 {
 	new vehid, otherid;
-	if(sscanf(params, "ud", otherid, vehid)) return Usage(playerid, "/givepv [playerid/name] [vehid] | /v my(mypv) - for find vehid");
+	if(sscanf(params, "ud", otherid, vehid)) return Usage(playerid, "/givepv [playerid/name] [vehid] | /mypv - for find vehid");
 	if(vehid == INVALID_VEHICLE_ID) return Error(playerid, "Invalid id");
 
 	if(!IsPlayerConnected(otherid) || !NearPlayer(playerid, otherid, 4.0))
@@ -2232,20 +2244,6 @@ GetClosestCar(playerid, exception = INVALID_VEHICLE_ID)
         }
     }
     return target;
-}
-
-stock Vehicle_GetID(vehicleid)
-{
-    if(vehicleid == INVALID_VEHICLE_ID) return -1;
-    
-    for(new i = 0; i < MAX_VEHICLES; i++)
-    {
-        if(pvData[i][cVeh] == vehicleid) // cVeh = vehicleid yang di-create
-        {
-            return i;
-        }
-    }
-    return -1;
 }
 
 CMD:tow(playerid, params[]) 

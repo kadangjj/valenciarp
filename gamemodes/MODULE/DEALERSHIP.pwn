@@ -23,6 +23,144 @@ enum e_Dealer
     dType,
     dMapIcon,	
 };
+// Deklarasi array
+new DealerVehicleNames[7][11][32];
+new DealerVehicleModels[7][11];
+new DealerVehicleCount[7] = {0, 8, 10, 10, 7, 10, 10};
+
+// Function untuk initialize data
+stock InitializeDealerVehicles()
+{
+	// Type 1: WAA (8 vehicles)
+	format(DealerVehicleNames[1][0], 32, "Alpha");
+	format(DealerVehicleNames[1][1], 32, "Elegy");
+	format(DealerVehicleNames[1][2], 32, "Stratum");
+	format(DealerVehicleNames[1][3], 32, "Sultan");
+	format(DealerVehicleNames[1][4], 32, "Jester");
+	format(DealerVehicleNames[1][5], 32, "Flash");
+	format(DealerVehicleNames[1][6], 32, "Uranus");
+	format(DealerVehicleNames[1][7], 32, "Comet");
+	
+	DealerVehicleModels[1][0] = 602;
+	DealerVehicleModels[1][1] = 562;
+	DealerVehicleModels[1][2] = 561;
+	DealerVehicleModels[1][3] = 560;
+	DealerVehicleModels[1][4] = 559;
+	DealerVehicleModels[1][5] = 565;
+	DealerVehicleModels[1][6] = 558;
+	DealerVehicleModels[1][7] = 480;
+	
+	// Type 2: Transfender (10 vehicles)
+	format(DealerVehicleNames[2][0], 32, "Elegant");
+	format(DealerVehicleNames[2][1], 32, "Admiral");
+	format(DealerVehicleNames[2][2], 32, "Primo");
+	format(DealerVehicleNames[2][3], 32, "Regina");
+	format(DealerVehicleNames[2][4], 32, "Premier");
+	format(DealerVehicleNames[2][5], 32, "Sentinel");
+	format(DealerVehicleNames[2][6], 32, "Willard");
+	format(DealerVehicleNames[2][7], 32, "Solair");
+	format(DealerVehicleNames[2][8], 32, "Vincent");
+	format(DealerVehicleNames[2][9], 32, "Sunrise");
+	
+	DealerVehicleModels[2][0] = 507;
+	DealerVehicleModels[2][1] = 445;
+	DealerVehicleModels[2][2] = 479;
+	DealerVehicleModels[2][3] = 507;
+	DealerVehicleModels[2][4] = 426;
+	DealerVehicleModels[2][5] = 405;
+	DealerVehicleModels[2][6] = 529;
+	DealerVehicleModels[2][7] = 458;
+	DealerVehicleModels[2][8] = 540;
+	DealerVehicleModels[2][9] = 550;
+	
+	// Type 3: Locolow (10 vehicles)
+	format(DealerVehicleNames[3][0], 32, "Blade");
+	format(DealerVehicleNames[3][1], 32, "Broadway");
+	format(DealerVehicleNames[3][2], 32, "Remington");
+	format(DealerVehicleNames[3][3], 32, "Savanna");
+	format(DealerVehicleNames[3][4], 32, "Slamvan");
+	format(DealerVehicleNames[3][5], 32, "Tahoma");
+	format(DealerVehicleNames[3][6], 32, "Tornado");
+	format(DealerVehicleNames[3][7], 32, "Voodoo");
+	format(DealerVehicleNames[3][8], 32, "Burrito");
+	format(DealerVehicleNames[3][9], 32, "Pony");
+	
+	DealerVehicleModels[3][0] = 536;
+	DealerVehicleModels[3][1] = 575;
+	DealerVehicleModels[3][2] = 534;
+	DealerVehicleModels[3][3] = 567;
+	DealerVehicleModels[3][4] = 535;
+	DealerVehicleModels[3][5] = 566;
+	DealerVehicleModels[3][6] = 576;
+	DealerVehicleModels[3][7] = 412;
+	DealerVehicleModels[3][8] = 482;
+	DealerVehicleModels[3][9] = 413;
+	
+	// Type 4: Motorcycle (7 vehicles)
+	format(DealerVehicleNames[4][0], 32, "BF-400");
+	format(DealerVehicleNames[4][1], 32, "Faggio");
+	format(DealerVehicleNames[4][2], 32, "FCR-900");
+	format(DealerVehicleNames[4][3], 32, "Freeway");
+	format(DealerVehicleNames[4][4], 32, "PCJ-600");
+	format(DealerVehicleNames[4][5], 32, "Sanchez");
+	format(DealerVehicleNames[4][6], 32, "Wayfarer");
+	
+	DealerVehicleModels[4][0] = 581;
+	DealerVehicleModels[4][1] = 462;
+	DealerVehicleModels[4][2] = 521;
+	DealerVehicleModels[4][3] = 463;
+	DealerVehicleModels[4][4] = 461;
+	DealerVehicleModels[4][5] = 468;
+	DealerVehicleModels[4][6] = 586;
+	
+	// Type 5: Industrial (10 vehicles)
+
+	format(DealerVehicleNames[5][0], 32, "Linerunner");
+	format(DealerVehicleNames[5][1], 32, "Mule");
+	format(DealerVehicleNames[5][2], 32, "Flatbed");
+	format(DealerVehicleNames[5][3], 32, "Yankee");
+	format(DealerVehicleNames[5][4], 32, "Boxville");
+	format(DealerVehicleNames[5][5], 32, "Benson");
+	format(DealerVehicleNames[5][6], 32, "Roadtrain");
+	format(DealerVehicleNames[5][7], 32, "Tanker");
+	format(DealerVehicleNames[5][8], 32, "Mr Whoopee");
+	format(DealerVehicleNames[5][9], 32, "Hotdog");
+
+	DealerVehicleModels[5][0] = 403; // Linerunner
+	DealerVehicleModels[5][1] = 414; // Mule
+	DealerVehicleModels[5][2] = 455; // Flatbed
+	DealerVehicleModels[5][3] = 456; // Yankee
+	DealerVehicleModels[5][4] = 498; // Boxville
+	DealerVehicleModels[5][5] = 499; // Benson
+	DealerVehicleModels[5][6] = 515; // Roadtrain ✅
+	DealerVehicleModels[5][7] = 514; // Tanker ✅
+	DealerVehicleModels[5][8] = 588; // Mr Whoopee
+	DealerVehicleModels[5][9] = 588; // Hotdog (isi benar, jangan 0)
+
+	
+	// Type 6: Company (10 vehicles)
+	format(DealerVehicleNames[6][0], 32, "Cabbie");
+	format(DealerVehicleNames[6][1], 32, "Taxi");
+	format(DealerVehicleNames[6][2], 32, "Tow Truck");
+	format(DealerVehicleNames[6][3], 32, "Walton");
+	format(DealerVehicleNames[6][4], 32, "Sadler");
+	format(DealerVehicleNames[6][5], 32, "Pony");
+	format(DealerVehicleNames[6][6], 32, "Bobcat");
+	format(DealerVehicleNames[6][7], 32, "Yosemite");
+	format(DealerVehicleNames[6][8], 32, "Burrito");
+	format(DealerVehicleNames[6][9], 32, "Rumpo");
+	
+	DealerVehicleModels[6][0] = 438;
+	DealerVehicleModels[6][1] = 420;
+	DealerVehicleModels[6][2] = 525;
+	DealerVehicleModels[6][3] = 478;
+	DealerVehicleModels[6][4] = 543;
+	DealerVehicleModels[6][5] = 413;
+	DealerVehicleModels[6][6] = 422;
+	DealerVehicleModels[6][7] = 554;
+	DealerVehicleModels[6][8] = 482;
+	DealerVehicleModels[6][9] = 440;
+}
 
 new dsData[MAX_DEALER][e_Dealer],
 	Iterator:Dealer<MAX_DEALER>;
@@ -298,221 +436,51 @@ GetAnyDealer()
 	return tmpcount;
 }
 
+// Function untuk build dialog
 Dealer_BuyMenu(playerid, did)
 {
-	// did = pData[playerid][pInDealer];
-
-	if(did <= -1)
-		return 0;
-
-	static
-		string[512];
-
-	switch(dsData[did][dType])
+	if(did <= -1) return 0;
+	
+	new dtype = dsData[did][dType];
+	if(dtype < 1 || dtype > 6) return 0;
+	
+	new string[1024];
+	format(string, sizeof(string), "Vehicle Name\tPrice\n");
+	
+	for(new i = 0; i < DealerVehicleCount[dtype]; i++)
 	{
-		case 1: // WAA
-		{
-			format(string, sizeof(string), "Vehicle Name\tPrice\n{ffffff}Alpha{7fff00}\t$%s\n{ffffff}Elegy{7fff00}\t$%s\n{ffffff}Startum{7fff00}\t$%s\n{ffffff}Sultan{7fff00}\t$%s\n{ffffff}Jester{7fff00}\t$%s\n{ffffff}Flash{7fff00}\t$%s\n{ffffff}Uranus{7fff00}\t$%s\n{ffffff}Comet{7fff00}\t$%s\n",
-				FormatMoney(dsData[did][dVehicle][0]),
-				FormatMoney(dsData[did][dVehicle][1]),
-				FormatMoney(dsData[did][dVehicle][2]),
-				FormatMoney(dsData[did][dVehicle][3]),
-				FormatMoney(dsData[did][dVehicle][4]),
-				FormatMoney(dsData[did][dVehicle][5]),
-				FormatMoney(dsData[did][dVehicle][6]),
-				FormatMoney(dsData[did][dVehicle][7])
-			);
-			ShowPlayerDialog(playerid, DEALER_BUYPROD, DIALOG_STYLE_TABLIST_HEADERS, dsData[did][dName], string, "Buy", "Cancel");
-		}
-		case 2: // Transfender
-		{
-			format(string, sizeof(string), "Vehicle Name\tPrice\n{ffffff}Elegant{7fff00}\t$%s\n{ffffff}Admiral{7fff00}\t$%s\t$%s\n{ffffff}Regina{7fff00}\t$%s\n{ffffff}Premier{7fff00}\t$%s\n{ffffff}Sentinel{7fff00}\t$%s\n{ffffff}Willard{7fff00}\t$%s\n{ffffff}Solair{7fff00}\t$%s\n{ffffff}Vincent{7fff00}\t$%s\n{ffffff}Sunrise{7fff00}\t$%s\n",
-				FormatMoney(dsData[did][dVehicle][0]),
-				FormatMoney(dsData[did][dVehicle][1]),
-				FormatMoney(dsData[did][dVehicle][2]),
-				FormatMoney(dsData[did][dVehicle][3]),
-				FormatMoney(dsData[did][dVehicle][4]),
-				FormatMoney(dsData[did][dVehicle][5]),
-				FormatMoney(dsData[did][dVehicle][6]),
-				FormatMoney(dsData[did][dVehicle][7]),
-				FormatMoney(dsData[did][dVehicle][8]),
-				FormatMoney(dsData[did][dVehicle][9])
-			);
-			ShowPlayerDialog(playerid, DEALER_BUYPROD, DIALOG_STYLE_TABLIST_HEADERS, dsData[did][dName], string, "Buy", "Cancel");		
-		}
-		case 3: // Locolow
-		{
-			format(string, sizeof(string), "Vehicle Name\tPrice\n{ffffff}Blade{7fff00}\t$%s\n{ffffff}Broadway{7fff00}\t$%s\n{ffffff}Remington{7fff00}\t$%s\n{ffffff}Savanna{7fff00}\t$%s\n{ffffff}Slamvan{7fff00}\t$%s\n{ffffff}Tahoma{7fff00}\t$%s\n{ffffff}Tornado{7fff00}\t$%s\n{ffffff}Voodoo{7fff00}\t$%s\n{ffffff}Burrito{7fff00}\t$%s\n{ffffff}Pony{7fff00}\t$%s\n",
-				FormatMoney(dsData[did][dVehicle][0]),
-				FormatMoney(dsData[did][dVehicle][1]),
-				FormatMoney(dsData[did][dVehicle][2]),
-				FormatMoney(dsData[did][dVehicle][3]),
-				FormatMoney(dsData[did][dVehicle][4]),
-				FormatMoney(dsData[did][dVehicle][5]),
-				FormatMoney(dsData[did][dVehicle][6]),
-				FormatMoney(dsData[did][dVehicle][7]),
-				FormatMoney(dsData[did][dVehicle][8]),
-				FormatMoney(dsData[did][dVehicle][9])
-			);
-			ShowPlayerDialog(playerid, DEALER_BUYPROD, DIALOG_STYLE_TABLIST_HEADERS, dsData[did][dName], string, "Buy", "Cancel");
-		}
-		case 4: // Motorcycle
-		{
-			format(string, sizeof(string), "Vehicle Name\tPrice\n{ffffff}BF-400{7fff00}\t$%s\n{ffffff}Faggio{7fff00}\t$%s\n{ffffff}FCR-900{7fff00}\t$%s\n{ffffff}Freeway{7fff00}\t$%s\n{ffffff}PCJ-600{7fff00}\t$%s\n{ffffff}Sanchez{7fff00}\t$%s\n{ffffff}Wayfarer{7fff00}\t$%s\n",
-				FormatMoney(dsData[did][dVehicle][0]),
-				FormatMoney(dsData[did][dVehicle][1]),
-				FormatMoney(dsData[did][dVehicle][2]),
-				FormatMoney(dsData[did][dVehicle][3]),
-				FormatMoney(dsData[did][dVehicle][4]),
-				FormatMoney(dsData[did][dVehicle][5]),
-				FormatMoney(dsData[did][dVehicle][6]),
-				FormatMoney(dsData[did][dVehicle][7])
-			);
-			ShowPlayerDialog(playerid, DEALER_BUYPROD, DIALOG_STYLE_TABLIST_HEADERS, dsData[did][dName], string, "Buy", "Cancel");
-		}
-		case 5: // Industrial
-		{
-			format(string, sizeof(string), "Vehicle Name\tPrice\n{ffffff}Linerunner{7fff00}\t$%s\n{ffffff}Mule{7fff00}\t$%s\n{ffffff}Flatbed{7fff00}\t$%s\n{ffffff}Yankee{7fff00}\t$%s\n{ffffff}Boxville{7fff00}\t$%s\n{ffffff}Benson{7fff00}\t$%s\t$%s\n{ffffff}Roadtrain{7fff00}\t$%s\n{ffffff}Tanker{7fff00}\t$%s\n{ffffff}Mr Whoope{7fff00}\t$%s\n{ffffff}Hotdog{7fff00}\t$%s\n",
-				FormatMoney(dsData[did][dVehicle][0]),
-				FormatMoney(dsData[did][dVehicle][1]),
-				FormatMoney(dsData[did][dVehicle][2]),
-				FormatMoney(dsData[did][dVehicle][3]),
-				FormatMoney(dsData[did][dVehicle][4]),
-				FormatMoney(dsData[did][dVehicle][5]),
-				FormatMoney(dsData[did][dVehicle][6]),
-				FormatMoney(dsData[did][dVehicle][7]),
-				FormatMoney(dsData[did][dVehicle][8]),
-				FormatMoney(dsData[did][dVehicle][9]),
-				FormatMoney(dsData[did][dVehicle][10])
-			);
-			ShowPlayerDialog(playerid, DEALER_BUYPROD, DIALOG_STYLE_TABLIST_HEADERS, dsData[did][dName], string, "Buy", "Cancel");
-		}
-		case 6: // Company
-		{
-			format(string, sizeof(string), "Vehicle Name\tPrice\n{ffffff}Cabbie{7fff00}\t$%s\n{ffffff}Taxi{7fff00}\t$%s\n{ffffff}Tow Truck{7fff00}\t$%s\n{ffffff}Walton{7fff00}\t$%s\n{ffffff}Sadler{7fff00}\t$%s\n{ffffff}Pony{7fff00}\t$%s\n{ffffff}Bobcat{7fff00}\t$%s\n{ffffff}Yosemite{7fff00}\t$%s\n{ffffff}Burrito{7fff00}\t$%s\n{ffffff}Rumpo{7fff00}\t$%s",
-				FormatMoney(dsData[did][dVehicle][0]),
-				FormatMoney(dsData[did][dVehicle][1]),
-				FormatMoney(dsData[did][dVehicle][2]),
-				FormatMoney(dsData[did][dVehicle][3]),
-				FormatMoney(dsData[did][dVehicle][4]),
-				FormatMoney(dsData[did][dVehicle][5]),
-				FormatMoney(dsData[did][dVehicle][6]),
-				FormatMoney(dsData[did][dVehicle][7]),
-				FormatMoney(dsData[did][dVehicle][8]),
-				FormatMoney(dsData[did][dVehicle][9])
-			);
-			ShowPlayerDialog(playerid, DEALER_BUYPROD, DIALOG_STYLE_TABLIST_HEADERS, dsData[did][dName], string, "Buy", "Cancel");
-		}
+		format(string, sizeof(string), "%s{ffffff}%s{7fff00}\t$%s\n", 
+			string, 
+			DealerVehicleNames[dtype][i], 
+			FormatMoney(dsData[did][dVehicle][i])
+		);
 	}
+	
+	ShowPlayerDialog(playerid, DEALER_BUYPROD, DIALOG_STYLE_TABLIST_HEADERS, dsData[did][dName], string, "Buy", "Cancel");
 	return 1;
 }
 
+// Function untuk admin edit harga
 Dealer_ProductMenu(playerid, did)
 {
-	// did = pData[playerid][pInDealer];
-
-	if(did <= -1)
-		return 0;
-
-	static
-		string[5120];
-
-	switch(dsData[did][dType])
+	if(did <= -1) return 0;
+	
+	new dtype = dsData[did][dType];
+	if(dtype < 1 || dtype > 6) return 0;
+	
+	new string[1024];
+	format(string, sizeof(string), "Vehicle Name\tPrice\n");
+	
+	for(new i = 0; i < DealerVehicleCount[dtype]; i++)
 	{
-		case 1: // WAA
-		{
-			format(string, sizeof(string), "Vehicle Name\tPrice\n{ffffff}Alpha{7fff00}\t$%s\n{ffffff}Elegy{7fff00}\t$%s\n{ffffff}Stratum{7fff00}\t$%s\n{ffffff}Sultan{7fff00}\t$%s\n{ffffff}Jester{7fff00}\t$%s\n{ffffff}Flash{7fff00}\t$%s\n{ffffff}Uranus{7fff00}\t$%s\n{ffffff}Comet{7fff00}\t$%s\n",
-				FormatMoney(dsData[did][dVehicle][0]),
-				FormatMoney(dsData[did][dVehicle][1]),
-				FormatMoney(dsData[did][dVehicle][2]),
-				FormatMoney(dsData[did][dVehicle][3]),
-				FormatMoney(dsData[did][dVehicle][4]),
-				FormatMoney(dsData[did][dVehicle][5]),
-				FormatMoney(dsData[did][dVehicle][6]),
-				FormatMoney(dsData[did][dVehicle][7])
-			);
-			ShowPlayerDialog(playerid, DEALER_EDITPROD, DIALOG_STYLE_TABLIST_HEADERS, "Dealer: Modify Vehicle", string, "Buy", "Cancel");
-		}
-		case 2: // Transfender
-		{
-			format(string, sizeof(string), "Vehicle Name\tPrice\n{ffffff}Elegant{7fff00}\t$%s\n{ffffff}Admiral{7fff00}\t$%s\n{ffffff}Primo{7fff00}\t$%s\n{ffffff}Regina{7fff00}\t$%s\n{ffffff}Premier{7fff00}\t$%s\n{ffffff}Sentinel{7fff00}\t$%s\n{ffffff}Willard{7fff00}\t$%s\n{ffffff}Solair{7fff00}\t$%s\n{ffffff}Vincent{7fff00}\t$%s\n{ffffff}Sunrise{7fff00}\t$%s\n",
-				FormatMoney(dsData[did][dVehicle][0]),
-				FormatMoney(dsData[did][dVehicle][1]),
-				FormatMoney(dsData[did][dVehicle][2]),
-				FormatMoney(dsData[did][dVehicle][3]),
-				FormatMoney(dsData[did][dVehicle][4]),
-				FormatMoney(dsData[did][dVehicle][5]),
-				FormatMoney(dsData[did][dVehicle][6]),
-				FormatMoney(dsData[did][dVehicle][7]),
-				FormatMoney(dsData[did][dVehicle][8]),
-				FormatMoney(dsData[did][dVehicle][9])
-			);
-			ShowPlayerDialog(playerid, DEALER_EDITPROD, DIALOG_STYLE_TABLIST_HEADERS, "Dealer: Modify Vehicle", string, "Buy", "Cancel");		
-		}
-		case 3: // Locolow
-		{
-			format(string, sizeof(string), "Vehicle Name\tPrice\n{ffffff}Blade{7fff00}\t$%s\n{ffffff}Broadway{7fff00}\t$%s\n{ffffff}Remington{7fff00}\t$%s\n{ffffff}Savvana{7fff00}\t$%s\n{ffffff}Slamvan{7fff00}\t$%s\n{ffffff}Tahoma{7fff00}\t$%s\n{ffffff}Tornado{7fff00}\t$%s\n{ffffff}Vodoo{7fff00}\t$%s\n{ffffff}Burito{7fff00}\t$%s\n{ffffff}Pony{7fff00}\t$%s\n",
-				FormatMoney(dsData[did][dVehicle][0]),
-				FormatMoney(dsData[did][dVehicle][1]),
-				FormatMoney(dsData[did][dVehicle][2]),
-				FormatMoney(dsData[did][dVehicle][3]),
-				FormatMoney(dsData[did][dVehicle][4]),
-				FormatMoney(dsData[did][dVehicle][5]),
-				FormatMoney(dsData[did][dVehicle][6]),
-				FormatMoney(dsData[did][dVehicle][7]),
-				FormatMoney(dsData[did][dVehicle][8]),
-				FormatMoney(dsData[did][dVehicle][9])
-			);
-			ShowPlayerDialog(playerid, DEALER_EDITPROD, DIALOG_STYLE_TABLIST_HEADERS, "Dealer: Modify Vehicle", string, "Buy", "Cancel");
-		}
-		case 4: // Motorcycle
-		{
-			format(string, sizeof(string), "Vehicle Name\tPrice\n{ffffff}BF-400{7fff00}\t$%s\n{ffffff}Faggio{7fff00}\t$%s\n{ffffff}FCR-900{7fff00}\t$%s\n{ffffff}Freeway{7fff00}\t$%s\n{ffffff}PCJ-600{7fff00}\t$%s\n{ffffff}Sanchez{7fff00}\t$%s\n{ffffff}Wayfarer{7fff00}\t$%s",
-				FormatMoney(dsData[did][dVehicle][0]),
-				FormatMoney(dsData[did][dVehicle][1]),
-				FormatMoney(dsData[did][dVehicle][2]),
-				FormatMoney(dsData[did][dVehicle][3]),
-				FormatMoney(dsData[did][dVehicle][4]),
-				FormatMoney(dsData[did][dVehicle][5]),
-				FormatMoney(dsData[did][dVehicle][6]),
-				FormatMoney(dsData[did][dVehicle][7])
-			);
-			ShowPlayerDialog(playerid, DEALER_EDITPROD, DIALOG_STYLE_TABLIST_HEADERS, "Dealer: Modify Vehicle", string, "Buy", "Cancel");
-		}
-		case 5: // Industrial
-		{
-			format(string, sizeof(string), "Vehicle Name\tPrice\n{ffffff}Linerunner{7fff00}\t$%s\n{ffffff}Mule{7fff00}\t$%s\n{ffffff}Flatbed{7fff00}\t$%s\n{ffffff}Yankee{7fff00}\t$%s\n{ffffff}Boxville{7fff00}\t$%s\n{ffffff}Benson{7fff00}\t$%s\n{ffffff}Cement Truck{7fff00}\t$%s\n{ffffff}Roadtrain{7fff00}\t$%s\n{ffffff}Tanker{7fff00}\t$%s\n{ffffff}Mr Whoope{7fff00}\t$%s\n{ffffff}Hotdog{7fff00}\t$%s\n",
-				FormatMoney(dsData[did][dVehicle][0]),
-				FormatMoney(dsData[did][dVehicle][1]),
-				FormatMoney(dsData[did][dVehicle][2]),
-				FormatMoney(dsData[did][dVehicle][3]),
-				FormatMoney(dsData[did][dVehicle][4]),
-				FormatMoney(dsData[did][dVehicle][5]),
-				FormatMoney(dsData[did][dVehicle][6]),
-				FormatMoney(dsData[did][dVehicle][7]),
-				FormatMoney(dsData[did][dVehicle][8]),
-				FormatMoney(dsData[did][dVehicle][9]),
-				FormatMoney(dsData[did][dVehicle][10])
-			);
-			ShowPlayerDialog(playerid, DEALER_EDITPROD, DIALOG_STYLE_TABLIST_HEADERS, dsData[did][dName], string, "Buy", "Cancel");
-		}
-		case 6: // Company
-		{
-			format(string, sizeof(string), "Vehicle Name\tPrice\n{ffffff}Cabbie{7fff00}\t$%s\n{ffffff}Taxi{7fff00}\t$%s\n{ffffff}Tow Truck{7fff00}\t$%s\n{ffffff}Walton{7fff00}\t$%s\n{ffffff}Sadler{7fff00}\t$%s\n{ffffff}Pony{7fff00}\t$%s\n{ffffff}Bobcat{7fff00}\t$%s\n{ffffff}Yosemite{7fff00}\t$%s\n{ffffff}Burrito{7fff00}\t$%s\n{ffffff}Rumpo{7fff00}\t$%s",
-				FormatMoney(dsData[did][dVehicle][0]),
-				FormatMoney(dsData[did][dVehicle][1]),
-				FormatMoney(dsData[did][dVehicle][2]),
-				FormatMoney(dsData[did][dVehicle][3]),
-				FormatMoney(dsData[did][dVehicle][4]),
-				FormatMoney(dsData[did][dVehicle][5]),
-				FormatMoney(dsData[did][dVehicle][6]),
-				FormatMoney(dsData[did][dVehicle][7]),
-				FormatMoney(dsData[did][dVehicle][8]),
-				FormatMoney(dsData[did][dVehicle][9])
-			);
-			ShowPlayerDialog(playerid, DEALER_EDITPROD, DIALOG_STYLE_TABLIST_HEADERS, dsData[did][dName], string, "Buy", "Cancel");
-		}
+		format(string, sizeof(string), "%s{ffffff}%s{7fff00}\t$%s\n", 
+			string, 
+			DealerVehicleNames[dtype][i], 
+			FormatMoney(dsData[did][dVehicle][i])
+		);
 	}
+	
+	ShowPlayerDialog(playerid, DEALER_EDITPROD, DIALOG_STYLE_TABLIST_HEADERS, "Dealer: Modify Vehicle Price", string, "Edit", "Cancel");
 	return 1;
 }
 
@@ -545,7 +513,18 @@ CMD:createdealer(playerid, params[])
 		return PermissionError(playerid);
 
 	static query[512];
-	new did = Iter_Free(Dealer), address[128];
+	new did = -1;
+	
+	// Cari ID yang kosong di database dengan looping
+	for(new i = 0; i < MAX_DEALER; i++)
+	{
+		if(!Iter_Contains(Dealer, i))
+		{
+			did = i;
+			break;
+		}
+	}
+	
 	if(did == -1)
 		return Error(playerid, "Kamu tidak bisa membuat Dealer lagi sudah terkena Limit");
 
@@ -558,6 +537,7 @@ CMD:createdealer(playerid, params[])
 	GetPlayerPos(playerid, dsData[did][dX], dsData[did][dY], dsData[did][dZ]);
 	dsData[did][dPrice] = price;
 	dsData[did][dType] = type;
+	new address[128];
 	address = GetLocation(dsData[did][dX], dsData[did][dY], dsData[did][dZ]);
 	format(dsData[did][dName], 128, address);
 	dsData[did][dVehicle][0] = 0;

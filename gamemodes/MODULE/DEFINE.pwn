@@ -1,5 +1,5 @@
 // Server Define
-#define TEXT_GAMEMODE	"VL v1.2.1 Brasscore"
+#define TEXT_GAMEMODE	"VL v1.2.3 Forge"
 #define TEXT_WEBURL		"valenciaroleplay.id"
 #define TEXT_LANGUAGE	"Indonesia/English"
 #define SERVER_BOT      "ValenciaBot"

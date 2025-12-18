@@ -69,7 +69,7 @@ enum droppedweapons {
 	WeapWorld,
     WeapObject
 };
-new DropWeap[MAX_DROP_WEAPON][droppedweapons];
+/*new DropWeap[MAX_DROP_WEAPON][droppedweapons];
 
 DropWeapon(player[], model, weaponid = 0, ammo = 0, Float:x, Float:y, Float:z, interior, world)
 {
@@ -136,7 +136,7 @@ PickupWeapon(playerid, itemid)
     }
     return 1;
 }
-	
+*/	
 //Weapon Attach System
 function OnWeaponsLoaded(playerid)
 {
@@ -264,36 +264,13 @@ CMD:weapon(playerid, params[])
 	}
 	else if(!strcmp(name, "drop", true))
 	{
-		if (!weaponid)
-			return Error(playerid, "You are not holding a weapon.");
-			
-		static
-			Float:x,
-			Float:y,
-			Float:z,
-			Float:angle;
-
-		GetPlayerPos(playerid, x, y, z);
-		GetPlayerFacingAngle(playerid, angle);
-
-		x += 1 * floatsin(-angle, degrees);
-		y += 1 * floatcos(-angle, degrees);
-
-		DropWeapon(pData[playerid][pName], GetWeaponModel(weaponid), weaponid, GetPlayerAmmoEx(playerid), x, y, z - 1, GetPlayerInterior(playerid), GetPlayerVirtualWorld(playerid));
-		ResetWeapon(playerid, weaponid);
-
-		ApplyAnimation(playerid, "BOMBER", "BOM_Plant", 4.1, 0, 0, 0, 0, 0, 1);
-		SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "* %s takes out a %s and drops it on the floor.", ReturnName(playerid), ReturnWeaponName(weaponid));
+		// Langsung panggil cmd_drop dengan parameter weapon
+		return callcmd::drop(playerid, "weapon");
 	}
 	else if(!strcmp(name, "pickup", true))
 	{
-		new wid = NearWeapon(playerid);
-		if(wid != -1)
-        {
-			PickupWeapon(playerid, wid);
-			SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "* %s has picked up a %s.", ReturnName(playerid), ReturnWeaponName(DropWeap[wid][WeaponID]));
-			ApplyAnimation(playerid, "BOMBER", "BOM_Plant", 4.1, 0, 0, 0, 0, 0, 1);
-		}
+		// Gunakan sistem pickup yang sudah ada
+		return callcmd::pickup(playerid, "weapon");
 	}
 	else Error(playerid, "You have specified an invalid option.");
 	return 1;

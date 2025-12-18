@@ -119,8 +119,21 @@ CMD:createpark(playerid, params[])
 		if(pData[playerid][pServerModerator] < 1)
 			return PermissionError(playerid);
 		
-	new id = Iter_Free(Parks), query[512];
+	new id = -1;
+	
+	// Cari ID yang kosong di iterator
+	for(new i = 0; i < MAX_PARKPOINT; i++)
+	{
+		if(!Iter_Contains(Parks, i))
+		{
+			id = i;
+			break;
+		}
+	}
+	
 	if(id == -1) return Error(playerid, "Can't add any more Park Point.");
+	
+	new query[512];
  	new Float: x, Float: y, Float: z;
  	GetPlayerPos(playerid, x, y, z);
 	
@@ -138,17 +151,13 @@ CMD:createpark(playerid, params[])
 	Iter_Add(Parks, id);
 	
 	mysql_format(g_SQL, query, sizeof(query), "INSERT INTO parks SET id=%d, posx='%f', posy='%f', posz='%f', interior=%d, world=%d", id, ppData[id][parkX], ppData[id][parkY], ppData[id][parkZ], GetPlayerInterior(playerid), GetPlayerVirtualWorld(playerid));
-	mysql_tquery(g_SQL, query, "OnParkCreated", "ii", playerid, id);
-	return 1;
-}
-
-function OnParkCreated(playerid, id)
-{
+	mysql_tquery(g_SQL, query);
+	
 	Park_Save(id);
 	Servers(playerid, "You has created Park Point id: %d.", id);
-	new str[150];
-	format(str,sizeof(str),"[Garkot]: %s membuat garkot id %d!", GetRPName(playerid), id);
-	LogServer("Admin", str);	
+	new str2[150];
+	format(str2,sizeof(str2),"[Garkot]: %s membuat garkot id %d!", GetRPName(playerid), id);
+	LogServer("Admin", str2);
 	return 1;
 }
 

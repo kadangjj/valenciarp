@@ -77,80 +77,68 @@ IsABusVeh(carid)
 	}
 	return 0;
 }
-//-----[ Bus Countdown ]-----
-// Tambahkan variable di bagian atas untuk tracking countdown
+//-----[ Bus Countdown - Harus Diam di CP ]-----
+// Variable
 new BusCountdown[MAX_PLAYERS];
-new BusCountdownTimer[MAX_PLAYERS];
-new BusStopType[MAX_PLAYERS];
+new BusStopPBus[MAX_PLAYERS]; // Simpan pBus saat ini
 
-// Function untuk update countdown
-forward BusCountdownUpdate(playerid);
-public BusCountdownUpdate(playerid)
+// Fungsi helper untuk cek apakah player di bus stop
+stock IsPlayerInBusStop(playerid, pbusvalue)
 {
-	if(!IsPlayerConnected(playerid)) 
+	switch(pbusvalue)
 	{
-		KillTimer(BusCountdownTimer[playerid]);
-		BusCountdownTimer[playerid] = -1;
+		case 11: return IsPlayerInRangeOfPoint(playerid, 5.0, buspoint11);
+		case 19: return IsPlayerInRangeOfPoint(playerid, 5.0, buspoint19);
+		// Tambahkan bus stop lain...
+	}
+	return 0;
+}
+
+// Timer countdown
+forward BusCountdownTimer(playerid);
+public BusCountdownTimer(playerid)
+{
+	if(!IsPlayerConnected(playerid)) return 1;
+	
+	// Cek apakah player masih di bus stop
+	if(!IsPlayerInBusStop(playerid, BusStopPBus[playerid]))
+	{
+		// Keluar dari CP, reset countdown
+		BusCountdown[playerid] = 0;
+		BusStopPBus[playerid] = 0;
+	//	GameTextForPlayer(playerid, "~r~Bus Stop Cancelled", 2000, 3);
 		return 1;
 	}
 	
 	if(BusCountdown[playerid] > 0)
 	{
+		// Tampilkan countdown
 		new string[64];
 		format(string, sizeof(string), "~w~PLEASE WAIT~n~~y~%d ~w~seconds", BusCountdown[playerid]);
 		GameTextForPlayer(playerid, string, 1100, 3);
 		BusCountdown[playerid]--;
+		
+		// Lanjut ke detik berikutnya
+		SetTimerEx("BusCountdownTimer", 1000, false, "i", playerid);
 	}
 	else
 	{
-		// Stop timer ketika countdown selesai
-		KillTimer(BusCountdownTimer[playerid]);
-		BusCountdownTimer[playerid] = -1;
+		// Countdown selesai, set checkpoint berikutnya
+		BusStopPBus[playerid] = 0;
 		
-		// Panggil BusStop sesuai tipe
-		switch(BusStopType[playerid])
+		if(pData[playerid][pBus] == 11)
 		{
-			case 1: BusStop1(playerid);
-			case 2: BusStop2(playerid);
-			case 3: BusStop3(playerid);
-			case 4: BusStop4(playerid);
+			pData[playerid][pBus] = 12;
+			SetPlayerRaceCheckpoint(playerid, 0, buspoint12, buspoint13, 5.0);
+			PlayerPlaySound(playerid, 1139, 0.0, 0.0, 0.0);
 		}
-		
-		// Reset tipe
-		BusStopType[playerid] = 0;
+		else if(pData[playerid][pBus] == 19)
+		{
+			pData[playerid][pBus] = 20;
+			SetPlayerRaceCheckpoint(playerid, 0, buspoint20, buspoint21, 5.0);
+			PlayerPlaySound(playerid, 1139, 0.0, 0.0, 0.0);
+		}
+		// Tambahkan bus stop lain...
 	}
 	return 1;
-}
-
-//----------[ BUS STOP ]-----------
-//rute a
-function BusStop1(playerid)
-{
-	// Mengatur checkpoint selanjutnya
-	DisablePlayerRaceCheckpoint(playerid);
-	SetPlayerRaceCheckpoint(playerid, 0, buspoint12, buspoint13, 5.0);
-	PlayerPlaySound(playerid, 1139, 0.0, 0.0, 0.0);
-}
-function BusStop2(playerid)
-{
-	// Mengatur checkpoint selanjutnya
-	DisablePlayerRaceCheckpoint(playerid);
-	SetPlayerRaceCheckpoint(playerid, 0, buspoint12, buspoint13, 5.0);
-	PlayerPlaySound(playerid, 1139, 0.0, 0.0, 0.0);
-}
-
-//rute b
-function BusStop3(playerid)
-{
-	// Mengatur checkpoint selanjutnya
-	DisablePlayerRaceCheckpoint(playerid);
-	SetPlayerRaceCheckpoint(playerid, 0, cpbus9, cpbus10, 5.0);
-	PlayerPlaySound(playerid, 1139, 0.0, 0.0, 0.0);
-}
-function BusStop4(playerid)
-{
-	// Mengatur checkpoint selanjutnya
-	DisablePlayerRaceCheckpoint(playerid);
-	SetPlayerRaceCheckpoint(playerid, 0, cpbus16, cpbus17, 5.0);
-	PlayerPlaySound(playerid, 1139, 0.0, 0.0, 0.0);
 }

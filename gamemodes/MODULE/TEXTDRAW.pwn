@@ -4,29 +4,24 @@
 //Info textdraw
 new PlayerText:InfoTD[MAX_PLAYERS];
 new Text:TextTime, Text:TextDate;
-new PlayerText: Hud_Compas[MAX_PLAYERS][3];
 
 //Server Name textdraw
 new Text:ServerName;
 
-//LoginTD Laiks Lunar
-new PlayerText:LoginTD[MAX_PLAYERS][4];
-
 //Animation
 new Text:AnimationTD;
 
-// Phone Textdraws IndoValencia
-new Text:PhoneTD[33];
-new Text:phoneclosetd;
-new Text:mesaagetd;
-new Text:contactstd;
-new Text:calltd;
-new Text:twittertd;
-new Text:banktd;
-new Text:apptd;
-new Text:gpstd;
-new Text:settingtd;
-new Text:cameratd;
+//SHOW SPEC PLAYERS
+new PlayerText:SpecBG[MAX_PLAYERS];
+new PlayerText:SpecName[MAX_PLAYERS];
+new PlayerText:SpecCash[MAX_PLAYERS];
+new PlayerText:SpecHP[MAX_PLAYERS];
+new PlayerText:SpecAP[MAX_PLAYERS];
+new PlayerText:SpecInt[MAX_PLAYERS];
+new PlayerText:SpecWorld[MAX_PLAYERS];
+
+//Navigator
+new PlayerText:NAV[MAX_PLAYERS][7];
 
 //Welcome Textdraws
 new Text:WelcomeTD[5];
@@ -70,7 +65,7 @@ new PlayerText:AkuDamage[MAX_PLAYERS];
 new PlayerText:AkuFuel[MAX_PLAYERS];
 new PlayerText:AkuSpeed[MAX_PLAYERS];
 
-//Variables HBE Simple v2
+//Variables HBE Minimalist
 new PlayerText:PlayerTD[MAX_PLAYERS][8];
 new PlayerText:JGMVSPEED[MAX_PLAYERS];
 new PlayerText:JGMVHP[MAX_PLAYERS];
@@ -113,7 +108,7 @@ CreatePlayerTextDraws(playerid)
 	PlayerTextDrawFont(playerid, NameServer[playerid][2], 3);
 	PlayerTextDrawSetProportional(playerid, NameServer[playerid][2], 1);
 
-	//HUD simple v2
+	//HU Minimalist
 	PlayerTD[playerid][0] = CreatePlayerTextDraw(playerid, 579.000000, 352.000000, "ld_bum:blkdot");
     PlayerTextDrawFont(playerid, PlayerTD[playerid][0], 4);
     PlayerTextDrawLetterSize(playerid, PlayerTD[playerid][0], 0.550000, 5.250008);
@@ -351,42 +346,6 @@ CreatePlayerTextDraws(playerid)
 	PlayerTextDrawSetProportional(playerid, DPcoin[playerid], 1);
 	PlayerTextDrawSetShadow(playerid, DPcoin[playerid], 0);
 
-	/*TDEditor_PTD[playerid][3] = CreatePlayerTextDraw(playerid, 565.500000, 405.833404, "LD_SPAC:white");
-	PlayerTextDrawLetterSize(playerid, TDEditor_PTD[playerid][3], 0.000000, 0.000000);
-	PlayerTextDrawTextSize(playerid, TDEditor_PTD[playerid][3], 68.000000, 8.000000);
-	PlayerTextDrawAlignment(playerid, TDEditor_PTD[playerid][3], 1);
-	PlayerTextDrawColor(playerid, TDEditor_PTD[playerid][3], 16711935);
-	PlayerTextDrawSetShadow(playerid, TDEditor_PTD[playerid][3], 0);
-	PlayerTextDrawSetOutline(playerid, TDEditor_PTD[playerid][3], 0);
-	PlayerTextDrawBackgroundColor(playerid, TDEditor_PTD[playerid][3], 255);
-	PlayerTextDrawFont(playerid, TDEditor_PTD[playerid][3], 4);
-	PlayerTextDrawSetProportional(playerid, TDEditor_PTD[playerid][3], 0);
-	PlayerTextDrawSetShadow(playerid, TDEditor_PTD[playerid][3], 0);
-
-	TDEditor_PTD[playerid][4] = CreatePlayerTextDraw(playerid, 565.500000, 420.416717, "LD_SPAC:white");
-	PlayerTextDrawLetterSize(playerid, TDEditor_PTD[playerid][4], 0.000000, 0.000000);
-	PlayerTextDrawTextSize(playerid, TDEditor_PTD[playerid][4], 68.000000, 8.000000);
-	PlayerTextDrawAlignment(playerid, TDEditor_PTD[playerid][4], 1);
-	PlayerTextDrawColor(playerid, TDEditor_PTD[playerid][4], 16711935);
-	PlayerTextDrawSetShadow(playerid, TDEditor_PTD[playerid][4], 0);
-	PlayerTextDrawSetOutline(playerid, TDEditor_PTD[playerid][4], 0);
-	PlayerTextDrawBackgroundColor(playerid, TDEditor_PTD[playerid][4], 255);
-	PlayerTextDrawFont(playerid, TDEditor_PTD[playerid][4], 4);
-	PlayerTextDrawSetProportional(playerid, TDEditor_PTD[playerid][4], 0);
-	PlayerTextDrawSetShadow(playerid, TDEditor_PTD[playerid][4], 0);
-
-	TDEditor_PTD[playerid][5] = CreatePlayerTextDraw(playerid, 565.500000, 435.000091, "LD_SPAC:white");
-	PlayerTextDrawLetterSize(playerid, TDEditor_PTD[playerid][5], 0.000000, 0.000000);
-	PlayerTextDrawTextSize(playerid, TDEditor_PTD[playerid][5], 68.000000, 8.000000);
-	PlayerTextDrawAlignment(playerid, TDEditor_PTD[playerid][5], 1);
-	PlayerTextDrawColor(playerid, TDEditor_PTD[playerid][5], 16711935);
-	PlayerTextDrawSetShadow(playerid, TDEditor_PTD[playerid][5], 0);
-	PlayerTextDrawSetOutline(playerid, TDEditor_PTD[playerid][5], 0);
-	PlayerTextDrawBackgroundColor(playerid, TDEditor_PTD[playerid][5], 255);
-	PlayerTextDrawFont(playerid, TDEditor_PTD[playerid][5], 4);
-	PlayerTextDrawSetProportional(playerid, TDEditor_PTD[playerid][5], 0);
-	PlayerTextDrawSetShadow(playerid, TDEditor_PTD[playerid][5], 0);*/
-
 	DPvehname[playerid] = CreatePlayerTextDraw(playerid, 431.000000, 367.333312, "Turismo");
 	PlayerTextDrawLetterSize(playerid, DPvehname[playerid], 0.299499, 1.121665);
 	PlayerTextDrawAlignment(playerid, DPvehname[playerid], 1);
@@ -430,30 +389,6 @@ CreatePlayerTextDraws(playerid)
 	TextDrawFont(DPvehfare[playerid], 1);
 	TextDrawSetProportional(DPvehfare[playerid], 1);
 	TextDrawSetShadow(DPvehfare[playerid], 0);
-
-	/*TDEditor_PTD[playerid][10] = CreatePlayerTextDraw(playerid, 459.000000, 415.749938, "LD_SPAC:white");
-	PlayerTextDrawLetterSize(playerid, TDEditor_PTD[playerid][10], 0.000000, 0.000000);
-	PlayerTextDrawTextSize(playerid, TDEditor_PTD[playerid][10], 61.000000, 9.000000);
-	PlayerTextDrawAlignment(playerid, TDEditor_PTD[playerid][10], 1);
-	PlayerTextDrawColor(playerid, TDEditor_PTD[playerid][10], 16711935);
-	PlayerTextDrawSetShadow(playerid, TDEditor_PTD[playerid][10], 0);
-	PlayerTextDrawSetOutline(playerid, TDEditor_PTD[playerid][10], 0);
-	PlayerTextDrawBackgroundColor(playerid, TDEditor_PTD[playerid][10], 255);
-	PlayerTextDrawFont(playerid, TDEditor_PTD[playerid][10], 4);
-	PlayerTextDrawSetProportional(playerid, TDEditor_PTD[playerid][10], 0);
-	PlayerTextDrawSetShadow(playerid, TDEditor_PTD[playerid][10], 0);
-
-	TDEditor_PTD[playerid][11] = CreatePlayerTextDraw(playerid, 459.500000, 432.083221, "LD_SPAC:white");
-	PlayerTextDrawLetterSize(playerid, TDEditor_PTD[playerid][11], 0.000000, 0.000000);
-	PlayerTextDrawTextSize(playerid, TDEditor_PTD[playerid][11], 61.000000, 9.000000);
-	PlayerTextDrawAlignment(playerid, TDEditor_PTD[playerid][11], 1);
-	PlayerTextDrawColor(playerid, TDEditor_PTD[playerid][11], 16711935);
-	PlayerTextDrawSetShadow(playerid, TDEditor_PTD[playerid][11], 0);
-	PlayerTextDrawSetOutline(playerid, TDEditor_PTD[playerid][11], 0);
-	PlayerTextDrawBackgroundColor(playerid, TDEditor_PTD[playerid][11], 255);
-	PlayerTextDrawFont(playerid, TDEditor_PTD[playerid][11], 4);
-	PlayerTextDrawSetProportional(playerid, TDEditor_PTD[playerid][11], 0);
-	PlayerTextDrawSetShadow(playerid, TDEditor_PTD[playerid][11], 0);*/
 	
 	//HBE textdraw Simple
 	SPvehname[playerid] = CreatePlayerTextDraw(playerid, 540.000000, 366.749908, "Turismo");
@@ -562,96 +497,135 @@ CreatePlayerTextDraws(playerid)
 	PlayerTextDrawSetProportional(playerid, DGEnergy[playerid], 1);
 	PlayerTextDrawSetSelectable(playerid, DGEnergy[playerid], 0);
 
-	// LoginTD Laiks Lunar
-	LoginTD[playerid][0] = CreatePlayerTextDraw(playerid, 320.000000, 135.000000, "_");
-	PlayerTextDrawFont(playerid, LoginTD[playerid][0], 1);
-	PlayerTextDrawLetterSize(playerid, LoginTD[playerid][0], 0.000000, 18.000030);
-	PlayerTextDrawTextSize(playerid, LoginTD[playerid][0], 0.000000, 175.500000);
-	PlayerTextDrawSetOutline(playerid, LoginTD[playerid][0], 1);
-	PlayerTextDrawSetShadow(playerid, LoginTD[playerid][0], 0);
-	PlayerTextDrawAlignment(playerid, LoginTD[playerid][0], 2);
-	PlayerTextDrawColor(playerid, LoginTD[playerid][0], -1);
-	PlayerTextDrawBackgroundColor(playerid, LoginTD[playerid][0], 255);
-	PlayerTextDrawBoxColor(playerid, LoginTD[playerid][0], 135);
-	PlayerTextDrawUseBox(playerid, LoginTD[playerid][0], 1);
-	PlayerTextDrawSetProportional(playerid, LoginTD[playerid][0], 1);
-	PlayerTextDrawSetSelectable(playerid, LoginTD[playerid][0], 0);
+	// NAVIGATION TEXTDRAW (SCALED UP ONLY)
 
-	LoginTD[playerid][1] = CreatePlayerTextDraw(playerid, 320.000000, 110.000000, "VALENCIA");
-	PlayerTextDrawFont(playerid, LoginTD[playerid][1], 1);
-	PlayerTextDrawLetterSize(playerid, LoginTD[playerid][1], 0.600000, 2.149997);
-	PlayerTextDrawTextSize(playerid, LoginTD[playerid][1], 405.500000, 17.500000);
-	PlayerTextDrawSetOutline(playerid, LoginTD[playerid][1], 1);
-	PlayerTextDrawSetShadow(playerid, LoginTD[playerid][1], 0);
-	PlayerTextDrawAlignment(playerid, LoginTD[playerid][1], 2);
-	PlayerTextDrawColor(playerid, LoginTD[playerid][1], -1);
-	PlayerTextDrawBackgroundColor(playerid, LoginTD[playerid][1], 255);
-	PlayerTextDrawBoxColor(playerid, LoginTD[playerid][1], 50);
-	PlayerTextDrawUseBox(playerid, LoginTD[playerid][1], 0);
-	PlayerTextDrawSetProportional(playerid, LoginTD[playerid][1], 1);
-	PlayerTextDrawSetSelectable(playerid, LoginTD[playerid][1], 0);
+	NAV[playerid][0] = CreatePlayerTextDraw(playerid, 118.000, 414.000, "South West");
+	PlayerTextDrawLetterSize(playerid, NAV[playerid][0], 0.180, 1.050);
+	PlayerTextDrawAlignment(playerid, NAV[playerid][0], 2);
+	PlayerTextDrawColor(playerid, NAV[playerid][0], -1);
+	PlayerTextDrawSetShadow(playerid, NAV[playerid][0], 0);
+	PlayerTextDrawSetOutline(playerid, NAV[playerid][0], 1);
+	PlayerTextDrawBackgroundColor(playerid, NAV[playerid][0], 150);
+	PlayerTextDrawFont(playerid, NAV[playerid][0], 1);
+	PlayerTextDrawSetProportional(playerid, NAV[playerid][0], 1);
 
-	LoginTD[playerid][2] = CreatePlayerTextDraw(playerid, 320.000000, 107.000000, "VALENCIA");
-	PlayerTextDrawFont(playerid, LoginTD[playerid][2], 1);
-	PlayerTextDrawLetterSize(playerid, LoginTD[playerid][2], 0.600000, 2.149997);
-	PlayerTextDrawTextSize(playerid, LoginTD[playerid][2], 405.500000, 17.500000);
-	PlayerTextDrawSetOutline(playerid, LoginTD[playerid][2], 1);
-	PlayerTextDrawSetShadow(playerid, LoginTD[playerid][2], 0);
-	PlayerTextDrawAlignment(playerid, LoginTD[playerid][2], 2);
-	PlayerTextDrawColor(playerid, LoginTD[playerid][2], -16776961);
-	PlayerTextDrawBackgroundColor(playerid, LoginTD[playerid][2], 255);
-	PlayerTextDrawBoxColor(playerid, LoginTD[playerid][2], 50);
-	PlayerTextDrawUseBox(playerid, LoginTD[playerid][2], 0);
-	PlayerTextDrawSetProportional(playerid, LoginTD[playerid][2], 1);
-	PlayerTextDrawSetSelectable(playerid, LoginTD[playerid][2], 0);
+	NAV[playerid][1] = CreatePlayerTextDraw(playerid, 118.000, 404.000, "SE");
+	PlayerTextDrawLetterSize(playerid, NAV[playerid][1], 0.260, 1.450);
+	PlayerTextDrawAlignment(playerid, NAV[playerid][1], 2);
+	PlayerTextDrawColor(playerid, NAV[playerid][1], -7601921);
+	PlayerTextDrawSetShadow(playerid, NAV[playerid][1], 0);
+	PlayerTextDrawSetOutline(playerid, NAV[playerid][1], 1);
+	PlayerTextDrawBackgroundColor(playerid, NAV[playerid][1], 150);
+	PlayerTextDrawFont(playerid, NAV[playerid][1], 1);
+	PlayerTextDrawSetProportional(playerid, NAV[playerid][1], 1);
 
-	LoginTD[playerid][3] = CreatePlayerTextDraw(playerid, 320.000000, 125.000000, "ROLEPLAY");
-	PlayerTextDrawFont(playerid, LoginTD[playerid][3], 1);
-	PlayerTextDrawLetterSize(playerid, LoginTD[playerid][3], 0.600000, 2.149997);
-	PlayerTextDrawTextSize(playerid, LoginTD[playerid][3], 405.500000, 17.500000);
-	PlayerTextDrawSetOutline(playerid, LoginTD[playerid][3], 1);
-	PlayerTextDrawSetShadow(playerid, LoginTD[playerid][3], 0);
-	PlayerTextDrawAlignment(playerid, LoginTD[playerid][3], 2);
-	PlayerTextDrawColor(playerid, LoginTD[playerid][3], -1);
-	PlayerTextDrawBoxColor(playerid, LoginTD[playerid][3], 50);
-	PlayerTextDrawUseBox(playerid, LoginTD[playerid][3], 0);
-	PlayerTextDrawSetProportional(playerid, LoginTD[playerid][3], 1);
-	PlayerTextDrawSetSelectable(playerid, LoginTD[playerid][3], 0);
+	NAV[playerid][2] = CreatePlayerTextDraw(playerid, 136.000, 398.000, "LD_SPAC:white");
+	PlayerTextDrawTextSize(playerid, NAV[playerid][2], -1.000, 36.000);
+	PlayerTextDrawAlignment(playerid, NAV[playerid][2], 1);
+	PlayerTextDrawColor(playerid, NAV[playerid][2], -1);
+	PlayerTextDrawSetShadow(playerid, NAV[playerid][2], 0);
+	PlayerTextDrawSetOutline(playerid, NAV[playerid][2], 1);
+	PlayerTextDrawBackgroundColor(playerid, NAV[playerid][2], 255);
+	PlayerTextDrawFont(playerid, NAV[playerid][2], 4);
+	PlayerTextDrawSetProportional(playerid, NAV[playerid][2], 1);
 
-	//Compas Textdraw
-	Hud_Compas[playerid][0] = CreatePlayerTextDraw(playerid, 135.000, 353.000, "N");
-	PlayerTextDrawLetterSize(playerid, Hud_Compas[playerid][0], 0.720, 3.197);
-	PlayerTextDrawTextSize(playerid, Hud_Compas[playerid][0], 400.000, 17.000);
-	PlayerTextDrawAlignment(playerid, Hud_Compas[playerid][0], 1);
-	PlayerTextDrawColor(playerid, Hud_Compas[playerid][0], -626712321);
-	PlayerTextDrawSetShadow(playerid, Hud_Compas[playerid][0], 0);
-	PlayerTextDrawSetOutline(playerid, Hud_Compas[playerid][0], 1);
-	PlayerTextDrawBackgroundColor(playerid, Hud_Compas[playerid][0], 255);
-	PlayerTextDrawFont(playerid, Hud_Compas[playerid][0], 1);
-	PlayerTextDrawSetProportional(playerid, Hud_Compas[playerid][0], 1);
+	NAV[playerid][3] = CreatePlayerTextDraw(playerid, 138.000, 392.000, "LD_SPAC:white");
+	PlayerTextDrawTextSize(playerid, NAV[playerid][3], -1.000, 36.000);
+	PlayerTextDrawAlignment(playerid, NAV[playerid][3], 1);
+	PlayerTextDrawColor(playerid, NAV[playerid][3], -1);
+	PlayerTextDrawSetShadow(playerid, NAV[playerid][3], 0);
+	PlayerTextDrawSetOutline(playerid, NAV[playerid][3], 1);
+	PlayerTextDrawBackgroundColor(playerid, NAV[playerid][3], 255);
+	PlayerTextDrawFont(playerid, NAV[playerid][3], 4);
+	PlayerTextDrawSetProportional(playerid, NAV[playerid][3], 1);
 
-	Hud_Compas[playerid][1] = CreatePlayerTextDraw(playerid, 136.000, 380.000, "North");
-	PlayerTextDrawLetterSize(playerid, Hud_Compas[playerid][1], 0.229, 1.200);
-	PlayerTextDrawTextSize(playerid, Hud_Compas[playerid][1], 503.500, 17.000);
-	PlayerTextDrawAlignment(playerid, Hud_Compas[playerid][1], 1);
-	PlayerTextDrawColor(playerid, Hud_Compas[playerid][1], -1);
-	PlayerTextDrawSetShadow(playerid, Hud_Compas[playerid][1], 0);
-	PlayerTextDrawSetOutline(playerid, Hud_Compas[playerid][1], 1);
-	PlayerTextDrawBackgroundColor(playerid, Hud_Compas[playerid][1], 255);
-	PlayerTextDrawFont(playerid, Hud_Compas[playerid][1], 1);
-	PlayerTextDrawSetProportional(playerid, Hud_Compas[playerid][1], 1);
+	NAV[playerid][4] = CreatePlayerTextDraw(playerid, 141.000, 406.000, "00:00:00");
+	PlayerTextDrawLetterSize(playerid, NAV[playerid][4], 0.145, 0.850);
+	PlayerTextDrawAlignment(playerid, NAV[playerid][4], 1);
+	PlayerTextDrawColor(playerid, NAV[playerid][4], -1);
+	PlayerTextDrawSetShadow(playerid, NAV[playerid][4], 0);
+	PlayerTextDrawSetOutline(playerid, NAV[playerid][4], 1);
+	PlayerTextDrawBackgroundColor(playerid, NAV[playerid][4], 150);
+	PlayerTextDrawFont(playerid, NAV[playerid][4], 1);
+	PlayerTextDrawSetProportional(playerid, NAV[playerid][4], 1);
 
-	Hud_Compas[playerid][2] = CreatePlayerTextDraw(playerid, 136.000, 394.000, "0.0|");
-	PlayerTextDrawLetterSize(playerid, Hud_Compas[playerid][2], 0.229, 1.100);
-	PlayerTextDrawTextSize(playerid, Hud_Compas[playerid][2], 1003.500, 37.000);
-	PlayerTextDrawAlignment(playerid, Hud_Compas[playerid][2], 1);
-	PlayerTextDrawColor(playerid, Hud_Compas[playerid][2], 1296911871);
-	PlayerTextDrawSetShadow(playerid, Hud_Compas[playerid][2], 0);
-	PlayerTextDrawSetOutline(playerid, Hud_Compas[playerid][2], 1);
-	PlayerTextDrawBackgroundColor(playerid, Hud_Compas[playerid][2], 255);
-	PlayerTextDrawFont(playerid, Hud_Compas[playerid][2], 1);
-	PlayerTextDrawSetProportional(playerid, Hud_Compas[playerid][2], 1);
+	NAV[playerid][5] = CreatePlayerTextDraw(playerid, 141.000, 412.000, "Monday, 20 Aug 2024");
+	PlayerTextDrawLetterSize(playerid, NAV[playerid][5], 0.145, 0.850);
+	PlayerTextDrawAlignment(playerid, NAV[playerid][5], 1);
+	PlayerTextDrawColor(playerid, NAV[playerid][5], -1);
+	PlayerTextDrawSetShadow(playerid, NAV[playerid][5], 0);
+	PlayerTextDrawSetOutline(playerid, NAV[playerid][5], 1);
+	PlayerTextDrawBackgroundColor(playerid, NAV[playerid][5], 150);
+	PlayerTextDrawFont(playerid, NAV[playerid][5], 1);
+	PlayerTextDrawSetProportional(playerid, NAV[playerid][5], 1);
 
+	NAV[playerid][6] = CreatePlayerTextDraw(playerid, 141.000, 418.000, "Los Santos");
+	PlayerTextDrawLetterSize(playerid, NAV[playerid][6], 0.145, 0.850);
+	PlayerTextDrawAlignment(playerid, NAV[playerid][6], 1);
+	PlayerTextDrawColor(playerid, NAV[playerid][6], -7601921);
+	PlayerTextDrawSetShadow(playerid, NAV[playerid][6], 0);
+	PlayerTextDrawSetOutline(playerid, NAV[playerid][6], 1);
+	PlayerTextDrawBackgroundColor(playerid, NAV[playerid][6], 150);
+	PlayerTextDrawFont(playerid, NAV[playerid][6], 1);
+	PlayerTextDrawSetProportional(playerid, NAV[playerid][6], 1);
+
+	// ===== SPECTATE TEXTDRAWS (RATA KIRI + BOX) =====
+	// BACKGROUND BOX
+	SpecBG[playerid] = CreatePlayerTextDraw(playerid, 235.0, 346.0, "_");
+	PlayerTextDrawFont(playerid, SpecBG[playerid], 1);
+	PlayerTextDrawLetterSize(playerid, SpecBG[playerid], 0.0, 9.5);
+	PlayerTextDrawUseBox(playerid, SpecBG[playerid], 1);
+	PlayerTextDrawBoxColor(playerid, SpecBG[playerid], 0x00000088);
+	PlayerTextDrawTextSize(playerid, SpecBG[playerid], 510.0, 0.0);
+	PlayerTextDrawSetOutline(playerid, SpecBG[playerid], 0);
+
+	// NAME
+	SpecName[playerid] = CreatePlayerTextDraw(playerid, 245.0, 350.0, "~g~Juan_Coki (12)");
+	PlayerTextDrawFont(playerid, SpecName[playerid], 2);
+	PlayerTextDrawLetterSize(playerid, SpecName[playerid], 0.28, 1.2);
+	PlayerTextDrawAlignment(playerid, SpecName[playerid], 1);
+	PlayerTextDrawColor(playerid, SpecName[playerid], -1);
+	PlayerTextDrawSetOutline(playerid, SpecName[playerid], 1);
+
+	// CASH
+	SpecCash[playerid] = CreatePlayerTextDraw(playerid, 245.0, 364.0, "~w~Cash: ~y~$9,100");
+	PlayerTextDrawFont(playerid, SpecCash[playerid], 2);
+	PlayerTextDrawLetterSize(playerid, SpecCash[playerid], 0.26, 1.1);
+	PlayerTextDrawAlignment(playerid, SpecCash[playerid], 1);
+	PlayerTextDrawColor(playerid, SpecCash[playerid], -1);
+	PlayerTextDrawSetOutline(playerid, SpecCash[playerid], 1);
+
+	// HP
+	SpecHP[playerid] = CreatePlayerTextDraw(playerid, 245.0, 378.0, "~w~HP: ~y~100.0");
+	PlayerTextDrawFont(playerid, SpecHP[playerid], 2);
+	PlayerTextDrawLetterSize(playerid, SpecHP[playerid], 0.26, 1.1);
+	PlayerTextDrawAlignment(playerid, SpecHP[playerid], 1);
+	PlayerTextDrawColor(playerid, SpecHP[playerid], -1);
+	PlayerTextDrawSetOutline(playerid, SpecHP[playerid], 1);
+
+	// AP
+	SpecAP[playerid] = CreatePlayerTextDraw(playerid, 245.0, 392.0, "~w~AP: ~y~100.0");
+	PlayerTextDrawFont(playerid, SpecAP[playerid], 2);
+	PlayerTextDrawLetterSize(playerid, SpecAP[playerid], 0.26, 1.1);
+	PlayerTextDrawAlignment(playerid, SpecAP[playerid], 1);
+	PlayerTextDrawColor(playerid, SpecAP[playerid], -1);
+	PlayerTextDrawSetOutline(playerid, SpecAP[playerid], 1);
+
+	// INTERIOR
+	SpecInt[playerid] = CreatePlayerTextDraw(playerid, 245.0, 406.0, "~w~Int: ~y~1");
+	PlayerTextDrawFont(playerid, SpecInt[playerid], 2);
+	PlayerTextDrawLetterSize(playerid, SpecInt[playerid], 0.26, 1.1);
+	PlayerTextDrawAlignment(playerid, SpecInt[playerid], 1);
+	PlayerTextDrawColor(playerid, SpecInt[playerid], -1);
+	PlayerTextDrawSetOutline(playerid, SpecInt[playerid], 1);
+
+	// WORLD
+	SpecWorld[playerid] = CreatePlayerTextDraw(playerid, 245.0, 420.0, "~w~World: ~y~1");
+	PlayerTextDrawFont(playerid, SpecWorld[playerid], 2);
+	PlayerTextDrawLetterSize(playerid, SpecWorld[playerid], 0.26, 1.1);
+	PlayerTextDrawAlignment(playerid, SpecWorld[playerid], 1);
+	PlayerTextDrawColor(playerid, SpecWorld[playerid], -1);
+	PlayerTextDrawSetOutline(playerid, SpecWorld[playerid], 1);
 }
 
 CreateTextDraw()
@@ -1116,511 +1090,6 @@ CreateTextDraw()
 	TextDrawUseBox(LaparHaus[5], 1);
 	TextDrawSetProportional(LaparHaus[5], 1);
 	TextDrawSetSelectable(LaparHaus[5], 0);
-
-	PhoneTD[6] = TextDrawCreate(419.000000, 318.000000, "ld_dual:backgnd");
-	TextDrawFont(PhoneTD[6], 4);
-	TextDrawLetterSize(PhoneTD[6], 0.600000, 2.000000);
-	TextDrawTextSize(PhoneTD[6], 109.500000, -198.000000);
-	TextDrawSetOutline(PhoneTD[6], 1);
-	TextDrawSetShadow(PhoneTD[6], 0);
-	TextDrawAlignment(PhoneTD[6], 1);
-	TextDrawColor(PhoneTD[6], -1);
-	TextDrawBackgroundColor(PhoneTD[6], 255);
-	TextDrawBoxColor(PhoneTD[6], 50);
-	TextDrawUseBox(PhoneTD[6], 1);
-	TextDrawSetProportional(PhoneTD[6], 1);
-	TextDrawSetSelectable(PhoneTD[6], 0);
-
-	PhoneTD[7] = TextDrawCreate(473.500000, 120.500000, "_");
-	TextDrawFont(PhoneTD[7], 1);
-	TextDrawLetterSize(PhoneTD[7], 0.554166, 1.700037);
-	TextDrawTextSize(PhoneTD[7], 252.500000, 105.000000);
-	TextDrawSetOutline(PhoneTD[7], 1);
-	TextDrawSetShadow(PhoneTD[7], 0);
-	TextDrawAlignment(PhoneTD[7], 2);
-	TextDrawColor(PhoneTD[7], -1);
-	TextDrawBackgroundColor(PhoneTD[7], 255);
-	TextDrawBoxColor(PhoneTD[7], 255);
-	TextDrawUseBox(PhoneTD[7], 1);
-	TextDrawSetProportional(PhoneTD[7], 1);
-	TextDrawSetSelectable(PhoneTD[7], 0);
-
-	PhoneTD[8] = TextDrawCreate(474.000000, 123.000000, "_");
-	TextDrawFont(PhoneTD[8], 1);
-	TextDrawLetterSize(PhoneTD[8], 0.600000, -0.199993);
-	TextDrawTextSize(PhoneTD[8], 326.000000, 21.000000);
-	TextDrawSetOutline(PhoneTD[8], 1);
-	TextDrawSetShadow(PhoneTD[8], 0);
-	TextDrawAlignment(PhoneTD[8], 2);
-	TextDrawColor(PhoneTD[8], -1);
-	TextDrawBackgroundColor(PhoneTD[8], 255);
-	TextDrawBoxColor(PhoneTD[8], -1);
-	TextDrawUseBox(PhoneTD[8], 1);
-	TextDrawSetProportional(PhoneTD[8], 1);
-	TextDrawSetSelectable(PhoneTD[8], 0);
-
-	PhoneTD[9] = TextDrawCreate(512.000000, 321.000000, "ld_beat:chit");
-	TextDrawFont(PhoneTD[9], 4);
-	TextDrawLetterSize(PhoneTD[9], 0.600000, 2.000000);
-	TextDrawTextSize(PhoneTD[9], 25.000000, 25.000000);
-	TextDrawSetOutline(PhoneTD[9], 1);
-	TextDrawSetShadow(PhoneTD[9], 0);
-	TextDrawAlignment(PhoneTD[9], 1);
-	TextDrawColor(PhoneTD[9], 255);
-	TextDrawBackgroundColor(PhoneTD[9], 255);
-	TextDrawBoxColor(PhoneTD[9], 50);
-	TextDrawUseBox(PhoneTD[9], 1);
-	TextDrawSetProportional(PhoneTD[9], 1);
-	TextDrawSetSelectable(PhoneTD[9], 0);
-
-	PhoneTD[10] = TextDrawCreate(480.000000, 119.500000, "ld_beat:chit");
-	TextDrawFont(PhoneTD[10], 4);
-	TextDrawLetterSize(PhoneTD[10], 0.600000, 2.000000);
-	TextDrawTextSize(PhoneTD[10], 10.000000, 5.000000);
-	TextDrawSetOutline(PhoneTD[10], 1);
-	TextDrawSetShadow(PhoneTD[10], 0);
-	TextDrawAlignment(PhoneTD[10], 1);
-	TextDrawColor(PhoneTD[10], -1);
-	TextDrawBackgroundColor(PhoneTD[10], 255);
-	TextDrawBoxColor(PhoneTD[10], 50);
-	TextDrawUseBox(PhoneTD[10], 1);
-	TextDrawSetProportional(PhoneTD[10], 1);
-	TextDrawSetSelectable(PhoneTD[10], 0);
-
-	PhoneTD[11] = TextDrawCreate(457.000000, 119.500000, "ld_beat:chit");
-	TextDrawFont(PhoneTD[11], 4);
-	TextDrawLetterSize(PhoneTD[11], 0.600000, 2.000000);
-	TextDrawTextSize(PhoneTD[11], 10.000000, 5.000000);
-	TextDrawSetOutline(PhoneTD[11], 1);
-	TextDrawSetShadow(PhoneTD[11], 0);
-	TextDrawAlignment(PhoneTD[11], 1);
-	TextDrawColor(PhoneTD[11], -1);
-	TextDrawBackgroundColor(PhoneTD[11], 255);
-	TextDrawBoxColor(PhoneTD[11], 50);
-	TextDrawUseBox(PhoneTD[11], 1);
-	TextDrawSetProportional(PhoneTD[11], 1);
-	TextDrawSetSelectable(PhoneTD[11], 0);
-
-	PhoneTD[12] = TextDrawCreate(452.000000, 119.500000, "ld_beat:chit");
-	TextDrawFont(PhoneTD[12], 4);
-	TextDrawLetterSize(PhoneTD[12], 0.600000, 2.000000);
-	TextDrawTextSize(PhoneTD[12], 5.000000, 5.000000);
-	TextDrawSetOutline(PhoneTD[12], 1);
-	TextDrawSetShadow(PhoneTD[12], 0);
-	TextDrawAlignment(PhoneTD[12], 1);
-	TextDrawColor(PhoneTD[12], -1);
-	TextDrawBackgroundColor(PhoneTD[12], 255);
-	TextDrawBoxColor(PhoneTD[12], 50);
-	TextDrawUseBox(PhoneTD[12], 1);
-	TextDrawSetProportional(PhoneTD[12], 1);
-	TextDrawSetSelectable(PhoneTD[12], 0);
-
-	PhoneTD[13] = TextDrawCreate(422.000000, 138.000000, "00:00");
-	TextDrawFont(PhoneTD[13], 3);
-	TextDrawLetterSize(PhoneTD[13], 0.220833, 1.100000);
-	TextDrawTextSize(PhoneTD[13], 550.000000, 17.000000);
-	TextDrawSetOutline(PhoneTD[13], 1);
-	TextDrawSetShadow(PhoneTD[13], 0);
-	TextDrawAlignment(PhoneTD[13], 1);
-	TextDrawColor(PhoneTD[13], -1);
-	TextDrawBackgroundColor(PhoneTD[13], 255);
-	TextDrawBoxColor(PhoneTD[13], 50);
-	TextDrawUseBox(PhoneTD[13], 0);
-	TextDrawSetProportional(PhoneTD[13], 1);
-	TextDrawSetSelectable(PhoneTD[13], 0);
-
-	PhoneTD[14] = TextDrawCreate(416.000000, 151.000000, "ld_beat:chit");
-	TextDrawFont(PhoneTD[14], 4);
-	TextDrawLetterSize(PhoneTD[14], 0.600000, 2.000000);
-	TextDrawTextSize(PhoneTD[14], 40.000000, 40.000000);
-	TextDrawSetOutline(PhoneTD[14], 1);
-	TextDrawSetShadow(PhoneTD[14], 0);
-	TextDrawAlignment(PhoneTD[14], 1);
-	TextDrawColor(PhoneTD[14], 1687547391);
-	TextDrawBackgroundColor(PhoneTD[14], 1097458175);
-	TextDrawBoxColor(PhoneTD[14], 1687547186);
-	TextDrawUseBox(PhoneTD[14], 1);
-	TextDrawSetProportional(PhoneTD[14], 1);
-	TextDrawSetSelectable(PhoneTD[14], 0);
-
-	PhoneTD[15] = TextDrawCreate(454.000000, 151.000000, "ld_beat:chit");
-	TextDrawFont(PhoneTD[15], 4);
-	TextDrawLetterSize(PhoneTD[15], 0.600000, 2.000000);
-	TextDrawTextSize(PhoneTD[15], 40.000000, 40.000000);
-	TextDrawSetOutline(PhoneTD[15], 1);
-	TextDrawSetShadow(PhoneTD[15], 0);
-	TextDrawAlignment(PhoneTD[15], 1);
-	TextDrawColor(PhoneTD[15], -65281);
-	TextDrawBackgroundColor(PhoneTD[15], 255);
-	TextDrawBoxColor(PhoneTD[15], 50);
-	TextDrawUseBox(PhoneTD[15], 1);
-	TextDrawSetProportional(PhoneTD[15], 1);
-	TextDrawSetSelectable(PhoneTD[15], 0);
-
-	PhoneTD[16] = TextDrawCreate(491.000000, 151.000000, "ld_beat:chit");
-	TextDrawFont(PhoneTD[16], 4);
-	TextDrawLetterSize(PhoneTD[16], 0.600000, 2.000000);
-	TextDrawTextSize(PhoneTD[16], 40.000000, 40.000000);
-	TextDrawSetOutline(PhoneTD[16], 1);
-	TextDrawSetShadow(PhoneTD[16], 0);
-	TextDrawAlignment(PhoneTD[16], 1);
-	TextDrawColor(PhoneTD[16], 1296911871);
-	TextDrawBackgroundColor(PhoneTD[16], 255);
-	TextDrawBoxColor(PhoneTD[16], -16777166);
-	TextDrawUseBox(PhoneTD[16], 1);
-	TextDrawSetProportional(PhoneTD[16], 1);
-	TextDrawSetSelectable(PhoneTD[16], 0);
-
-	PhoneTD[17] = TextDrawCreate(491.000000, 193.000000, "ld_beat:chit");
-	TextDrawFont(PhoneTD[17], 4);
-	TextDrawLetterSize(PhoneTD[17], 0.600000, 2.000000);
-	TextDrawTextSize(PhoneTD[17], 40.000000, 40.000000);
-	TextDrawSetOutline(PhoneTD[17], 1);
-	TextDrawSetShadow(PhoneTD[17], 0);
-	TextDrawAlignment(PhoneTD[17], 1);
-	TextDrawColor(PhoneTD[17], -16776961);
-	TextDrawBackgroundColor(PhoneTD[17], 255);
-	TextDrawBoxColor(PhoneTD[17], -16777166);
-	TextDrawUseBox(PhoneTD[17], 1);
-	TextDrawSetProportional(PhoneTD[17], 1);
-	TextDrawSetSelectable(PhoneTD[17], 0);
-
-	PhoneTD[18] = TextDrawCreate(491.000000, 238.000000, "ld_beat:chit");
-	TextDrawFont(PhoneTD[18], 4);
-	TextDrawLetterSize(PhoneTD[18], 0.600000, 2.000000);
-	TextDrawTextSize(PhoneTD[18], 40.000000, 40.000000);
-	TextDrawSetOutline(PhoneTD[18], 1);
-	TextDrawSetShadow(PhoneTD[18], 0);
-	TextDrawAlignment(PhoneTD[18], 1);
-	TextDrawColor(PhoneTD[18], 9145343);
-	TextDrawBackgroundColor(PhoneTD[18], 255);
-	TextDrawBoxColor(PhoneTD[18], -16777166);
-	TextDrawUseBox(PhoneTD[18], 1);
-	TextDrawSetProportional(PhoneTD[18], 1);
-	TextDrawSetSelectable(PhoneTD[18], 0);
-
-	PhoneTD[19] = TextDrawCreate(416.000000, 193.000000, "ld_beat:chit");
-	TextDrawFont(PhoneTD[19], 4);
-	TextDrawLetterSize(PhoneTD[19], 0.600000, 2.000000);
-	TextDrawTextSize(PhoneTD[19], 40.000000, 40.000000);
-	TextDrawSetOutline(PhoneTD[19], 1);
-	TextDrawSetShadow(PhoneTD[19], 0);
-	TextDrawAlignment(PhoneTD[19], 1);
-	TextDrawColor(PhoneTD[19], -1);
-	TextDrawBackgroundColor(PhoneTD[19], 1097458175);
-	TextDrawBoxColor(PhoneTD[19], 1687547186);
-	TextDrawUseBox(PhoneTD[19], 1);
-	TextDrawSetProportional(PhoneTD[19], 1);
-	TextDrawSetSelectable(PhoneTD[19], 0);
-
-	PhoneTD[20] = TextDrawCreate(416.000000, 238.000000, "ld_beat:chit");
-	TextDrawFont(PhoneTD[20], 4);
-	TextDrawLetterSize(PhoneTD[20], 0.600000, 2.000000);
-	TextDrawTextSize(PhoneTD[20], 40.000000, 40.000000);
-	TextDrawSetOutline(PhoneTD[20], 1);
-	TextDrawSetShadow(PhoneTD[20], 0);
-	TextDrawAlignment(PhoneTD[20], 1);
-	TextDrawColor(PhoneTD[20], 65535);
-	TextDrawBackgroundColor(PhoneTD[20], 1097458175);
-	TextDrawBoxColor(PhoneTD[20], 1687547186);
-	TextDrawUseBox(PhoneTD[20], 1);
-	TextDrawSetProportional(PhoneTD[20], 1);
-	TextDrawSetSelectable(PhoneTD[20], 0);
-
-	PhoneTD[21] = TextDrawCreate(454.000000, 193.000000, "ld_beat:chit");
-	TextDrawFont(PhoneTD[21], 4);
-	TextDrawLetterSize(PhoneTD[21], 0.600000, 2.000000);
-	TextDrawTextSize(PhoneTD[21], 40.000000, 40.000000);
-	TextDrawSetOutline(PhoneTD[21], 1);
-	TextDrawSetShadow(PhoneTD[21], 0);
-	TextDrawAlignment(PhoneTD[21], 1);
-	TextDrawColor(PhoneTD[21], 1433087999);
-	TextDrawBackgroundColor(PhoneTD[21], 255);
-	TextDrawBoxColor(PhoneTD[21], 50);
-	TextDrawUseBox(PhoneTD[21], 1);
-	TextDrawSetProportional(PhoneTD[21], 1);
-	TextDrawSetSelectable(PhoneTD[21], 0);
-
-	PhoneTD[22] = TextDrawCreate(454.000000, 238.000000, "ld_beat:chit");
-	TextDrawFont(PhoneTD[22], 4);
-	TextDrawLetterSize(PhoneTD[22], 0.600000, 2.000000);
-	TextDrawTextSize(PhoneTD[22], 40.000000, 40.000000);
-	TextDrawSetOutline(PhoneTD[22], 1);
-	TextDrawSetShadow(PhoneTD[22], 0);
-	TextDrawAlignment(PhoneTD[22], 1);
-	TextDrawColor(PhoneTD[22], -1962934017);
-	TextDrawBackgroundColor(PhoneTD[22], 255);
-	TextDrawBoxColor(PhoneTD[22], 50);
-	TextDrawUseBox(PhoneTD[22], 1);
-	TextDrawSetProportional(PhoneTD[22], 1);
-	TextDrawSetSelectable(PhoneTD[22], 0);
-
-	PhoneTD[23] = TextDrawCreate(428.000000, 186.000000, "SMS");
-	TextDrawFont(PhoneTD[23], 1);
-	TextDrawLetterSize(PhoneTD[23], 0.224998, 1.000000);
-	TextDrawTextSize(PhoneTD[23], 555.500000, 17.000000);
-	TextDrawSetOutline(PhoneTD[23], 1);
-	TextDrawSetShadow(PhoneTD[23], 0);
-	TextDrawAlignment(PhoneTD[23], 1);
-	TextDrawColor(PhoneTD[23], -1);
-	TextDrawBackgroundColor(PhoneTD[23], 255);
-	TextDrawBoxColor(PhoneTD[23], 50);
-	TextDrawUseBox(PhoneTD[23], 0);
-	TextDrawSetProportional(PhoneTD[23], 1);
-	TextDrawSetSelectable(PhoneTD[23], 0);
-
-	PhoneTD[24] = TextDrawCreate(458.000000, 186.000000, "CONTACT");
-	TextDrawFont(PhoneTD[24], 1);
-	TextDrawLetterSize(PhoneTD[24], 0.224998, 1.000000);
-	TextDrawTextSize(PhoneTD[24], 555.500000, 17.000000);
-	TextDrawSetOutline(PhoneTD[24], 1);
-	TextDrawSetShadow(PhoneTD[24], 0);
-	TextDrawAlignment(PhoneTD[24], 1);
-	TextDrawColor(PhoneTD[24], -1);
-	TextDrawBackgroundColor(PhoneTD[24], 255);
-	TextDrawBoxColor(PhoneTD[24], 50);
-	TextDrawUseBox(PhoneTD[24], 0);
-	TextDrawSetProportional(PhoneTD[24], 1);
-	TextDrawSetSelectable(PhoneTD[24], 0);
-
-	PhoneTD[25] = TextDrawCreate(502.000000, 186.000000, "CALL");
-	TextDrawFont(PhoneTD[25], 1);
-	TextDrawLetterSize(PhoneTD[25], 0.224998, 1.000000);
-	TextDrawTextSize(PhoneTD[25], 555.500000, 17.000000);
-	TextDrawSetOutline(PhoneTD[25], 1);
-	TextDrawSetShadow(PhoneTD[25], 0);
-	TextDrawAlignment(PhoneTD[25], 1);
-	TextDrawColor(PhoneTD[25], -1);
-	TextDrawBackgroundColor(PhoneTD[25], 255);
-	TextDrawBoxColor(PhoneTD[25], 50);
-	TextDrawUseBox(PhoneTD[25], 0);
-	TextDrawSetProportional(PhoneTD[25], 1);
-	TextDrawSetSelectable(PhoneTD[25], 0);
-
-	PhoneTD[26] = TextDrawCreate(497.000000, 227.000000, "SETTING");
-	TextDrawFont(PhoneTD[26], 1);
-	TextDrawLetterSize(PhoneTD[26], 0.224998, 1.000000);
-	TextDrawTextSize(PhoneTD[26], 555.500000, 17.000000);
-	TextDrawSetOutline(PhoneTD[26], 1);
-	TextDrawSetShadow(PhoneTD[26], 0);
-	TextDrawAlignment(PhoneTD[26], 1);
-	TextDrawColor(PhoneTD[26], -1);
-	TextDrawBackgroundColor(PhoneTD[26], 255);
-	TextDrawBoxColor(PhoneTD[26], 50);
-	TextDrawUseBox(PhoneTD[26], 0);
-	TextDrawSetProportional(PhoneTD[26], 1);
-	TextDrawSetSelectable(PhoneTD[26], 0);
-
-	PhoneTD[27] = TextDrawCreate(497.000000, 272.000000, "CAMERA");
-	TextDrawFont(PhoneTD[27], 1);
-	TextDrawLetterSize(PhoneTD[27], 0.224998, 1.000000);
-	TextDrawTextSize(PhoneTD[27], 555.500000, 17.000000);
-	TextDrawSetOutline(PhoneTD[27], 1);
-	TextDrawSetShadow(PhoneTD[27], 0);
-	TextDrawAlignment(PhoneTD[27], 1);
-	TextDrawColor(PhoneTD[27], -1);
-	TextDrawBackgroundColor(PhoneTD[27], 255);
-	TextDrawBoxColor(PhoneTD[27], 50);
-	TextDrawUseBox(PhoneTD[27], 0);
-	TextDrawSetProportional(PhoneTD[27], 1);
-	TextDrawSetSelectable(PhoneTD[27], 0);
-
-	PhoneTD[28] = TextDrawCreate(423.000000, 227.000000, "I-BANK");
-	TextDrawFont(PhoneTD[28], 1);
-	TextDrawLetterSize(PhoneTD[28], 0.224998, 1.000000);
-	TextDrawTextSize(PhoneTD[28], 555.500000, 17.000000);
-	TextDrawSetOutline(PhoneTD[28], 1);
-	TextDrawSetShadow(PhoneTD[28], 0);
-	TextDrawAlignment(PhoneTD[28], 1);
-	TextDrawColor(PhoneTD[28], -1);
-	TextDrawBackgroundColor(PhoneTD[28], 255);
-	TextDrawBoxColor(PhoneTD[28], 50);
-	TextDrawUseBox(PhoneTD[28], 0);
-	TextDrawSetProportional(PhoneTD[28], 1);
-	TextDrawSetSelectable(PhoneTD[28], 0);
-
-	PhoneTD[29] = TextDrawCreate(421.000000, 272.000000, "TWITTER");
-	TextDrawFont(PhoneTD[29], 1);
-	TextDrawLetterSize(PhoneTD[29], 0.224998, 1.000000);
-	TextDrawTextSize(PhoneTD[29], 555.500000, 17.000000);
-	TextDrawSetOutline(PhoneTD[29], 1);
-	TextDrawSetShadow(PhoneTD[29], 0);
-	TextDrawAlignment(PhoneTD[29], 1);
-	TextDrawColor(PhoneTD[29], -1);
-	TextDrawBackgroundColor(PhoneTD[29], 255);
-	TextDrawBoxColor(PhoneTD[29], 50);
-	TextDrawUseBox(PhoneTD[29], 0);
-	TextDrawSetProportional(PhoneTD[29], 1);
-	TextDrawSetSelectable(PhoneTD[29], 0);
-
-	PhoneTD[30] = TextDrawCreate(467.000000, 227.000000, "GPS");
-	TextDrawFont(PhoneTD[30], 1);
-	TextDrawLetterSize(PhoneTD[30], 0.224998, 1.000000);
-	TextDrawTextSize(PhoneTD[30], 555.500000, 17.000000);
-	TextDrawSetOutline(PhoneTD[30], 1);
-	TextDrawSetShadow(PhoneTD[30], 0);
-	TextDrawAlignment(PhoneTD[30], 1);
-	TextDrawColor(PhoneTD[30], -1);
-	TextDrawBackgroundColor(PhoneTD[30], 255);
-	TextDrawBoxColor(PhoneTD[30], 50);
-	TextDrawUseBox(PhoneTD[30], 0);
-	TextDrawSetProportional(PhoneTD[30], 1);
-	TextDrawSetSelectable(PhoneTD[30], 0);
-
-	PhoneTD[31] = TextDrawCreate(462.000000, 272.000000, "APP");
-	TextDrawFont(PhoneTD[31], 1);
-	TextDrawLetterSize(PhoneTD[31], 0.224997, 1.000000);
-	TextDrawTextSize(PhoneTD[31], 555.500000, 17.000000);
-	TextDrawSetOutline(PhoneTD[31], 1);
-	TextDrawSetShadow(PhoneTD[31], 0);
-	TextDrawAlignment(PhoneTD[31], 1);
-	TextDrawColor(PhoneTD[31], -1);
-	TextDrawBackgroundColor(PhoneTD[31], 255);
-	TextDrawBoxColor(PhoneTD[31], 50);
-	TextDrawUseBox(PhoneTD[31], 0);
-	TextDrawSetProportional(PhoneTD[31], 1);
-	TextDrawSetSelectable(PhoneTD[31], 0);
-
-
-	phoneclosetd = TextDrawCreate(459.000000, 316.500000, "ld_beat:chit");//close
-	TextDrawFont(phoneclosetd, 4);
-	TextDrawLetterSize(phoneclosetd, 0.600000, 2.000000);
-	TextDrawTextSize(phoneclosetd, 27.000000, 27.000000);
-	TextDrawSetOutline(phoneclosetd, 1);
-	TextDrawSetShadow(phoneclosetd, 0);
-	TextDrawAlignment(phoneclosetd, 1);
-	TextDrawColor(phoneclosetd, -1);
-	TextDrawBackgroundColor(phoneclosetd, 255);
-	TextDrawBoxColor(phoneclosetd, 50);
-	TextDrawUseBox(phoneclosetd, 1);
-	TextDrawSetProportional(phoneclosetd, 1);
-	TextDrawSetSelectable(phoneclosetd, 1);
-
-	mesaagetd = TextDrawCreate(429.000000, 163.000000, "ld_chat:goodcha");
-	TextDrawFont(mesaagetd, 4);
-	TextDrawLetterSize(mesaagetd, 0.600000, 2.000000);
-	TextDrawTextSize(mesaagetd, 14.000000, 14.000000);
-	TextDrawSetOutline(mesaagetd, 1);
-	TextDrawSetShadow(mesaagetd, 0);
-	TextDrawAlignment(mesaagetd, 1);
-	TextDrawColor(mesaagetd, -1);
-	TextDrawBackgroundColor(mesaagetd, 255);
-	TextDrawBoxColor(mesaagetd, 50);
-	TextDrawUseBox(mesaagetd, 1);
-	TextDrawSetProportional(mesaagetd, 1);
-	TextDrawSetSelectable(mesaagetd, 1);
-
-	contactstd = TextDrawCreate(467.000000, 163.000000, "ld_chat:badchat");
-	TextDrawFont(contactstd, 4);
-	TextDrawLetterSize(contactstd, 0.600000, 2.000000);
-	TextDrawTextSize(contactstd, 14.000000, 14.000000);
-	TextDrawSetOutline(contactstd, 1);
-	TextDrawSetShadow(contactstd, 0);
-	TextDrawAlignment(contactstd, 1);
-	TextDrawColor(contactstd, -1);
-	TextDrawBackgroundColor(contactstd, 255);
-	TextDrawBoxColor(contactstd, 50);
-	TextDrawUseBox(contactstd, 1);
-	TextDrawSetProportional(contactstd, 1);
-	TextDrawSetSelectable(contactstd, 1);
-
-	cameratd = TextDrawCreate(504.000000, 251.000000, "ld_grav:flwr");
-	TextDrawFont(cameratd, 4);
-	TextDrawLetterSize(cameratd, 0.600000, 2.000000);
-	TextDrawTextSize(cameratd, 14.000000, 14.000000);
-	TextDrawSetOutline(cameratd, 1);
-	TextDrawSetShadow(cameratd, 0);
-	TextDrawAlignment(cameratd, 1);
-	TextDrawColor(cameratd, -1);
-	TextDrawBackgroundColor(cameratd, 255);
-	TextDrawBoxColor(cameratd, 50);
-	TextDrawUseBox(cameratd, 1);
-	TextDrawSetProportional(cameratd, 1);
-	TextDrawSetSelectable(cameratd, 1);
-
-	banktd = TextDrawCreate(429.000000, 205.000000, "HUD:radar_cash");
-	TextDrawFont(banktd, 4);
-	TextDrawLetterSize(banktd, 0.600000, 2.000000);
-	TextDrawTextSize(banktd, 14.000000, 14.000000);
-	TextDrawSetOutline(banktd, 1);
-	TextDrawSetShadow(banktd, 0);
-	TextDrawAlignment(banktd, 1);
-	TextDrawColor(banktd, -1);
-	TextDrawBackgroundColor(banktd, 255);
-	TextDrawBoxColor(banktd, 50);
-	TextDrawUseBox(banktd, 1);
-	TextDrawSetProportional(banktd, 1);
-	TextDrawSetSelectable(banktd, 1);
-
-	settingtd = TextDrawCreate(504.000000, 205.000000, "HUD:radar_waypoint");
-	TextDrawFont(settingtd, 4);
-	TextDrawLetterSize(settingtd, 0.600000, 2.000000);
-	TextDrawTextSize(settingtd, 14.000000, 14.000000);
-	TextDrawSetOutline(settingtd, 1);
-	TextDrawSetShadow(settingtd, 0);
-	TextDrawAlignment(settingtd, 1);
-	TextDrawColor(settingtd, -1);
-	TextDrawBackgroundColor(settingtd, 255);
-	TextDrawBoxColor(settingtd, 50);
-	TextDrawUseBox(settingtd, 1);
-	TextDrawSetProportional(settingtd, 1);
-	TextDrawSetSelectable(settingtd, 1);
-
-	twittertd = TextDrawCreate(431.000000, 249.000000, "T");
-	TextDrawFont(twittertd, 1);
-	TextDrawLetterSize(twittertd, 0.562500, 1.799998);
-	TextDrawTextSize(twittertd, 441.000000, 49.000000);
-	TextDrawSetOutline(twittertd, 1);
-	TextDrawSetShadow(twittertd, 0);
-	TextDrawAlignment(twittertd, 1);
-	TextDrawColor(twittertd, -1);
-	TextDrawBackgroundColor(twittertd, 255);
-	TextDrawBoxColor(twittertd, 50);
-	TextDrawUseBox(twittertd, 0);
-	TextDrawSetProportional(twittertd, 1);
-	TextDrawSetSelectable(twittertd, 1);
-
-	gpstd = TextDrawCreate(467.000000, 203.000000, "G");
-	TextDrawFont(gpstd, 1);
-	TextDrawLetterSize(gpstd, 0.495833, 1.799998);
-	TextDrawTextSize(gpstd, 480.500000, 52.500000);
-	TextDrawSetOutline(gpstd, 1);
-	TextDrawSetShadow(gpstd, 0);
-	TextDrawAlignment(gpstd, 1);
-	TextDrawColor(gpstd, -1);
-	TextDrawBackgroundColor(gpstd, 255);
-	TextDrawBoxColor(gpstd, 50);
-	TextDrawUseBox(gpstd, 0);
-	TextDrawSetProportional(gpstd, 1);
-	TextDrawSetSelectable(gpstd, 1);
-
-	calltd = TextDrawCreate(505.000000, 161.000000, "C");
-	TextDrawFont(calltd, 1);
-	TextDrawLetterSize(calltd, 0.495833, 1.799998);
-	TextDrawTextSize(calltd, 516.000000, 17.000000);
-	TextDrawSetOutline(calltd, 1);
-	TextDrawSetShadow(calltd, 0);
-	TextDrawAlignment(calltd, 1);
-	TextDrawColor(calltd, -1);
-	TextDrawBackgroundColor(calltd, 255);
-	TextDrawBoxColor(calltd, 50);
-	TextDrawUseBox(calltd, 0);
-	TextDrawSetProportional(calltd, 1);
-	TextDrawSetSelectable(calltd, 1);
-
-	apptd = TextDrawCreate(467.000000, 249.000000, "HUD:radar_datedisco");
-	TextDrawFont(apptd, 4);
-	TextDrawLetterSize(apptd, 0.495833, 1.799998);
-	TextDrawTextSize(apptd, 15.000000, 16.500000);
-	TextDrawSetOutline(apptd, 1);
-	TextDrawSetShadow(apptd, 0);
-	TextDrawAlignment(apptd, 1);
-	TextDrawColor(apptd, -1);
-	TextDrawBackgroundColor(apptd, 255);
-	TextDrawBoxColor(apptd, 50);
-	TextDrawUseBox(apptd, 0);
-	TextDrawSetProportional(apptd, 1);
-	TextDrawSetSelectable(apptd, 1);
 
 	//Welcome Textdraw
 	WelcomeTD[0] = TextDrawCreate(320.000000, 379.000000, "_");

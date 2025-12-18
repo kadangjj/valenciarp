@@ -1,11 +1,14 @@
 //----------[ Function Login Register]----------
 function OnPlayerDataLoaded(playerid, race_check)
 {
-    SetPlayerCameraPos(playerid, 326.0329, -2066.3926, 26.5885);
-    SetPlayerCameraLookAt(playerid,247.605590, -1841.989990, 39.802570);
-    InterpolateCameraPos(playerid, 326.0329, -2066.3926, 26.5885, -34.6148, -2128.5989, 73.8314, 50000);
-    InterpolateCameraLookAt(playerid, 247.605590, -1841.989990, 39.802570, 817.645996, -1645.395751, 29.292520, 15000);
-    
+   	// Set posisi awal kamera
+	SetPlayerCameraPos(playerid, -242.9653, 317.2726, 46.3929);
+	SetPlayerCameraLookAt(playerid, -242.9653, 317.2726, 46.3929);
+
+	// Interpolasi kamera (contoh target bisa diganti sesuai kebutuhan)
+	InterpolateCameraPos(playerid, -242.9653, 317.2726, 46.3929, 100.0, 400.0, 60.0, 50000);
+	InterpolateCameraLookAt(playerid, -242.9653, 317.2726, 46.3929, 120.0, 420.0, 55.0, 15000);
+
     if (race_check != g_MysqlRaceCheck[playerid]) return Kick(playerid);
     
     for(new i = 0; i < 5; i++)
@@ -692,7 +695,7 @@ function LoadStats(playerid, PlayersName[])
 		
 
 		
-		new header[248], scoremath = ((level)*5), fac[24], Cache:checkfamily, gstr[2468], query[128];
+		new header[248], scoremath = ((level)*8), fac[24], Cache:checkfamily, gstr[2468], query[128];
 	
 		if(faction == 1)
 		{
@@ -1205,6 +1208,48 @@ IsPlayerOnline(const name[], &id = INVALID_PLAYER_ID)
 	id = INVALID_PLAYER_ID;
 	return 0;
 }
+
+stock FailSideJob(playerid, vehicleid)
+{
+    if(pData[playerid][pSideJob] <= 0) return;
+
+    new model = GetVehicleModel(vehicleid);
+
+    if(pData[playerid][pSweeper] > 0 && model == 574)
+    {
+        pData[playerid][pSweeper] = 0;
+        Info(playerid, "Sidejob Sweeper gagal karena kamu keluar dari kendaraan.");
+        SweeperRouteAUsed = 0;
+        SweeperRouteBUsed = 0;
+        SweeperRouteCUsed = 0;
+    }
+
+    if(pData[playerid][pBus] > 0 && model == 431)
+    {
+        pData[playerid][pBus] = 0;
+        Info(playerid, "Sidejob Bus gagal karena kamu keluar dari kendaraan.");
+        BusRouteAUsed = 0;
+        BusRouteBUsed = 0;
+    }
+
+    if(pData[playerid][pMower] > 0 && model == 572)
+    {
+        pData[playerid][pMower] = 0;
+        Info(playerid, "Sidejob Mower gagal karena kamu keluar dari kendaraan.");
+    }
+
+    // Reset job umum
+    pData[playerid][pSideJob] = 0;
+    pData[playerid][pCheckPoint] = CHECKPOINT_NONE;
+    DisablePlayerRaceCheckpoint(playerid);
+    PlayerUsingSweeperRoute[playerid] = 0;
+
+    if(vehicleid > 0)
+    {
+        SetTimerEx("RespawnPV", 1000, false, "d", vehicleid);
+    }
+}
+
 /*SendSMS(playerid, phoneNumber, text[])
 {
     foreach(new ii : Player)

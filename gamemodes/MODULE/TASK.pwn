@@ -4,9 +4,60 @@
          TASK OPTIMIZED LUNARPRIDE
 
 */
-
+#define COMPASS_SECTORS 22.5
 // Tambahkan variable global di bagian atas script
 new LastUptimeSecond = 0;
+
+stock NavUpdate(playerid)
+{
+	static second, minute, hour, day, month, year;
+	static Float:posPlayer[4];
+	static timestr[32], datestr[64];
+	
+	gettime(hour, minute, second);
+	getdate(year, month, day);
+	
+	// Get position and angle efficiently
+	if(IsPlayerInAnyVehicle(playerid))
+	{
+		new vehicleid = GetPlayerVehicleID(playerid);
+		GetVehiclePos(vehicleid, posPlayer[0], posPlayer[1], posPlayer[2]);
+		GetVehicleZAngle(vehicleid, posPlayer[3]);
+	}
+	else
+	{
+		GetPlayerPos(playerid, posPlayer[0], posPlayer[1], posPlayer[2]);
+		GetPlayerFacingAngle(playerid, posPlayer[3]);
+	}
+
+	// Untuk 8 arah mata angin
+	new direction = floatround((posPlayer[3] + 22.5) / 45.0) % 8;
+
+	static const directionNames[][] = {
+		"North", "Northeast", "East", "Southeast",
+		"South", "Southwest", "West", "Northwest"
+	};
+
+	static const directionShort[][] = {
+		"N", "NE", "E", "SE",
+		"S", "SW", "W", "NW"
+	};
+
+	// Update direction textdraws
+	PlayerTextDrawSetString(playerid, NAV[playerid][0], directionNames[direction]);
+	PlayerTextDrawSetString(playerid, NAV[playerid][1], directionShort[direction]);
+	
+	// Update time textdraw
+	format(timestr, sizeof(timestr), "%02d:%02d:%02d", hour, minute, second);
+	PlayerTextDrawSetString(playerid, NAV[playerid][4], timestr);
+	
+	// Update date textdraw
+	format(datestr, sizeof(datestr), "%02d %s %04d", day, GetMonth(month), year);
+	PlayerTextDrawSetString(playerid, NAV[playerid][5], datestr);
+	
+	// Update location textdraw
+	PlayerTextDrawSetString(playerid, NAV[playerid][6], GetLocation(posPlayer[0], posPlayer[1], posPlayer[2]));
+}
 
 task onlineTimer[1000]()
 {	
@@ -20,9 +71,6 @@ task onlineTimer[1000]()
 	TextDrawSetString(TextDate, datestring);
 	format(datestring, sizeof datestring, "%s%d:%s%d:%s%d", (hours < 10) ? ("0") : (""), hours, (minutes < 10) ? ("0") : (""), minutes, (seconds < 10) ? ("0") : (""), seconds);
 	TextDrawSetString(TextTime, datestring);
-	//Phone Time
-	format(datestring, sizeof datestring, "%s%d:%s%d", (hours < 10) ? ("0") : (""), hours, (minutes < 10) ? ("0") : (""), minutes);
-	TextDrawSetString(PhoneTD[13], datestring);
 
 	// Fix: Hanya update uptime sekali per detik (cek berdasarkan real second)
 	if(seconds != LastUptimeSecond)
@@ -82,6 +130,8 @@ ptask PlayerDelay[1000](playerid)
 {
 	if(pData[playerid][IsLoggedIn] == false) return 0;
 	NgecekCiter(playerid);
+	NavUpdate(playerid);
+
 		//VIP Expired Checking
 	if(pData[playerid][pVip] > 0)
 	{
@@ -366,28 +416,77 @@ ptask playerTimer[1000](playerid)
         }
         if(pData[playerid][pSeconds] == 60)
         {
-            new scoremath = ((pData[playerid][pLevel])*5);
             pData[playerid][pMinutes]++, pData[playerid][pCurrMinutes]++;
             pData[playerid][pSeconds] = 0, pData[playerid][pCurrSeconds] = 0;
+            
             switch(pData[playerid][pMinutes])
             {               
-                case 60:
+                case 60: // Setiap 1 jam
                 {
                     pData[playerid][pHours]++;
-                    pData[playerid][pLevelUp] += 1;
                     pData[playerid][pMinutes] = 0;
-                    UpdatePlayerData(playerid);
+                    
+                    // Sistem EXP baru dengan VIP Boost
+                    new exp_gain;
+                    
+                    // Base EXP berdasarkan level
+                    if(pData[playerid][pLevel] >= 6)
+                    {
+                        exp_gain = 2; // Level 6+ dapat 2 EXP per jam
+                    }
+                    else
+                    {
+                        exp_gain = 1; // Level 1-5 dapat 1 EXP per jam
+                    }
+                    
+                    // VIP Boost Multiplier
+                    if(pData[playerid][pVip] == 1) // Bronze VIP
+                    {
+                        exp_gain *= 2; // 2x EXP
+                    }
+                    else if(pData[playerid][pVip] == 2) // Silver VIP
+                    {
+                        exp_gain *= 3; // 3x EXP
+                    }
+                    else if(pData[playerid][pVip] == 3) // Diamond VIP
+                    {
+                        exp_gain *= 4; // 4x EXP
+                    }
+                    
+                    // Tambah EXP (pLevelUp)
+                    pData[playerid][pLevelUp] += exp_gain;
+                    
+                    // Hitung EXP yang dibutuhkan untuk naik level (scoremath)
+                    new scoremath = (pData[playerid][pLevel] * 8);
+                    
+                    // Cek apakah cukup EXP untuk naik level
                     if(pData[playerid][pLevelUp] >= scoremath)
                     {
-                        new mstr[128];
-                        pData[playerid][pLevel] += 1;
+                        // Naik level!
+                        pData[playerid][pLevel]++;
+                        pData[playerid][pLevelUp] = 0; // Reset EXP
                         SetPlayerScore(playerid, pData[playerid][pLevel]);
-                        UpdatePlayerData(playerid);
-                        format(mstr,sizeof(mstr),"~g~Level Up!~n~~w~Sekarang anda level ~r~%d", pData[playerid][pLevel]);
+                        
+                        // Notifikasi level up
+                        new mstr[128];
+                        format(mstr, sizeof(mstr), "~g~Level Up!~n~~w~Sekarang anda level ~r~%d", pData[playerid][pLevel]);
                         GameTextForPlayer(playerid, mstr, 6000, 1);
+                        PlayerPlaySound(playerid, 1057, 0.0, 0.0, 0.0);
+                        
+                        Servers(playerid, "Selamat! Kamu naik ke level %d!", pData[playerid][pLevel]);
+					}
+                    else
+                    {
+                        // Belum cukup EXP, kasih tau progress
+                        Servers(playerid, "EXP +%d | Progress: %d/%d EXP menuju level %d", exp_gain, pData[playerid][pLevelUp], scoremath, pData[playerid][pLevel] + 1);
+                       
                     }
+                    
+                    // Update database
+                    UpdatePlayerData(playerid);
                 }
             }
+            
             if(pData[playerid][pCurrMinutes] == 60)
             {
                 pData[playerid][pCurrMinutes] = 0;

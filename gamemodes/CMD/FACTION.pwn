@@ -400,6 +400,7 @@ CMD:respawncak(playerid, params[])
     {
         // Menghancurkan kendaraan yang sedang dikendarai
         DestroyVehicle(vehicleid);
+		CleanupFactionVehicle(vehicleid);
         
         // Jika Anda ingin mengatur kendaraan untuk respawn, Anda bisa menggunakan:
         // SetVehicleToRespawn(vehicleid);
@@ -442,7 +443,7 @@ CMD:openvehiclemenu(playerid, params[])
         }
     }
     else if (IsPlayerInRangeOfPoint(playerid, 3.5, 1162.5398, -1313.6564, 31.4925) ||
-             IsPlayerInRangeOfPoint(playerid, 3.5, 1569.8613, -1708.7760, 5.8906))
+             IsPlayerInRangeOfPoint(playerid, 3.5, 1124.6143, -1318.0011, 13.7310))
     {
         if (pData[playerid][pFaction] == 3) // SAMD
         {

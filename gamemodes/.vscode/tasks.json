@@ -6,7 +6,7 @@
       "type": "shell",
       "command": "C:\\Users\\lenovo\\Documents\\new project\\flow-rp-main\\pawno\\pawncc.exe",
       "args": [
-        "C:\\Users\\lenovo\\Documents\\new project\\flow-rp-main\\gamemodes\\gm.pwn",
+        "C:\\Users\\lenovo\\Documents\\new project\\flow-rp-main\\gamemodes\\GM.pwn",
         "-iincludes",
         "-oC:\\Users\\lenovo\\Documents\\new project\\flow-rp-main\\gamemodes\\GM.amx"
       ],

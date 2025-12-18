@@ -18,7 +18,7 @@ new VoucData[MAX_VOUCHER][E_VOUCHER],
 	
 function LoadVouchers()
 {
-    new voucid, admin[16], donature[16];
+    new voucid, admin[16], donature[16], tempString[64];
 	
 	new rows = cache_num_rows();
  	if(rows)
@@ -26,14 +26,15 @@ function LoadVouchers()
 		for(new i; i < rows; i++)
 		{
 			cache_get_value_name_int(i, "id", voucid);
-			cache_get_value_name_int(i, "code", VoucData[voucid][voucCode]);
+			cache_get_value_name(i, "code", tempString, sizeof(tempString));
+			format(VoucData[voucid][voucCode], 32, tempString);
 			cache_get_value_name_int(i, "vip", VoucData[voucid][voucVIP]);
 			cache_get_value_name_int(i, "vip_time", VoucData[voucid][voucVIPTime]);
 			cache_get_value_name_int(i, "money", VoucData[voucid][voucMoney]);
 			cache_get_value_name_int(i, "gold", VoucData[voucid][voucGold]);
-			cache_get_value_name(i, "admin", admin);
+			cache_get_value_name(i, "admin", admin, sizeof(admin));
 			format(VoucData[voucid][voucAdmin], 16, admin);
-			cache_get_value_name(i, "donature", donature);
+			cache_get_value_name(i, "donature", donature, sizeof(donature));
 			format(VoucData[voucid][voucDonature], 16, donature);
 			cache_get_value_name_int(i, "claim", VoucData[voucid][voucClaim]);
 			Iter_Add(Vouchers, voucid);
@@ -41,7 +42,7 @@ function LoadVouchers()
 		printf("[Vouchers]: %d Loaded.", rows);
 	}
 }
-	
+
 Voucher_Save(voucid)
 {
 	new cQuery[512];
