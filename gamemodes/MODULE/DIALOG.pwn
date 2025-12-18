@@ -17193,7 +17193,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 	{
 		if(!response) return 1;
 		SetPVarInt(playerid, "ClickedVeh", ReturnPlayerVehID(playerid, (listitem + 1)));
-		ShowPlayerDialog(playerid, DIALOG_MYVEH_INFO, DIALOG_STYLE_LIST, "Vehicle Info", "Information Vehicle\nTrack Vehicle\nUnstuck Vehicle", "Select", "Cancel");
+		ShowPlayerDialog(playerid, DIALOG_MYVEH_INFO, DIALOG_STYLE_LIST, "Vehicle Info", "Information Vehicle\nSet Name Vehicle\nTrack Vehicle\nUnstuck Vehicle", "Select", "Cancel");
 		return 1;
 	}
 	if(dialogid == DIALOG_MYVEH_INFO)
@@ -17208,19 +17208,23 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 				if(IsValidVehicle(pvData[vid][cVeh]))
 				{
 					new info[900];
-					format(info, sizeof(info), "License Plate:\t{ffff00}%s\n{ffffff}Model:\t{ffff00}%s(%d)\n{ffffff}Vehicle UID:\t{ffff00}%d\n{ffffff}Insurance(s):\t{ffff00}%d Active\n\n{ffffff}Fuel Tank:\t{ffff00}%d / 1000\n{ffffff}Primary Color:\t{ffff00}%d {ffffff}- Secondary Color:\t{ffff00}%d\n{ffffff}Paintjob:\t{ffff00}%d\n\n{ffffff}Owner Information:\n{ffffff}Name:\t{ffff00}%s",
-					pvData[vid][cPlate], GetVehicleModelName(pvData[vid][cModel]), pvData[vid][cModel], pvData[vid][cVeh], pvData[vid][cInsu], pvData[vid][cFuel], pvData[vid][cColor1], pvData[vid][cColor2], pvData[vid][cPaintJob], pData[playerid][pName]);
+					format(info, sizeof(info), "{ffffff}Vehicle Name:\t{ffff00}%s\n{ffffff}License Plate:\t{ffff00}%s\n{ffffff}Model:\t{ffff00}%s(%d)\n{ffffff}Vehicle UID:\t{ffff00}%d\n{ffffff}Insurance(s):\t{ffff00}%d Active\n\n{ffffff}Fuel Tank:\t{ffff00}%d / 1000\n{ffffff}Primary Color:\t{ffff00}%d {ffffff}- Secondary Color:\t{ffff00}%d\n{ffffff}Paintjob:\t{ffff00}%d\n\n{ffffff}Owner Information:\n{ffffff}Name:\t{ffff00}%s",
+					pvData[vid][cName], pvData[vid][cPlate], GetVehicleModelName(pvData[vid][cModel]), pvData[vid][cModel], pvData[vid][cVeh], pvData[vid][cInsu], pvData[vid][cFuel], pvData[vid][cColor1], pvData[vid][cColor2], pvData[vid][cPaintJob], pData[playerid][pName]);
 					ShowPlayerDialog(playerid, DIALOG_UNUSED, DIALOG_STYLE_MSGBOX, "Vehicle Registration", info, "Close", "");
 				}
 				else
 				{
 					new info[900];
-					format(info, sizeof(info), "License Plate:\t{ffff00}%s\n{ffffff}Model:\t{ffff00}%s(%d)\n{ffffff}Vehicle UID:\t{ffff00}%d\n{ffffff}Insurance(s):\t{ffff00}%d Active\n\n{ffffff}Fuel Tank:\t{ffff00}%d / 1000\n{ffffff}Primary Color:\t{ffff00}%d {ffffff}- Secondary Color:\t{ffff00}%d\n{ffffff}Paintjob:\t{ffff00}%d\n\n{ffffff}Owner Information:\n{ffffff}Name:\t{ffff00}%s",
-					pvData[vid][cPlate], GetVehicleModelName(pvData[vid][cModel]), pvData[vid][cModel], pvData[vid][cVeh], pvData[vid][cInsu], pvData[vid][cFuel], pvData[vid][cColor1], pvData[vid][cColor2], pvData[vid][cPaintJob], pData[playerid][pName]);
+					format(info, sizeof(info), "{ffffff}Vehicle Name:\t{ffff00}%s\n{ffffff}License Plate:\t{ffff00}%s\n{ffffff}Model:\t{ffff00}%s(%d)\n{ffffff}Vehicle UID:\t{ffff00}%d\n{ffffff}Insurance(s):\t{ffff00}%d Active\n\n{ffffff}Fuel Tank:\t{ffff00}%d / 1000\n{ffffff}Primary Color:\t{ffff00}%d {ffffff}- Secondary Color:\t{ffff00}%d\n{ffffff}Paintjob:\t{ffff00}%d\n\n{ffffff}Owner Information:\n{ffffff}Name:\t{ffff00}%s",
+					pvData[vid][cName], pvData[vid][cPlate], GetVehicleModelName(pvData[vid][cModel]), pvData[vid][cModel], pvData[vid][cVeh], pvData[vid][cInsu], pvData[vid][cFuel], pvData[vid][cColor1], pvData[vid][cColor2], pvData[vid][cPaintJob], pData[playerid][pName]);
 					ShowPlayerDialog(playerid, DIALOG_UNUSED, DIALOG_STYLE_MSGBOX, "Vehicle Registration", info, "Close", "");
 				}
 			}
 			case 1:
+			{
+				ShowPlayerDialog(playerid, DIALOG_MYVEH_SETNAME, DIALOG_STYLE_INPUT, "Set Vehicle Name", "Enter new vehicle name:", "Confirm", "Cancel");
+			}
+			case 2:
 			{
 				if(IsValidVehicle(pvData[vid][cVeh]))
 				{
@@ -17251,7 +17255,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 				else
 					return Error(playerid, "Kendaraanmu belum di spawn!");
 			}
-			case 2:
+			case 3:
 			{
 				static
 				carid = -1;
@@ -17275,7 +17279,30 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 		}
 		return 1;
 	}
-	
+	if(dialogid == DIALOG_MYVEH_SETNAME)
+	{
+		new vid = GetPVarInt(playerid, "ClickedVeh");
+		if(response)
+		{
+			if(strlen(inputtext) < 21 && strlen(inputtext) > 2)
+			{
+				format(pvData[vid][cName], 32, inputtext);
+				// Simpan ke database kalau perlu
+				Vehicle_Save(vid);
+				
+				Info(playerid, "Kamu berhasil mengubah nama kendaraan menjadi {FFFF00}%s", inputtext);
+				// callcmd::myveh(playerid, ""); // Kalau mau balik ke menu
+			}
+			else
+			{
+				new mstr[248];
+				format(mstr, sizeof(mstr), "Nama sebelumnya: %s\n\nMasukkan nama kendaraan yang kamu inginkan\n{ff0000}Minimal 3 dan Maksimal 20 karakter", pvData[vid][cName]);
+				ShowPlayerDialog(playerid, DIALOG_MYVEH_SETNAME, DIALOG_STYLE_INPUT, "Rename Vehicle", mstr, "Done", "Back");
+				return 1;
+			}
+		}
+		return 1;
+	}
 	if(dialogid == DIALOG_FAMILY_INTERIOR)
 	{
 	    if(response)

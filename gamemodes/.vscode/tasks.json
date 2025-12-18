@@ -2,13 +2,13 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Compile Pawn",
+      "label": "Compile Pawn gm.pwn",
       "type": "shell",
-     "command": "C:\\Users\\lenovo\\Documents\\new project\\flow-rp-main\\pawno\\pawncc.exe",
+      "command": "C:\\Users\\lenovo\\Documents\\new project\\flow-rp-main\\pawno\\pawncc.exe",
       "args": [
-        "${file}",
+        "C:\\Users\\lenovo\\Documents\\new project\\flow-rp-main\\gamemodes\\gm.pwn",
         "-iincludes",
-        "-o${fileDirname}/${fileBasenameNoExtension}.amx"
+        "-oC:\\Users\\lenovo\\Documents\\new project\\flow-rp-main\\gamemodes\\GM.amx"
       ],
       "group": {
         "kind": "build",

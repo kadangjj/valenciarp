@@ -12,6 +12,7 @@ enum pvdata
 	cID,
 	cOwner,
 	cModel,
+	cName,
 	cColor1,
 	cColor2,
 	cPaintJob,
@@ -85,6 +86,7 @@ new const g_arrVehicleNames[212][] = {
 	"Police Rancher", "Picador", "S.W.A.T", "Alpha", "Phoenix", "Glendale", "Sadler", "Luggage", "Luggage", "Stairs",
 	"Boxville", "Tiller", "Utility Trailer"
 };
+
 
 GetEngineStatus(vehicleid)
 {
@@ -547,6 +549,7 @@ public LoadPlayerVehicle(playerid)
 			pvData[i][cTogNeon] = 0;
 			cache_get_value_name_int(z, "price", pvData[i][cPrice]);
 			cache_get_value_name_int(z, "model", pvData[i][cModel]);
+			cache_get_value_name_int(z, "name", pvData[i][cName]);
 			cache_get_value_name(z, "plate", tempString);
 			format(pvData[i][cPlate], 16, tempString);
 			cache_get_value_name_int(z, "plate_time", pvData[i][cPlateTime]);
@@ -691,7 +694,7 @@ Vehicle_Save(vehicleid)
 	Vehicle_GetStatus(vehicleid);
 	// SaveVehicleDamage(vehicleid);
 	new cQuery[3000];
-	format(cQuery, sizeof(cQuery), "UPDATE vehicle SET locked='%d', insu='%d', claim='%d', claim_time='%d', x='%f', y='%f', z='%f', a='%f', health='%f', panels='%d', doors='%d', lights='%d', tires='%d', fuel='%d', interior='%d', vw='%d', damage0='%d', damage1='%d', damage2='%d', damage3='%d', color1='%d', color2='%d', paintjob='%d', neon='%d', price='%d', model='%d', plate='%d', plate_time='%d', ticket='%d', mod0='%d', mod1='%d', mod2='%d', mod3='%d', mod4='%d', mod5='%d', mod6='%d', mod7='%d', mod8='%d', mod9='%d', mod10='%d', mod11='%d', mod12='%d', mod13='%d', mod14='%d', mod15='%d', mod16='%d', lumber='%d', metal='%d', coal='%d', product='%d', gasoil='%d',component='%d',fish='%d', box='%d', rental='%d', park='%d', broken='%d', trunk='%d' WHERE id='%d'",
+	format(cQuery, sizeof(cQuery), "UPDATE vehicle SET locked='%d', insu='%d', claim='%d', claim_time='%d', x='%f', y='%f', z='%f', a='%f', health='%f', panels='%d', doors='%d', lights='%d', tires='%d', fuel='%d', interior='%d', vw='%d', damage0='%d', damage1='%d', damage2='%d', damage3='%d', color1='%d', color2='%d', paintjob='%d', neon='%d', price='%d', model='%d', plate='%d', plate_time='%d', ticket='%d', mod0='%d', mod1='%d', mod2='%d', mod3='%d', mod4='%d', mod5='%d', mod6='%d', mod7='%d', mod8='%d', mod9='%d', mod10='%d', mod11='%d', mod12='%d', mod13='%d', mod14='%d', mod15='%d', mod16='%d', lumber='%d', metal='%d', coal='%d', product='%d', gasoil='%d',component='%d',fish='%d', box='%d', rental='%d', park='%d', broken='%d', trunk='%d',name='%d' WHERE id='%d'",
 
 		pvData[vehicleid][cLocked],
 		pvData[vehicleid][cInsu],
@@ -747,6 +750,7 @@ Vehicle_Save(vehicleid)
 		pvData[vehicleid][cPark],
 		pvData[vehicleid][cStolen],
 		pvData[vehicleid][cTrunk],
+		pvData[vehicleid][cName],
 		pvData[vehicleid][cID]	
 	);
 	return mysql_tquery(g_SQL, cQuery);	
@@ -761,13 +765,13 @@ function EngineStatus(playerid, vehicleid)
 			if(vehicleid == pvData[ii][cVeh])
 			{
 				if(pvData[ii][cTicket] >= 2000)
-					return Error(playerid, "Kendaraan ini sudah ditilang oleh Polisi! /v insu - untuk memeriksa");
+					return Error(playerid, "Kendaraan ini sudah ditilang oleh Polisi! /ticket - untuk memeriksa");
 			}
 		}
 		new Float: f_vHealth;
 		GetVehicleHealth(vehicleid, f_vHealth);
-		if(f_vHealth < 350.0) return Error(playerid, "Kendaraan tidak dapat Menyala, Sudah rusak!");
-		if(GetVehicleFuel(vehicleid) <= 0.0) return Error(playerid, "Kendaraan tidak dapat Menyala, Bensin habis!");
+		if(f_vHealth < 350.0) return Error(playerid, "The vehicle cannot be started. It is damaged.");
+		if(GetVehicleFuel(vehicleid) <= 0.0) return Error(playerid, "The vehicle won't start, out of fuel!");
 
 		new rand = random(3);
 		if(rand == 0)
@@ -842,6 +846,7 @@ function RemovePlayerVehicle(playerid)
 			mysql_format(g_SQL, cQuery, sizeof(cQuery), "%s`claim_time`='%d', ", cQuery, pvData[i][cClaimTime]);
 			mysql_format(g_SQL, cQuery, sizeof(cQuery), "%s`plate`='%e', ", cQuery, pvData[i][cPlate]);
 			mysql_format(g_SQL, cQuery, sizeof(cQuery), "%s`plate_time`='%d', ", cQuery, pvData[i][cPlateTime]);
+			mysql_format(g_SQL, cQuery, sizeof(cQuery), "%s`name`='%e', ", cQuery, pvData[i][cName]);
 			mysql_format(g_SQL, cQuery, sizeof(cQuery), "%s`ticket`='%d', ", cQuery, pvData[i][cTicket]);
 			mysql_format(g_SQL, cQuery, sizeof(cQuery), "%s`color1`=%d, ", cQuery, pvData[i][cColor1]);
 			mysql_format(g_SQL, cQuery, sizeof(cQuery), "%s`color2`=%d, ", cQuery, pvData[i][cColor2]);
@@ -916,6 +921,7 @@ function OnVehCreated(playerid, oid, pid, model, color1, color2, Float:x, Float:
 	pvData[i][cID] = cache_insert_id();
 	pvData[i][cOwner] = pid;
 	pvData[i][cModel] = model;
+	format(pvData[i][cName], 24, "None");
 	pvData[i][cColor1] = color1;
 	pvData[i][cColor2] = color2;
 	pvData[i][cPaintJob] = -1;
@@ -969,7 +975,7 @@ function OnVehStarterpack(playerid, pid, model, color1, color2, Float:x, Float:y
 	new price = GetVehicleCost(model);
 	pvData[i][cID] = cache_insert_id();
 	pvData[i][cOwner] = pid;
-	
+	format(pvData[i][cName], 24, "None");
 	pvData[i][cModel] = model;
 	pvData[i][cColor1] = color1;
 	pvData[i][cColor2] = color2;
@@ -1022,7 +1028,7 @@ function OnVehBuyPV(playerid, pid, model, color1, color2, cost, Float:x, Float:y
     new i = Iter_Free(PVehicles);
     pvData[i][cID] = cache_insert_id();
     pvData[i][cOwner] = pid;
-	
+	format(pvData[i][cName], 24, "None");
     pvData[i][cModel] = model;
     pvData[i][cColor1] = color1;
     pvData[i][cColor2] = color2;
@@ -1080,7 +1086,7 @@ function OnVehBuyVIPPV(playerid, pid, model, color1, color2, cost, Float:x, Floa
 	new i = Iter_Free(PVehicles);
 	pvData[i][cID] = cache_insert_id();
 	pvData[i][cOwner] = pid;
-	
+	format(pvData[i][cName], 24, "None");
 	pvData[i][cModel] = model;
 	pvData[i][cColor1] = color1;
 	pvData[i][cColor2] = color2;
@@ -1134,7 +1140,7 @@ function OnVehRentPV(playerid, pid, model, color1, color2, cost, Float:x, Float:
 	new i = Iter_Free(PVehicles);
 	pvData[i][cID] = cache_insert_id();
 	pvData[i][cOwner] = pid;
-	
+	format(pvData[i][cName], 24, "None");
 	pvData[i][cModel] = model;
 	pvData[i][cColor1] = color1;
 	pvData[i][cColor2] = color2;
@@ -1189,7 +1195,7 @@ function OnVehRentBike(playerid, pid, model, color1, color2, cost, Float:x, Floa
 	new i = Iter_Free(PVehicles);
 	pvData[i][cID] = cache_insert_id();
 	pvData[i][cOwner] = pid;
-	
+	format(pvData[i][cName], 24, "None");
 	pvData[i][cModel] = model;
 	pvData[i][cColor1] = color1;
 	pvData[i][cColor2] = color2;
@@ -1244,7 +1250,7 @@ function OnVehRentBoat(playerid, pid, model, color1, color2, cost, Float:x, Floa
 	new i = Iter_Free(PVehicles);
 	pvData[i][cID] = cache_insert_id();
 	pvData[i][cOwner] = pid;
-	
+	format(pvData[i][cName], 24, "None");
 	pvData[i][cModel] = model;
 	pvData[i][cColor1] = color1;
 	pvData[i][cColor2] = color2;
@@ -1820,6 +1826,7 @@ CMD:mypv(playerid, params[])
 CMD:engine(playerid, params[])
 {
 	new vehicleid = GetPlayerVehicleID(playerid);
+	new vid = Vehicle_GetID(vehicleid); // atau cara kamu get vehicle data ID
 	if(IsPlayerInAnyVehicle(playerid) && GetPlayerState(playerid) == PLAYER_STATE_DRIVER)
 	{	
 		if(!IsEngineVehicle(vehicleid))
@@ -1833,7 +1840,10 @@ CMD:engine(playerid, params[])
 		else
 		{
 			//Info(playerid, "Anda mencoba menyalakan mesin kendaraan..");
-			//SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s mencoba menghidupkan mesin kendaraan %s.", ReturnName(playerid, 0), GetVehicleNameByVehicle(GetPlayerVehicleID(playerid)));
+			new msg[128]; // pastikan cukup besar untuk nama player + nama kendaraan
+			format(msg, sizeof(msg), "** %s has started %s's engine", ReturnName(playerid), pvData[vid][cName]);
+			SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, msg);
+
 			InfoTD_MSG(playerid, 4000, "Start Engine...");
 			SetTimerEx("EngineStatus", 3000, false, "id", playerid, vehicleid);
 			//UpdatePlayerData(playerid);
@@ -2222,6 +2232,20 @@ GetClosestCar(playerid, exception = INVALID_VEHICLE_ID)
         }
     }
     return target;
+}
+
+stock Vehicle_GetID(vehicleid)
+{
+    if(vehicleid == INVALID_VEHICLE_ID) return -1;
+    
+    for(new i = 0; i < MAX_VEHICLES; i++)
+    {
+        if(pvData[i][cVeh] == vehicleid) // cVeh = vehicleid yang di-create
+        {
+            return i;
+        }
+    }
+    return -1;
 }
 
 CMD:tow(playerid, params[]) 

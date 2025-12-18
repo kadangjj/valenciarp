@@ -424,7 +424,7 @@ enum
 	DIALOG_SPAWN_1,
 	DIALOG_MYVEH,
 	DIALOG_MYVEH_INFO,
-	DIALOG_VEHNAME,
+	DIALOG_MYVEH_SETNAME,
 	DIALOG_FAMILY_INTERIOR,
 	DIALOG_SPAREPART,
 	DIALOG_BUYPARTS,
@@ -499,6 +499,8 @@ enum
 	DIALOG_REPLYADS,
 	DIALOG_SHOWONLY,
 	DIALOG_ADS1,
+	DIALOG_SHOWADS,
+	DIALOG_ADS,
 	//private farm
 	DIALOG_FARMSAFE,
 	FARM_INFO,
@@ -6411,6 +6413,7 @@ public OnPlayerStateChange(playerid, newstate, oldstate)
 		if(IsEngineVehicle(vehicleid) && pData[playerid][pDriveLic] <= 0)
         {
             Info(playerid, "You don't have {FFFF00}Driving Licenses{FFFFFF}, Be carefull");
+			SendClientMessage(playerid, COLOR_SBLUE, "Use /engine or press Y to turn on your vehicle's engine.");
         }
 		if(pData[playerid][pHBEMode] == 1)
 		{
