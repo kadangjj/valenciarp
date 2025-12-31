@@ -12,7 +12,7 @@ enum pvdata
 	cID,
 	cOwner,
 	cModel,
-	cName,
+	cName[32],
 	cColor1,
 	cColor2,
 	cPaintJob,
@@ -22,7 +22,7 @@ enum pvdata
 	cInsu,
 	cClaim,
 	cClaimTime,
-	cPlate[15],
+	cPlate[16],
 	cPlateTime,
 	cTicket,
 	cPrice,
@@ -54,9 +54,11 @@ enum pvdata
 	cImpound,
 	//Vehicle Storage
 	cTrunk,
-	//cKeyHolders[3],
-   // cKeyHolderCount,
+	Text3D:cTextLabel,
+	cKeyHolders[3], // Max 5 key holders (simpan playerid ONLINE, bukan SQL ID)
+    cKeyCount,
 	bool:LoadedStorage,
+	bool:pHandbrake,
 };
 new pvData[MAX_PRIVATE_VEHICLE][pvdata],
 Iterator:PVehicles<MAX_PRIVATE_VEHICLE + 1>;
@@ -312,8 +314,71 @@ Vehicle_GetStatus(carid)
     return 1;
 }
 
+// Function untuk add key holder
+AddVehicleKeyHolder(carid, playerid)
+{
+    if(carid < 0 || !Iter_Contains(PVehicles, carid))
+        return 0;
+    
+    // Check apakah sudah punya key
+    for(new i = 0; i < 3; i++)
+    {
+        if(pvData[carid][cKeyHolders][i] == playerid)
+            return 0; // Already has key
+    }
+    
+    // Cari slot kosong
+    for(new i = 0; i < 3; i++)
+    {
+        if(pvData[carid][cKeyHolders][i] == INVALID_PLAYER_ID)
+        {
+            pvData[carid][cKeyHolders][i] = playerid;
+            pvData[carid][cKeyCount]++;
+            return 1;
+        }
+    }
+    
+    return 0; // Key holder limit reached
+}
 
+// Function untuk remove key holder
+RemoveVehicleKeyHolder(carid, playerid)
+{
+    if(carid < 0 || !Iter_Contains(PVehicles, carid))
+        return 0;
+    
+    for(new i = 0; i < 3; i++)
+    {
+        if(pvData[carid][cKeyHolders][i] == playerid)
+        {
+            pvData[carid][cKeyHolders][i] = INVALID_PLAYER_ID;
+            pvData[carid][cKeyCount]--;
+            return 1;
+        }
+    }
+    
+    return 0;
+}
 
+// Function untuk check apakah player punya key
+HasVehicleKey(playerid, carid)
+{
+    if(carid < 0 || !Iter_Contains(PVehicles, carid))
+        return 0;
+    
+    // Check owner
+    if(pvData[carid][cOwner] == pData[playerid][pID])
+        return 1;
+    
+    // Check key holders
+    for(new i = 0; i < 5; i++)
+    {
+        if(pvData[carid][cKeyHolders][i] == playerid)
+            return 1;
+    }
+    
+    return 0;
+}
 
 CountParkedVeh(id)
 {
@@ -342,67 +407,176 @@ ValidRepairVehicle(vehicleid) {
 	return 1;
 }
 
-
-//Private Vehicle Player System Function
-
-function OnPlayerVehicleRespawn(i)
+stock UpdateVehicleCrateLabel(carid)
 {
-	if(pvData[i][cClaim] == 0 && pvData[i][cPark] < 0 && pvData[i][cStolen] == 0)
-	{
-		// DESTROY VEHICLE LAMA (jika ada)
-		if(IsValidVehicle(pvData[i][cVeh]))
-		{
-			DestroyVehicle(pvData[i][cVeh]);
-		}
-		
-		// CREATE VEHICLE BARU
-		pvData[i][cVeh] = CreateVehicle(pvData[i][cModel], pvData[i][cPosX], pvData[i][cPosY], pvData[i][cPosZ], pvData[i][cPosA], pvData[i][cColor1], pvData[i][cColor2], -1);
-		SetVehicleNumberPlate(pvData[i][cVeh], pvData[i][cPlate]);
-		SetVehicleVirtualWorld(pvData[i][cVeh], pvData[i][cVw]);
-		LinkVehicleToInterior(pvData[i][cVeh], pvData[i][cInt]);
-		UpdateVehicleDamageStatus(pvData[i][cVeh], pvData[i][cDamagePanels], pvData[i][cDamageDoors], pvData[i][cDamageLights], pvData[i][cDamageTires]);
-		SetVehicleFuel(pvData[i][cVeh], pvData[i][cFuel]);
-		pvData[i][cTrunk] = 1;
-	}
-	
-	if(IsValidVehicle(pvData[i][cVeh]))
-	{
-		if(pvData[i][cHealth] < 350.0)
-		{
-			SetValidVehicleHealth(pvData[i][cVeh], 350.0);
-		}
-		else
-		{
-			SetValidVehicleHealth(pvData[i][cVeh], pvData[i][cHealth]);
-		}
-		
-		if(pvData[i][cPaintJob] != -1)
-		{
-			ChangeVehiclePaintjob(pvData[i][cVeh], pvData[i][cPaintJob]);
-		}
-		
-		for(new z = 0; z < 17; z++)
-		{
-			if(pvData[i][cMod][z] != 0)
-				AddVehicleComponent(pvData[i][cVeh], pvData[i][cMod][z]);
-		}
-		
-		if(pvData[i][cLocked] == 1)
-		{
-			SwitchVehicleDoors(pvData[i][cVeh], true);
-		}
-		else
-		{
-			SwitchVehicleDoors(pvData[i][cVeh], false);
-		}
-	}
-	
-	OnLoadVehicleStorage(i);
-	MySQL_LoadVehicleStorage(i);
-	
-	return 1;
+    if(carid == -1 || !IsValidVehicle(pvData[carid][cVeh])) return 0;
+    
+    // Hapus label lama jika ada
+    if(IsValidDynamic3DTextLabel(pvData[carid][cTextLabel]))
+        DestroyDynamic3DTextLabel(pvData[carid][cTextLabel]);
+    
+    new labeltext[128];
+    
+    // Jika ada fish
+    if(pvData[carid][cFish] > 0)
+    {
+        new totalCrates = pvData[carid][cFish] / 20; // 20 raw fish = 1 crate
+        format(labeltext, sizeof(labeltext), 
+            ""YELLOW_E"Fish Crate: "GREEN_E"%d"WHITE_E"/10", totalCrates);
+    }
+    // Jika ada component
+    else if(pvData[carid][cComponent] > 0)
+    {
+        new totalCrates = pvData[carid][cComponent] / 20; // 20 raw component = 1 crate
+        format(labeltext, sizeof(labeltext), 
+            ""YELLOW_E"Component Crate: "GREEN_E"%d"WHITE_E"/10", totalCrates);
+    }
+    else
+    {
+        return 0; // Tidak ada crate, tidak perlu label
+    }
+    
+    // Create label baru
+    pvData[carid][cTextLabel] = CreateDynamic3DTextLabel(labeltext, COLOR_YELLOW, 0.0, 0.0, 0.0, 15.0, INVALID_PLAYER_ID, pvData[carid][cVeh]);
+    
+    return 1;
 }
 
+//Private Vehicle Player System Function
+function OnPlayerVehicleRespawn(i)
+{
+    // ✅ SAFETY CHECK: Pastikan index valid
+    if(!Iter_Contains(PVehicles, i))
+    {
+        printf("[ERROR] OnPlayerVehicleRespawn called with invalid index: %d", i);
+        return 0;
+    }
+
+    if(pvData[i][cClaim] == 0 && pvData[i][cPark] < 0 && pvData[i][cStolen] == 0)
+    {
+        // ✅ DESTROY VEHICLE LAMA MILIK SENDIRI DULU
+        if(IsValidVehicle(pvData[i][cVeh]))
+        {
+            DestroyVehicle(pvData[i][cVeh]);
+            pvData[i][cVeh] = 0;
+        }
+        
+        // ✅ Simpan koordinat spawn ke variable lokal
+        new Float:spawn_x = pvData[i][cPosX];
+        new Float:spawn_y = pvData[i][cPosY];
+        new Float:spawn_z = pvData[i][cPosZ];
+        new spawn_int = pvData[i][cInt];
+        new spawn_vw = pvData[i][cVw];
+        
+        // ✅ CEK DAN DESPAWN VEHICLE LAIN DI POSISI YANG SAMA
+        foreach(new v : PVehicles)
+        {
+            if(v == i) continue; // Skip vehicle ini sendiri
+            if(pvData[v][cVeh] == 0) continue; // Skip yang belum spawn
+            if(!IsValidVehicle(pvData[v][cVeh])) continue; // Skip yang invalid
+            if(pvData[v][cClaim] == 1) continue; // Jangan despawn yang sedang di-claim
+            
+            // Skip jika beda interior/virtual world
+            if(pvData[v][cInt] != spawn_int || pvData[v][cVw] != spawn_vw)
+                continue;
+            
+            new Float:vx, Float:vy, Float:vz;
+            GetVehiclePos(pvData[v][cVeh], vx, vy, vz);
+            
+            // Jika ada vehicle lain di posisi yang sama (radius 3.0)
+            if(floatabs(spawn_x - vx) < 3.0 && 
+               floatabs(spawn_y - vy) < 3.0 && 
+               floatabs(spawn_z - vz) < 3.0)
+            {
+                // Cek apakah ada player di dalam vehicle
+                new bool:hasPlayer = false;
+                foreach(new p : Player)
+                {
+                    if(IsPlayerConnected(p) && GetPlayerVehicleID(p) == pvData[v][cVeh])
+                    {
+                        hasPlayer = true;
+                        break;
+                    }
+                }
+                
+                // Jangan despawn kalau ada player di dalamnya
+                if(hasPlayer) continue;
+                
+                // Despawn vehicle yang overlap
+                DestroyVehicle(pvData[v][cVeh]);
+                pvData[v][cVeh] = 0;
+                
+                // Notif owner (jika online)
+                foreach(new p : Player)
+                {
+                    if(IsPlayerConnected(p) && pData[p][pID] == pvData[v][cOwner])
+                    {
+                        Custom(p, "VEHICLE: "WHITE_E"Your %s has been despawned due to position conflict. Use /mypv to respawn.", GetVehicleModelName(pvData[v][cModel]));
+                        break;
+                    }
+                }
+                
+                printf("[Vehicle Overlap] ID %d despawned (conflict with ID %d)", pvData[v][cID], pvData[i][cID]);
+            }
+        }
+        
+        // ✅ CREATE VEHICLE BARU
+        pvData[i][cVeh] = CreateVehicle(pvData[i][cModel], spawn_x, spawn_y, spawn_z, pvData[i][cPosA], 
+            pvData[i][cColor1], pvData[i][cColor2], -1);
+        
+        if(!IsValidVehicle(pvData[i][cVeh]))
+        {
+            printf("[ERROR] Failed to create vehicle ID %d (Model: %d)", pvData[i][cID], pvData[i][cModel]);
+            pvData[i][cVeh] = 0;
+            return 0;
+        }
+        
+        SetVehicleNumberPlate(pvData[i][cVeh], pvData[i][cPlate]);
+        SetVehicleVirtualWorld(pvData[i][cVeh], spawn_vw);
+        LinkVehicleToInterior(pvData[i][cVeh], spawn_int);
+        UpdateVehicleDamageStatus(pvData[i][cVeh], pvData[i][cDamagePanels], pvData[i][cDamageDoors], 
+            pvData[i][cDamageLights], pvData[i][cDamageTires]);
+        SetVehicleFuel(pvData[i][cVeh], pvData[i][cFuel]);
+        pvData[i][cTrunk] = 1;
+    }
+    
+    if(IsValidVehicle(pvData[i][cVeh]))
+    {
+        if(pvData[i][cHealth] < 350.0)
+        {
+            SetValidVehicleHealth(pvData[i][cVeh], 350.0);
+        }
+        else
+        {
+            SetValidVehicleHealth(pvData[i][cVeh], pvData[i][cHealth]);
+        }
+        
+        if(pvData[i][cPaintJob] != -1)
+        {
+            ChangeVehiclePaintjob(pvData[i][cVeh], pvData[i][cPaintJob]);
+        }
+        
+        for(new z = 0; z < 17; z++)
+        {
+            if(pvData[i][cMod][z] != 0)
+                AddVehicleComponent(pvData[i][cVeh], pvData[i][cMod][z]);
+        }
+        
+        if(pvData[i][cLocked] == 1)
+        {
+            SwitchVehicleDoors(pvData[i][cVeh], true);
+        }
+        else
+        {
+            SwitchVehicleDoors(pvData[i][cVeh], false);
+        }
+    }
+    
+    OnLoadVehicleStorage(i);
+    MySQL_LoadVehicleStorage(i);
+    
+    return 1;
+}
 function OnLoadVehicleStorage(i)
 {
 	if(IsValidVehicle(pvData[i][cVeh]))
@@ -432,14 +606,14 @@ function OnLoadVehicleStorage(i)
 				}
 			}
 		}
-		if(pvData[i][cTogNeon] == 1)
+		/*if(pvData[i][cTogNeon] == 1)
 		{
 			if(pvData[i][cNeon] != 0)
 			{
 				SetVehicleNeonLights(pvData[i][cVeh], true, pvData[i][cNeon], 0);
 			}
 		}
-
+*/
 		if(pvData[i][cMetal] > 0)
 		{
 
@@ -514,98 +688,162 @@ function OnLoadVehicleStorage(i)
 forward LoadPlayerVehicle(playerid);
 public LoadPlayerVehicle(playerid)
 {
-	new query[128];
-	mysql_format(g_SQL, query, sizeof(query), "SELECT * FROM `vehicle` WHERE `owner` = %d", pData[playerid][pID]);
-	mysql_query(g_SQL, query, true);
-	new count = cache_num_rows(), tempString[56];
-	if(count > 0)
-	{
-		for(new z = 0; z < count; z++)
-		{
-			new i = Iter_Free(PVehicles);
-			cache_get_value_name_int(z, "id", pvData[i][cID]);
-			//pvData[i][VehicleOwned] = true;
-			cache_get_value_name_int(z, "owner", pvData[i][cOwner]);
-			cache_get_value_name_int(z, "locked", pvData[i][cLocked]);
-			cache_get_value_name_int(z, "insu", pvData[i][cInsu]);
-			cache_get_value_name_int(z, "claim", pvData[i][cClaim]);
-			cache_get_value_name_int(z, "claim_time", pvData[i][cClaimTime]);
-			cache_get_value_name_float(z, "x", pvData[i][cPosX]);
-			cache_get_value_name_float(z, "y", pvData[i][cPosY]);
-			cache_get_value_name_float(z, "z", pvData[i][cPosZ]);
-			cache_get_value_name_float(z, "a", pvData[i][cPosA]);
-			cache_get_value_name_float(z, "health", pvData[i][cHealth]);
-			cache_get_value_name_int(z, "panels", pvData[i][cDamagePanels]);
-			cache_get_value_name_int(z, "doors", pvData[i][cDamageDoors]);
-			cache_get_value_name_int(z, "lights", pvData[i][cDamageLights]);
-			cache_get_value_name_int(z, "tires", pvData[i][cDamageTires]);
-			cache_get_value_name_int(z, "fuel", pvData[i][cFuel]);
-			cache_get_value_name_int(z, "interior", pvData[i][cInt]);
-			cache_get_value_name_int(z, "vw", pvData[i][cVw]);
-			cache_get_value_name_int(z, "color1", pvData[i][cColor1]);
-			cache_get_value_name_int(z, "color2", pvData[i][cColor2]);
-			cache_get_value_name_int(z, "paintjob", pvData[i][cPaintJob]);
-			cache_get_value_name_int(z, "neon", pvData[i][cNeon]);
-			pvData[i][cTogNeon] = 0;
-			cache_get_value_name_int(z, "price", pvData[i][cPrice]);
-			cache_get_value_name_int(z, "model", pvData[i][cModel]);
-			cache_get_value_name(z, "plate", tempString);
-			format(pvData[i][cPlate], 16, tempString);
-			cache_get_value_name_int(z, "plate_time", pvData[i][cPlateTime]);
-			cache_get_value_name_int(z, "ticket", pvData[i][cTicket]);
+    // ✅ CARA AMAN: Collect dulu ID yang mau di-remove, baru remove setelah loop selesai
+    new toRemove[MAX_VEHICLES], removeCount = 0;
+    
+    foreach(new i : PVehicles)
+    {
+        if(pvData[i][cOwner] == pData[playerid][pID])
+        {
+            if(IsValidVehicle(pvData[i][cVeh]))
+            {
+                DestroyVehicle(pvData[i][cVeh]);
+            }
+            pvData[i][cVeh] = 0;
+            
+            toRemove[removeCount] = i;
+            removeCount++;
+        }
+    }
+    
+    for(new x = 0; x < removeCount; x++)
+    {
+        Iter_Remove(PVehicles, toRemove[x]);
+    }
+    
+    printf("[DEBUG] Removed %d old vehicles for %s before loading", removeCount, pData[playerid][pName]);
+    
+    // Load dari database
+    new query[128];
+    mysql_format(g_SQL, query, sizeof(query), "SELECT * FROM `vehicle` WHERE `owner` = %d", pData[playerid][pID]);
+    mysql_query(g_SQL, query, true);
+    new count = cache_num_rows();
+    
+    printf("[DEBUG] Found %d vehicles in database for %s", count, pData[playerid][pName]);
+    
+    if(count > 0)
+    {
+        new tempString[128]; // ✅ PERBESAR dari 56 jadi 128
+        
+        for(new z = 0; z < count; z++)
+        {
+            new i = Iter_Free(PVehicles);
+            
+            if(i == INVALID_ITERATOR_SLOT)
+            {
+                printf("[ERROR] No free vehicle slot for player %s", pData[playerid][pName]);
+                break;
+            }
+            
+            printf("[DEBUG] Loading vehicle row %d into slot %d", z, i);
+            
+            // ✅ Load satu-satu dengan error handling
+            cache_get_value_name_int(z, "id", pvData[i][cID]);
+            cache_get_value_name_int(z, "owner", pvData[i][cOwner]);
+            cache_get_value_name_int(z, "model", pvData[i][cModel]);
+            
+            printf("[DEBUG] Basic data: ID=%d Owner=%d Model=%d", 
+                pvData[i][cID], pvData[i][cOwner], pvData[i][cModel]);
+            
+            cache_get_value_name_int(z, "locked", pvData[i][cLocked]);
+            cache_get_value_name_int(z, "insu", pvData[i][cInsu]);
+            cache_get_value_name_int(z, "claim", pvData[i][cClaim]);
+            cache_get_value_name_int(z, "claim_time", pvData[i][cClaimTime]);
+            
+            cache_get_value_name_float(z, "x", pvData[i][cPosX]);
+            cache_get_value_name_float(z, "y", pvData[i][cPosY]);
+            cache_get_value_name_float(z, "z", pvData[i][cPosZ]);
+            cache_get_value_name_float(z, "a", pvData[i][cPosA]);
+            cache_get_value_name_float(z, "health", pvData[i][cHealth]);
+            
+            cache_get_value_name_int(z, "panels", pvData[i][cDamagePanels]);
+            cache_get_value_name_int(z, "doors", pvData[i][cDamageDoors]);
+            cache_get_value_name_int(z, "lights", pvData[i][cDamageLights]);
+            cache_get_value_name_int(z, "tires", pvData[i][cDamageTires]);
+            cache_get_value_name_int(z, "fuel", pvData[i][cFuel]);
+            cache_get_value_name_int(z, "interior", pvData[i][cInt]);
+            cache_get_value_name_int(z, "vw", pvData[i][cVw]);
+            cache_get_value_name_int(z, "color1", pvData[i][cColor1]);
+            cache_get_value_name_int(z, "color2", pvData[i][cColor2]);
+            cache_get_value_name_int(z, "paintjob", pvData[i][cPaintJob]);
+            cache_get_value_name_int(z, "neon", pvData[i][cNeon]);
+            pvData[i][cTogNeon] = 0;
+            cache_get_value_name_int(z, "price", pvData[i][cPrice]);
+            
+            // ✅ Plate dengan safety
+            cache_get_value_name(z, "plate", tempString, sizeof(tempString));
+            format(pvData[i][cPlate], 16, "%s", tempString);
+            
+            cache_get_value_name_int(z, "plate_time", pvData[i][cPlateTime]);
+            cache_get_value_name_int(z, "ticket", pvData[i][cTicket]);
 
-			cache_get_value_name_int(z, "mod0", pvData[i][cMod][0]);
-			cache_get_value_name_int(z, "mod1", pvData[i][cMod][1]);
-			cache_get_value_name_int(z, "mod2", pvData[i][cMod][2]);
-			cache_get_value_name_int(z, "mod3", pvData[i][cMod][3]);
-			cache_get_value_name_int(z, "mod4", pvData[i][cMod][4]);
-			cache_get_value_name_int(z, "mod5", pvData[i][cMod][5]);
-			cache_get_value_name_int(z, "mod6", pvData[i][cMod][6]);
-			cache_get_value_name_int(z, "mod7", pvData[i][cMod][7]);
-			cache_get_value_name_int(z, "mod8", pvData[i][cMod][8]);
-			cache_get_value_name_int(z, "mod9", pvData[i][cMod][9]);
-			cache_get_value_name_int(z, "mod10", pvData[i][cMod][10]);
-			cache_get_value_name_int(z, "mod11", pvData[i][cMod][11]);
-			cache_get_value_name_int(z, "mod12", pvData[i][cMod][12]);
-			cache_get_value_name_int(z, "mod13", pvData[i][cMod][13]);
-			cache_get_value_name_int(z, "mod14", pvData[i][cMod][14]);
-			cache_get_value_name_int(z, "mod15", pvData[i][cMod][15]);
-			cache_get_value_name_int(z, "mod16", pvData[i][cMod][16]);
-			cache_get_value_name_int(z, "lumber", pvData[i][cLumber]);
-			cache_get_value_name_int(z, "metal", pvData[i][cMetal]);
-			cache_get_value_name_int(z, "coal", pvData[i][cCoal]);
-			cache_get_value_name_int(z, "product", pvData[i][cProduct]);
-			cache_get_value_name_int(z, "gasoil", pvData[i][cGasOil]);
-			cache_get_value_name_int(z, "component", pvData[i][cComponent]);
-			cache_get_value_name_int(z, "fish", pvData[i][cFish]);
-			cache_get_value_name_int(z, "box", pvData[i][cBox]);
-			cache_get_value_name_int(z, "rental", pvData[i][cRent]);
-			cache_get_value_name_int(z, "park", pvData[i][cPark]);
-			cache_get_value_name_int(z, "broken", pvData[i][cStolen]);
-			cache_get_value_name_int(z, "trunk", pvData[i][cTrunk]);
-			// PERBAIKAN: gunakan cache_get_value_name untuk string, bukan cache_get_value_name_int
-			cache_get_value_name(z, "name", tempString, sizeof(tempString));
-			format(pvData[i][cName], 24, tempString);
-			/*for(new x = 0; x < 17; x++)
-			{
-				format(tempString, sizeof(tempString), "mod%d", x);
-				cache_get_value_name_int(z, tempString, pvData[i][cMod][x]);
-			}*/
-			Iter_Add(PVehicles, i);
-			if(pvData[i][cClaim] == 0 && pvData[i][cStolen] == 0)
-			{
-				OnPlayerVehicleRespawn(i);
-			}
-			else
-			{
-				pvData[i][cVeh] = 0;
-			}
-		}
-		printf("[Vehicles] Loaded: %s(%d)", pData[playerid][pName], playerid);
-	}
-	return 1;
+            // ✅ Mods - cek apakah kolom ada
+            cache_get_value_name_int(z, "mod0", pvData[i][cMod][0]);
+            cache_get_value_name_int(z, "mod1", pvData[i][cMod][1]);
+            cache_get_value_name_int(z, "mod2", pvData[i][cMod][2]);
+            cache_get_value_name_int(z, "mod3", pvData[i][cMod][3]);
+            cache_get_value_name_int(z, "mod4", pvData[i][cMod][4]);
+            cache_get_value_name_int(z, "mod5", pvData[i][cMod][5]);
+            cache_get_value_name_int(z, "mod6", pvData[i][cMod][6]);
+            cache_get_value_name_int(z, "mod7", pvData[i][cMod][7]);
+            cache_get_value_name_int(z, "mod8", pvData[i][cMod][8]);
+            cache_get_value_name_int(z, "mod9", pvData[i][cMod][9]);
+            cache_get_value_name_int(z, "mod10", pvData[i][cMod][10]);
+            cache_get_value_name_int(z, "mod11", pvData[i][cMod][11]);
+            cache_get_value_name_int(z, "mod12", pvData[i][cMod][12]);
+            cache_get_value_name_int(z, "mod13", pvData[i][cMod][13]);
+            cache_get_value_name_int(z, "mod14", pvData[i][cMod][14]);
+            cache_get_value_name_int(z, "mod15", pvData[i][cMod][15]);
+            cache_get_value_name_int(z, "mod16", pvData[i][cMod][16]);
+            
+            printf("[DEBUG] Mods loaded");
+            
+            cache_get_value_name_int(z, "lumber", pvData[i][cLumber]);
+            cache_get_value_name_int(z, "metal", pvData[i][cMetal]);
+            cache_get_value_name_int(z, "coal", pvData[i][cCoal]);
+            cache_get_value_name_int(z, "product", pvData[i][cProduct]);
+            cache_get_value_name_int(z, "gasoil", pvData[i][cGasOil]);
+            cache_get_value_name_int(z, "component", pvData[i][cComponent]);
+            cache_get_value_name_int(z, "fish", pvData[i][cFish]);
+            cache_get_value_name_int(z, "box", pvData[i][cBox]);
+            cache_get_value_name_int(z, "rental", pvData[i][cRent]);
+            cache_get_value_name_int(z, "park", pvData[i][cPark]);
+            cache_get_value_name_int(z, "broken", pvData[i][cStolen]);
+            cache_get_value_name_int(z, "trunk", pvData[i][cTrunk]);
+            
+            printf("[DEBUG] Materials loaded");
+            
+            // ✅ Name dengan safety
+            cache_get_value_name(z, "name", tempString, sizeof(tempString));
+            format(pvData[i][cName], 24, "%s", tempString);
+            
+            printf("[DEBUG] All data loaded for vehicle ID %d", pvData[i][cID]);
+            
+            // Reset key holders
+            for(new k = 0; k < 3; k++)
+            {
+                pvData[i][cKeyHolders][k] = INVALID_PLAYER_ID;
+            }
+            pvData[i][cKeyCount] = 0;
+            
+            Iter_Add(PVehicles, i);
+            
+            if(pvData[i][cClaim] == 0 && pvData[i][cStolen] == 0)
+            {
+                printf("[DEBUG] Spawning vehicle ID %d", pvData[i][cID]);
+                OnPlayerVehicleRespawn(i);
+                printf("[DEBUG] Vehicle spawned: VehID=%d", pvData[i][cVeh]);
+            }
+            else
+            {
+                pvData[i][cVeh] = 0;
+                printf("[DEBUG] Vehicle not spawned (Claim:%d Stolen:%d)", pvData[i][cClaim], pvData[i][cStolen]);
+            }
+        }
+        printf("[Vehicles] Loaded %d vehicle(s) for %s(%d)", count, pData[playerid][pName], playerid);
+    }
+    return 1;
 }
-
 /*function LoadPV(playerid)
 {
 	new query[128];
@@ -758,8 +996,46 @@ Vehicle_Save(vehicleid)
 	return mysql_tquery(g_SQL, cQuery);	
 }
 
+forward HandbrakeTimer();
+public HandbrakeTimer()
+{
+    HandbrakeUpdate();
+    return 1;
+}
+
+stock HandbrakeUpdate()
+{
+    foreach(new i : PVehicles)
+    {
+        if(pvData[i][pHandbrake] && IsValidVehicle(pvData[i][cVeh]))
+        {
+            // Matikan engine paksa
+            if(GetEngineStatus(pvData[i][cVeh]))
+            {
+                SwitchVehicleEngine(pvData[i][cVeh], false);
+            }
+            
+            // Stop kendaraan jika masih bergerak
+            new Float:vX, Float:vY, Float:vZ;
+            GetVehicleVelocity(pvData[i][cVeh], vX, vY, vZ);
+            
+            if(vX != 0.0 || vY != 0.0 || vZ != 0.0)
+            {
+                SetVehicleVelocity(pvData[i][cVeh], 0.0, 0.0, 0.0);
+            }
+        }
+    }
+    return 1;
+}
+
 function EngineStatus(playerid, vehicleid)
 {
+	// ✅ CEK HANDBRAKE DULU
+    /*new carid = Vehicle_Nearest2(playerid);
+    if(carid != -1 && pvData[carid][pHandbrake])
+    {
+        return Error(playerid, "You need to release the handbrake first.");
+    }*/
 	if(!GetEngineStatus(vehicleid))
 	{
 		foreach(new ii : PVehicles)
@@ -875,11 +1151,11 @@ function RemovePlayerVehicle(playerid)
 			mysql_format(g_SQL, cQuery, sizeof(cQuery), "%sWHERE `id` = %d", cQuery, pvData[i][cID]);
 			mysql_query(g_SQL, cQuery, true);
 
-			if(pvData[i][cNeon] != 0)
+			/*if(pvData[i][cNeon] != 0)
 			{
 				SetVehicleNeonLights(pvData[i][cVeh], false, pvData[i][cNeon], 0);
 			}
-			/*if(IsAPickup(pvData[i][cVeh]))
+			if(IsAPickup(pvData[i][cVeh]))
 			{
 				for(new a; a < LUMBER_LIMIT; a++)
 				{
@@ -911,6 +1187,8 @@ function RemovePlayerVehicle(playerid)
 	}
 	return 1;
 }
+
+
 
 	// Float:cDamagePanels,
 	// Float:cDamageDoors,
@@ -1030,7 +1308,7 @@ function OnVehBuyPV(playerid, pid, model, color1, color2, cost, Float:x, Float:y
     new i = Iter_Free(PVehicles);
     pvData[i][cID] = cache_insert_id();
     pvData[i][cOwner] = pid;
-	format(pvData[i][cName], 24, "None");
+	format(pvData[i][cName], 32, "None");
     pvData[i][cModel] = model;
     pvData[i][cColor1] = color1;
     pvData[i][cColor2] = color2;
@@ -1074,10 +1352,10 @@ function OnVehBuyPV(playerid, pid, model, color1, color2, cost, Float:x, Float:y
 
     Iter_Add(PVehicles, i);
     OnPlayerVehicleRespawn(i);
-    Servers(playerid, "Anda telah membeli kendaraan seharga $%s dengan model %s(%d)", FormatMoney(GetVehicleCost(model)), GetVehicleModelName(model), model);
+    Servers(playerid, "Anda telah membeli kendaraan seharga %s dengan model %s(%d)", FormatMoney(GetVehicleCost(model)), GetVehicleModelName(model), model);
 
     new str[150];
-    format(str,sizeof(str),"[VEH]: %s membeli kendaraan seharga $%s model %s(%d)!", GetRPName(playerid), FormatMoney(GetVehicleCost(model)), GetVehicleModelName(model), model);
+    format(str,sizeof(str),"[VEH]: %s membeli kendaraan seharga %s model %s(%d)!", GetRPName(playerid), FormatMoney(GetVehicleCost(model)), GetVehicleModelName(model), model);
     LogServer("Property", str);
     pData[playerid][pBuyPvModel] = 0;
     return 1;
@@ -1239,10 +1517,10 @@ function OnVehRentBike(playerid, pid, model, color1, color2, cost, Float:x, Floa
 		pvData[i][cMod][j] = 0;
 	Iter_Add(PVehicles, i);
 	OnPlayerVehicleRespawn(i);
-	Servers(playerid, "Kamu telah menyewa kendaraan seharga "RED_E"$%s"WHITE_E" /one days dengan model %s(%d)", FormatMoney(GetVehicleRentalCost(model)), GetVehicleModelName(model), model);
+	Servers(playerid, "Kamu telah menyewa kendaraan seharga "RED_E"%s"WHITE_E" /one days dengan model %s(%d)", FormatMoney(GetVehicleRentalCost(model)), GetVehicleModelName(model), model);
 	pData[playerid][pBuyPvModel] = 0;
 	new str[150];
-	format(str,sizeof(str),"[VEH]: %s menyewa kendaraan seharga $%s /one days model %s(%d)!", GetRPName(playerid), FormatMoney(GetVehicleCost(model)), GetVehicleModelName(model), model);
+	format(str,sizeof(str),"[VEH]: %s menyewa kendaraan seharga %s /one days model %s(%d)!", GetRPName(playerid), FormatMoney(GetVehicleCost(model)), GetVehicleModelName(model), model);
 	LogServer("Property", str);
 	return 1;
 }
@@ -1294,9 +1572,9 @@ function OnVehRentBoat(playerid, pid, model, color1, color2, cost, Float:x, Floa
 		pvData[i][cMod][j] = 0;
 	Iter_Add(PVehicles, i);
 	OnPlayerVehicleRespawn(i);
-	Servers(playerid, "Kamu telah menyewa kapal seharga "RED_E"$%s"WHITE_E" /one days dengan model %s(%d)", FormatMoney(GetVehicleRentalCost(model)), GetVehicleModelName(model), model);
+	Servers(playerid, "Kamu telah menyewa kapal seharga "RED_E"%s"WHITE_E" /one days dengan model %s(%d)", FormatMoney(GetVehicleRentalCost(model)), GetVehicleModelName(model), model);
 	new str[150];
-	format(str,sizeof(str),"[VEH]: %s menyewa kapal seharga $%s /one days model %s(%d)!", GetRPName(playerid), FormatMoney(GetVehicleCost(model)), GetVehicleModelName(model), model);
+	format(str,sizeof(str),"[VEH]: %s menyewa kapal seharga %s /one days model %s(%d)!", GetRPName(playerid), FormatMoney(GetVehicleCost(model)), GetVehicleModelName(model), model);
 	LogServer("Property", str);
 	pData[playerid][pBuyPvModel] = 0;
 	return 1;
@@ -1800,6 +2078,10 @@ CMD:mypv(playerid, params[])
 		{
 			status = "{DB881A}Rusak";
 		}
+		else if(!IsValidVehicle(pvData[vid][cVeh])) // ✅ CEK APAKAH VEHICLE VALID
+		{
+			status = "{FF6347}Despawned";
+		}
 		else
 		{
 			status = "{FFFF00}Spawned";
@@ -1843,17 +2125,31 @@ CMD:engine(playerid, params[])
 			// Cari ID private vehicle
 			new vid = Vehicle_Nearest2(playerid);
 			new msg[128];
+			new vehicleName[32];
 			
 			// Cek apakah ini private vehicle dengan custom name
-			if(vid != -1 && strcmp(pvData[vid][cName], "None") != 0)
+			if(vid != -1 && strcmp(pvData[vid][cName], "None") != 0 && strlen(pvData[vid][cName]) > 0)
 			{
 				// Jika kendaraan private dengan custom name
 				format(msg, sizeof(msg), "** %s is starting %s's engine", ReturnName(playerid), pvData[vid][cName]);
 			}
 			else
 			{
-				// Untuk semua kendaraan lainnya (private tanpa custom name, faction, dll)
-				format(msg, sizeof(msg), "** %s is starting the vehicle's engine", ReturnName(playerid));
+				// Dapatkan nama kendaraan default dari array g_arrVehicleNames
+				new modelid = GetVehicleModel(vehicleid);
+				
+				// Validasi model ID (400-611)
+				if(modelid >= 400 && modelid <= 611)
+				{
+					format(vehicleName, sizeof(vehicleName), "%s", g_arrVehicleNames[modelid - 400]);
+				}
+				else
+				{
+					format(vehicleName, sizeof(vehicleName), "Unknown Vehicle");
+				}
+				
+				// Untuk kendaraan tanpa custom name, tampilkan nama model kendaraan
+				format(msg, sizeof(msg), "** %s is starting the %s's engine", ReturnName(playerid), vehicleName);
 			}
 			
 			SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, msg);
@@ -1943,36 +2239,195 @@ CMD:trunk(playerid, params[])
 	return 1;
 }
 
+// Commands
+CMD:sharekey(playerid, params[])
+{
+    new otherid, vehid;
+
+    if(sscanf(params, "ud", otherid, vehid))
+        return Usage(playerid, "/sharekey [playerid/name] [vehid] | /mypv - to find vehid");
+
+    if(!IsPlayerConnected(otherid))
+        return Error(playerid, "Player not connected!");
+
+    if(otherid == playerid)
+        return Error(playerid, "You can't share keys with yourself.");
+
+    if(!NearPlayer(playerid, otherid, 5.0))
+        return Error(playerid, "That player is not near you.");
+
+    if(vehid == INVALID_VEHICLE_ID)
+        return Error(playerid, "Invalid vehicle ID.");
+
+    // Cari vehicle berdasarkan vehid (SA-MP vehicle ID)
+    new carid = -1;
+    foreach(new i : PVehicles)
+    {
+        if(pvData[i][cVeh] == vehid)
+        {
+            carid = i;
+            break;
+        }
+    }
+
+    if(carid == -1)
+        return Error(playerid, "Invalid vehicle ID or vehicle is not spawned.");
+
+    // Check apakah owner
+    if(pvData[carid][cOwner] != pData[playerid][pID])
+        return Error(playerid, "You don't own this vehicle! Use /mypv to find your vehicle IDs.");
+
+    // Check apakah dekat dengan vehicle
+    new nearid = GetNearestVehicleToPlayer(playerid, 5.0, false);
+    if(vehid != nearid)
+        return Error(playerid, "You must be near the vehicle you want to share keys for!");
+
+    if(AddVehicleKeyHolder(carid, otherid))
+    {
+        Custom(playerid, "VEHICLE: "WHITE_E"You have shared your %s (ID:%d) keys with %s.", GetVehicleModelName(GetVehicleModel(pvData[carid][cVeh])), vehid,ReturnName(otherid));
+        Custom(otherid, "VEHICLE: "WHITE_E"%s has shared their %s (ID:%d) keys with you.", ReturnName(playerid), GetVehicleModelName(GetVehicleModel(pvData[carid][cVeh])),vehid);
+    }
+    else
+    {
+        Error(playerid, "Unable to share keys. Player might already have keys or limit reached.");
+    }
+
+    return 1;
+}
+
+CMD:removekey(playerid, params[])
+{
+    new otherid, vehid;
+
+    if(sscanf(params, "ud", otherid, vehid))
+        return Usage(playerid, "/removekey [playerid/name] [vehid] | /mypv - to find vehid");
+
+    if(!IsPlayerConnected(otherid))
+        return Error(playerid, "Player not connected!");
+
+    if(vehid == INVALID_VEHICLE_ID)
+        return Error(playerid, "Invalid vehicle ID.");
+
+    // Cari vehicle berdasarkan vehid
+    new carid = -1;
+    foreach(new i : PVehicles)
+    {
+        if(pvData[i][cVeh] == vehid)
+        {
+            carid = i;
+            break;
+        }
+    }
+
+    if(carid == -1)
+        return Error(playerid, "Invalid vehicle ID or vehicle is not spawned.");
+
+    // Check apakah owner
+    if(pvData[carid][cOwner] != pData[playerid][pID])
+        return Error(playerid, "You don't own this vehicle! Use /mypv to find your vehicle IDs.");
+
+    // Check apakah dekat dengan vehicle
+    new nearid = GetNearestVehicleToPlayer(playerid, 5.0, false);
+    if(vehid != nearid)
+        return Error(playerid, "You must be near the vehicle!");
+
+    if(RemoveVehicleKeyHolder(carid, otherid))
+    {
+        Custom(playerid, "VEHICLE: "WHITE_E"You have removed %s's keys to your %s (ID:%d).", ReturnName(otherid), GetVehicleModelName(GetVehicleModel(pvData[carid][cVeh])),vehid);
+        Custom(otherid, "VEHICLE: "WHITE_E"%s has removed your keys to their %s (ID:%d).",  ReturnName(playerid), GetVehicleModelName(GetVehicleModel(pvData[carid][cVeh])),vehid);
+    }
+    else
+    {
+        Error(playerid, "That player doesn't have keys to this vehicle.");
+    }
+
+    return 1;
+}
+
+CMD:keyholders(playerid, params[])
+{
+    new vehid;
+
+    if(sscanf(params, "d", vehid))
+        return Usage(playerid, "/keyholders [vehid] | /mypv - to find vehid");
+
+    if(vehid == INVALID_VEHICLE_ID)
+        return Error(playerid, "Invalid vehicle ID.");
+
+    // Cari vehicle berdasarkan vehid
+    new carid = -1;
+    foreach(new i : PVehicles)
+    {
+        if(pvData[i][cVeh] == vehid)
+        {
+            carid = i;
+            break;
+        }
+    }
+
+    if(carid == -1)
+        return Error(playerid, "Invalid vehicle ID or vehicle is not spawned.");
+
+    // Check apakah owner
+    if(pvData[carid][cOwner] != pData[playerid][pID])
+        return Error(playerid, "You don't own this vehicle!");
+
+    if(pvData[carid][cKeyCount] == 0)
+        return Info(playerid, "No one has keys to this vehicle.");
+
+    new str[512], temp[64], count = 0;
+    format(str, sizeof(str), "Key Holders for %s (ID:%d):\n\n", 
+        GetVehicleModelName(GetVehicleModel(pvData[carid][cVeh])),
+        vehid);
+
+    for(new i = 0; i < 3; i++)
+    {
+        if(pvData[carid][cKeyHolders][i] != INVALID_PLAYER_ID && IsPlayerConnected(pvData[carid][cKeyHolders][i]))
+        {
+            count++;
+            format(temp, sizeof(temp), "%d. %s (ID: %d)\n", 
+                count, 
+                ReturnName(pvData[carid][cKeyHolders][i]),
+                pvData[carid][cKeyHolders][i]
+            );
+            strcat(str, temp);
+        }
+    }
+
+    if(count == 0)
+        return  Custom(playerid, "VEHICLE: "WHITE_E"No one has keys to this vehicle.");
+
+    ShowPlayerDialog(playerid, DIALOG_UNUSED, DIALOG_STYLE_MSGBOX, 
+        "Vehicle Key Holders", str, "Close", "");
+    return 1;
+}
+
 CMD:lock(playerid, params[])
 {
-    static
-    carid = -1;
+    new carid = -1;
 
-    if((carid = Vehicle_Nearest(playerid)) != -1)
+    if((carid = Vehicle_Nearest(playerid)) == -1)
+        return Error(playerid, "You are not near any vehicle.");
+
+    // Check apakah punya key (owner atau key holder)
+    if(!HasVehicleKey(playerid, carid))
+        return Error(playerid, "You don't have keys to this vehicle.");
+
+    if(!pvData[carid][cLocked])
     {
-        if(Vehicle_IsOwner(playerid, carid))
-        {
-            if(!pvData[carid][cLocked])
-            {
-                pvData[carid][cLocked] = 1;
-
-                InfoTD_MSG(playerid, 4000, "Vehicle ~r~Locked!");
-                PlayerPlaySound(playerid, 24600, 0.0, 0.0, 0.0);
-
-                SwitchVehicleDoors(pvData[carid][cVeh], true);
-            }
-            else
-            {
-                pvData[carid][cLocked] = 0;
-                InfoTD_MSG(playerid, 4000, "Vehicle ~g~Unlocked!");
-                PlayerPlaySound(playerid, 24600, 0.0, 0.0, 0.0);
-
-                SwitchVehicleDoors(pvData[carid][cVeh], false);
-            }
-        }
-        else Error(playerid, "You don't have keys to this vehicle.");
+        pvData[carid][cLocked] = 1;
+        InfoTD_MSG(playerid, 4000, "Vehicle ~r~Locked!");
+        PlayerPlaySound(playerid, 24600, 0.0, 0.0, 0.0);
+        SwitchVehicleDoors(pvData[carid][cVeh], true);
     }
-    else Error(playerid, "You are not near any vehicle that you want to lock.");
+    else
+    {
+        pvData[carid][cLocked] = 0;
+        InfoTD_MSG(playerid, 4000, "Vehicle ~g~Unlocked!");
+        PlayerPlaySound(playerid, 24600, 0.0, 0.0, 0.0);
+        SwitchVehicleDoors(pvData[carid][cVeh], false);
+    }
+
     return 1;
 }
 
@@ -2016,47 +2471,6 @@ CMD:neon(playerid, params[])
 	return 1;
 }
 
-/*CMD:sharekey(playerid, params[])
-{
-    static
-    otherid,
-    carid = -1;
-
-    if(sscanf(params, "u", otherid))
-        return Usage(playerid, "/sharekey [playerid/name]");
-
-    if(otherid == playerid)
-        return Error(playerid, "You can't share keys with yourself.");
-
-    if((carid = Vehicle_Nearest(playerid)) != -1)
-    {
-        if(Vehicle_IsOwner(playerid, carid))
-        {
-            if(otherid == INVALID_PLAYER_ID || otherid == playerid || !NearPlayer(playerid, otherid, 3.0))
-				return Error(playerid, "That player is not connected.");
-
-            if(AddVehicleKeyHolder(carid, otherid))
-            {
-                SendClientMessageEx(playerid, COLOR_GREEN, "You have shared your vehicle keys with %s.", GetPlayerName(otherid));
-                SendClientMessageEx(otherid, COLOR_GREEN, "%s has shared their vehicle keys with you.", GetPlayerName(playerid));
-            }
-            else
-            {
-                Error(playerid, "Unable to share keys. The player might already have keys or the key holder limit is reached.");
-            }
-        }
-        else
-        {
-            Error(playerid, "You don't own this vehicle.");
-        }
-    }
-    else
-    {
-        Error(playerid, "You are not near any vehicle that you want to share keys for.");
-    }
-    return 1;
-}
-*/
 CMD:myinsu(playerid, params[])
 {
 	new bool:found = false, msg2[512];
@@ -2132,7 +2546,7 @@ CMD:unrentpv(playerid, params[])
 				{
 					if(pvData[i][cRent] != 0)
 					{
-						Info(playerid, "You has unrental the vehicle id %d (database id: %d).", vehid, pvData[i][cID]);
+						Custom(playerid, "VEHICLE: "WHITE_E"You has unrental the vehicle id %d (database id: %d).", vehid, pvData[i][cID]);
 						new str[150];
 						format(str,sizeof(str),"[VEH]: %s unrental kendaraan id %d (database id: %d)!", GetRPName(playerid), vehid, pvData[i][cID]);
 						LogServer("Property", str);
@@ -2146,9 +2560,9 @@ CMD:unrentpv(playerid, params[])
 						pvData[i][cVeh] = INVALID_VEHICLE_ID;
 						Iter_SafeRemove(PVehicles, i, i);
 					}
-					else return Error(playerid, "This is not rental vehicle! use /sellpv for sell owned vehicle.");
+					else return Error(playerid, "This is not rental vehicle!");
 				}
-				else return Error(playerid, "ID kendaraan ini bukan punya mu! gunakan /v my(/mypv) untuk mencari ID.");
+				else return Error(playerid, "ID kendaraan ini bukan punya mu! gunakan /mypv untuk mencari ID.");
 			}
 		}
 		return 1;
@@ -2186,8 +2600,8 @@ CMD:givepv(playerid, params[])
 						Error(playerid, "This player have too many vehicles, sell a vehicle first!");
 						return 1;
 					}
-					Info(playerid, "Anda memberikan kendaraan %s(%d) anda kepada %s.", GetVehicleName(vehid), GetVehicleModel(vehid), ReturnName(otherid));
-					Info(otherid, "%s Telah memberikan kendaraan %s(%d) kepada anda.(/mypv)", ReturnName(playerid), GetVehicleName(vehid), GetVehicleModel(vehid));
+					Custom(playerid, "VEHICLE: "WHITE_E"You have handed over your vehicle %s (ID: %d) to %s.", GetVehicleName(vehid), GetVehicleModel(vehid), ReturnName(otherid));
+					Custom(otherid, "VEHICLE: "WHITE_E"Vehicle %s (ID: %d) received. (/mypv)", ReturnName(playerid), GetVehicleName(vehid), GetVehicleModel(vehid));
 					new str[150];
 					format(str,sizeof(str),"[VEH]: %s memberikan kendaraan model %s(%d) ke %s!", GetRPName(playerid), GetVehicleName(vehid), GetVehicleModel(vehid), GetRPName(otherid));
 					LogServer("Property", str);
@@ -2285,7 +2699,7 @@ CMD:tow(playerid, params[])
 					AttachTrailerToVehicle(closestcar, carid);
 					return 1;
 				}*/
-				Info(playerid, "You has towed the vehicle in trailer.");
+				Custom(playerid, "VEHICLE: "WHITE_E"You has towed the vehicle in trailer.");
 				AttachTrailerToVehicle(closestcar, carid);
 				return 1;
 			}
@@ -2455,5 +2869,58 @@ CMD:vstorage(playerid, params[])
         else Error(playerid, "This vehicle does not have a storage compartment!");
     }
     else Error(playerid, "You are not near any vehicle.");
+    return 1;
+}
+CMD:handbrake(playerid, params[])
+{
+    if(!IsPlayerInAnyVehicle(playerid))
+        return Error(playerid, "Kamu harus berada di dalam kendaraan!");
+    
+    if(GetPlayerState(playerid) != PLAYER_STATE_DRIVER)
+        return Error(playerid, "Kamu harus menjadi driver kendaraan!");
+    
+    new vehicleid = GetPlayerVehicleID(playerid);
+    
+    // Cek apakah kendaraan adalah motor (bike)
+    if(IsABike(vehicleid))
+        return Error(playerid, "Motor tidak memiliki handbrake!");
+    
+    // Cek apakah kendaraan bisa pakai handbrake (tidak termasuk boat, plane, dll)
+    if(!IsEngineVehicle(vehicleid))
+        return Error(playerid, "Kendaraan ini tidak memiliki handbrake!");
+    
+    new carid = Vehicle_Nearest2(playerid);
+    
+    if(carid != -1)
+    {
+        if(!pvData[carid][pHandbrake])
+        {
+            // Aktifkan handbrake
+            new Float:vX, Float:vY, Float:vZ;
+            GetVehicleVelocity(vehicleid, vX, vY, vZ);
+            SetVehicleVelocity(vehicleid, 0.0, 0.0, 0.0);
+            
+            pvData[carid][pHandbrake] = true;
+            Custom(playerid, "VEHICLE: "WHITE_E"Handbrake "GREEN_E"activated.");
+            
+            // Kirim pesan roleplay ke sekitar
+            SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s menarik rem tangan kendaraannya.", ReturnName(playerid));
+        }
+        else
+        {
+            // Nonaktifkan handbrake
+            pvData[carid][pHandbrake] = false;
+            Custom(playerid, "VEHICLE: "WHITE_E"Handbrake "RED_E"unactivated.");
+            
+            // Kirim pesan roleplay ke sekitar
+            SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s melepas rem tangan kendaraannya.", ReturnName(playerid));
+        }
+    }
+    else
+    {
+        // Fallback jika bukan private vehicle
+        Error(playerid, "Kendaraan ini tidak bisa menggunakan handbrake!");
+    }
+    
     return 1;
 }

@@ -95,7 +95,22 @@ Bisnis_Save(id)
 	);
 	return mysql_tquery(g_SQL, cQuery);
 }
-	
+
+GetBisnisTypeName(bid)
+{
+    new type[32];
+    switch(bData[bid][bType])
+    {
+        case 1: type = "Fast Food";
+        case 2: type = "Market";
+        case 3: type = "Clothes";
+        case 4: type = "Equipment";
+        case 5: type = "Electronics";
+        default: type = "Unknown";
+    }
+    return type;
+}
+
 Player_OwnsBisnis(playerid, id)
 {
 	return (bData[id][bOwnerID] == pData[playerid][pID]) || (!strcmp(bData[id][bOwner], pData[playerid][pName], true));
@@ -190,7 +205,7 @@ Bisnis_BuyMenu(playerid, bizid)
     {
         case 1:
         {
-            format(string, sizeof(string), "Produk\tHarga\n{ffffff}Fried Chicken\t{7fff00}$%s\n{ffffff}Pizza Stack\t{7fff00}$%s\n{ffffff}Patty Burger\t{7fff00}$%s\n{ffffff}Sprunk\t{7fff00}$%s",
+            format(string, sizeof(string), "Produk\tHarga\n{ffffff}Fried Chicken\t{7fff00}%s\n{ffffff}Pizza Stack\t{7fff00}%s\n{ffffff}Patty Burger\t{7fff00}%s\n{ffffff}Sprunk\t{7fff00}%s",
                 FormatMoney(bData[bizid][bP][0]),
                 FormatMoney(bData[bizid][bP][1]),
                 FormatMoney(bData[bizid][bP][2]),
@@ -200,18 +215,19 @@ Bisnis_BuyMenu(playerid, bizid)
         }
         case 2:
         {
-            format(string, sizeof(string), "Produk\tHarga\n{ffffff}Snack\t{7fff00}$%s\n{ffffff}Sprunk\t{7fff00}$%s\n{ffffff}Gas Fuel\t{7fff00}$%s\n{ffffff}Bandage\t{7fff00}$%s\n{ffffff}E-Toll\t{7fff00}$%s",
+            format(string, sizeof(string), "Produk\tHarga\n{ffffff}Snack\t{7fff00}%s\n{ffffff}Sprunk\t{7fff00}%s\n{ffffff}Gas Fuel\t{7fff00}%s\n{ffffff}Bandage\t{7fff00}%s\n{ffffff}E-Toll\t{7fff00}%s\n{ffffff}Cigarrete\t{7fff00}%s",
                 FormatMoney(bData[bizid][bP][0]),
                 FormatMoney(bData[bizid][bP][1]),
                 FormatMoney(bData[bizid][bP][2]),
                 FormatMoney(bData[bizid][bP][3]),
-				FormatMoney(bData[bizid][bP][4])
+				FormatMoney(bData[bizid][bP][4]),
+				FormatMoney(bData[bizid][bP][5])
             );
             ShowPlayerDialog(playerid, BISNIS_BUYPROD, DIALOG_STYLE_TABLIST_HEADERS, bData[bizid][bName], string, "Buy", "Cancel");
         }
         case 3:
         {
-            format(string, sizeof(string), "Aksesoris\tHarga\n{ffffff}Clothes\t{7fff00}$%s\n{ffffff}Toys\t{7fff00}$%s\n{ffffff}Mask\t{7fff00}$%s\n{ffffff}Helmet\t{7fff00}$%s",
+            format(string, sizeof(string), "Aksesoris\tHarga\n{ffffff}Clothes\t{7fff00}%s\n{ffffff}Toys\t{7fff00}%s\n{ffffff}Mask\t{7fff00}%s\n{ffffff}Helmet\t{7fff00}%s",
                 FormatMoney(bData[bizid][bP][0]),
                 FormatMoney(bData[bizid][bP][1]),
                 FormatMoney(bData[bizid][bP][2]),
@@ -221,7 +237,7 @@ Bisnis_BuyMenu(playerid, bizid)
         }
         case 4:
         {
-            format(string, sizeof(string), "Alat\tHarga\n{ffffff}Brass Knuckles\t{7fff00}$%s\n{ffffff}Knife\t{7fff00}$%s\n{ffffff}Baseball Bat\t{7fff00}$%s\n{ffffff}Shovel\t{7fff00}$%s\n{ffffff}Chainsaw\t{7fff00}$%s\n{ffffff}Cane\t{7fff00}$%s\n{ffffff}Fishing Tool\t{7fff00}$%s\n{ffffff}Worm\t{7fff00}$%s\n{ffffff}Spray Can\t{7fff00}$%s",
+            format(string, sizeof(string), "Alat\tHarga\n{ffffff}Brass Knuckles\t{7fff00}%s\n{ffffff}Knife\t{7fff00}%s\n{ffffff}Baseball Bat\t{7fff00}%s\n{ffffff}Shovel\t{7fff00}%s\n{ffffff}Chainsaw\t{7fff00}%s\n{ffffff}Cane\t{7fff00}%s\n{ffffff}Fishing Tool\t{7fff00}%s\n{ffffff}Worm\t{7fff00}%s\n{ffffff}Spray Can\t{7fff00}%s",
                 FormatMoney(bData[bizid][bP][0]),
                 FormatMoney(bData[bizid][bP][1]),
                 FormatMoney(bData[bizid][bP][2]),
@@ -236,7 +252,7 @@ Bisnis_BuyMenu(playerid, bizid)
         }
 		case 5:
         {
-            format(string, sizeof(string), "Produk\tHarga\n{ffffff}GPS\t{7fff00}$%s\n{ffffff}Phone\t{7fff00}$%s\n{ffffff}Phone Credit\t{7fff00}$%s\n{ffffff}Phone Book\t{7fff00}$%s\n{ffffff}Walkie Talkie\t{7fff00}$%s\n{ffffff}Boombox\t{7fff00}$%s",
+            format(string, sizeof(string), "Produk\tHarga\n{ffffff}GPS\t{7fff00}%s\n{ffffff}Phone\t{7fff00}%s\n{ffffff}Phone Credit\t{7fff00}%s\n{ffffff}Phone Book\t{7fff00}%s\n{ffffff}Walkie Talkie\t{7fff00}%s\n{ffffff}Boombox\t{7fff00}%s",
                 FormatMoney(bData[bizid][bP][0]),
                 FormatMoney(bData[bizid][bP][1]),
                 FormatMoney(bData[bizid][bP][2]),
@@ -263,7 +279,7 @@ Bisnis_ProductMenu(playerid, bizid)
     {
         case 1:
         {
-            format(string, sizeof(string), "Produk\tHarga\n{ffffff}Fried Chicken\t{7fff00}$%s\n{ffffff}Pizza Stack\t{7fff00}$%s\n{ffffff}Patty Burger\t{7fff00}$%s\n{ffffff}Sprunk\t{7fff00}$%s",
+            format(string, sizeof(string), "Produk\tHarga\n{ffffff}Fried Chicken\t{7fff00}%s\n{ffffff}Pizza Stack\t{7fff00}%s\n{ffffff}Patty Burger\t{7fff00}%s\n{ffffff}Sprunk\t{7fff00}%s",
                 FormatMoney(bData[bizid][bP][0]),
                 FormatMoney(bData[bizid][bP][1]),
                 FormatMoney(bData[bizid][bP][2]),
@@ -273,7 +289,7 @@ Bisnis_ProductMenu(playerid, bizid)
         }
         case 2:
         {
-            format(string, sizeof(string), "Produk\tHarga\n{ffffff}Snack\t{7fff00}$%s\n{ffffff}Sprunk\t{7fff00}$%s\n{ffffff}Gas Fuel\t{7fff00}$%s\n{ffffff}Bandage\t{7fff00}%s\n{ffffff}200 Saldo E-Toll\t{7fff00}%s",
+            format(string, sizeof(string), "Produk\tHarga\n{ffffff}Snack\t{7fff00}%s\n{ffffff}Sprunk\t{7fff00}%s\n{ffffff}Gas Fuel\t{7fff00}%s\n{ffffff}Bandage\t{7fff00}%s\n{ffffff}E-Toll\t{7fff00}%s\n{ffffff}Cigarette\t{7fff00}%s",
                 FormatMoney(bData[bizid][bP][0]),
                 FormatMoney(bData[bizid][bP][1]),
                 FormatMoney(bData[bizid][bP][2]),
@@ -289,7 +305,7 @@ Bisnis_ProductMenu(playerid, bizid)
         }
         case 3:
         {
-            format(string, sizeof(string), "Aksesoris\tHarga\n{ffffff}Clothes\t{7fff00}$%s\n{ffffff}Toys\t{7fff00}$%s\n{ffffff}Mask\t{7fff00}$%s\n{ffffff}Helmet\t{7fff00}%s",
+            format(string, sizeof(string), "Aksesoris\tHarga\n{ffffff}Clothes\t{7fff00}%s\n{ffffff}Toys\t{7fff00}%s\n{ffffff}Mask\t{7fff00}%s\n{ffffff}Helmet\t{7fff00}%s",
                 FormatMoney(bData[bizid][bP][0]),
                 FormatMoney(bData[bizid][bP][1]),
                 FormatMoney(bData[bizid][bP][2]),
@@ -299,7 +315,7 @@ Bisnis_ProductMenu(playerid, bizid)
         }
         case 4:
         {
-            format(string, sizeof(string), "Alat\tHarga\n{ffffff}Brass Knuckles\t{7fff00}$%s\n{ffffff}Knife\t{7fff00}$%s\n{ffffff}Baseball Bat\t{7fff00}$%s\n{ffffff}Shovel\t{7fff00}$%s\n{ffffff}Chainsaw\t{7fff00}$%s\n{ffffff}Cane\t{7fff00}$%s\n{ffffff}Fishing Tool\t{7fff00}$%s\n{ffffff}Worm\t{7fff00}$%s\n{ffffff}Spray Can\t{7fff00}$%s",
+            format(string, sizeof(string), "Alat\tHarga\n{ffffff}Brass Knuckles\t{7fff00}%s\n{ffffff}Knife\t{7fff00}%s\n{ffffff}Baseball Bat\t{7fff00}%s\n{ffffff}Shovel\t{7fff00}%s\n{ffffff}Chainsaw\t{7fff00}%s\n{ffffff}Cane\t{7fff00}%s\n{ffffff}Fishing Tool\t{7fff00}%s\n{ffffff}Worm\t{7fff00}%s\n{ffffff}Spray Can\t{7fff00}%s",
                 FormatMoney(bData[bizid][bP][0]),
                 FormatMoney(bData[bizid][bP][1]),
                 FormatMoney(bData[bizid][bP][2]),
@@ -314,7 +330,7 @@ Bisnis_ProductMenu(playerid, bizid)
         }
 		case 5:
         {
-            format(string, sizeof(string), "Produk\tHarga\n{ffffff}GPS\t{7fff00}$%s\n{ffffff}Phone\t{7fff00}$%s\n{ffffff}Phone Credit\t{7fff00}$%s\n{ffffff}Phone Book\t{7fff00}$%s\n{ffffff}Walkie Talkie\t{7fff00}$%s\n{ffffff}Boombox\t{7fff00}$%s",
+            format(string, sizeof(string), "Produk\tHarga\n{ffffff}GPS\t{7fff00}%s\n{ffffff}Phone\t{7fff00}%s\n{ffffff}Phone Credit\t{7fff00}%s\n{ffffff}Phone Book\t{7fff00}%s\n{ffffff}Walkie Talkie\t{7fff00}%s\n{ffffff}Boombox\t{7fff00}%s",
                 FormatMoney(bData[bizid][bP][0]),
                 FormatMoney(bData[bizid][bP][1]),
                 FormatMoney(bData[bizid][bP][2]),
@@ -372,6 +388,14 @@ Bisnis_Type(bisid)
 				bData[bisid][bIntposZ] = 1003.54;
 				bData[bisid][bIntposA] = 357.58;
 				bData[bisid][bInt] = 6;
+			}
+			case 2:
+			{
+				bData[bisid][bIntposX] = -25.72;
+				bData[bisid][bIntposY] = -187.82;
+				bData[bisid][bIntposZ] = 1003.54;
+				bData[bisid][bIntposA] = 357.58;
+				bData[bisid][bInt] = 17;
 			}
 		}
 	}
@@ -507,16 +531,42 @@ Bisnis_Refresh(id)
 		{
 			type= "Unknown";
 		}
-        if(strcmp(bData[id][bOwner], "-") || bData[id][bOwnerID] != 0)
+       	if(strcmp(bData[id][bOwner], "-") || bData[id][bOwnerID] != 0)
 		{
-			format(string, sizeof(string), "[ID: %d]\n"WHITE_E"Name: {FFFF00}%s\n"WHITE_E"Owned by %s\nType: %s\nPress '{FF0000}ENTER{FFFFFF}' to enter", id, bData[id][bName], bData[id][bOwner], type);
+			// ✅ CEK APAKAH BISNIS DISITA
+			if(bData[id][bLocked] == 2)
+			{
+				format(string, sizeof(string), 
+					"[ID: %d]\n\
+					{FF0000}CONFISCATED BY GOVERNMENT\n\
+					{FFFFFF}Name: {FFFF00}%s\n\
+					{FFFFFF}Owner: {FFFF00}%s {FFFFFF}\n\
+					{FFFFFF}Type: %s\n\
+					{FF0000}Entry Prohibited", 
+					id, bData[id][bName], bData[id][bOwner], type);
+				
+				bData[id][bPickup] = CreateDynamicPickup(19133, 23, bData[id][bExtposX], bData[id][bExtposY], bData[id][bExtposZ]+0.2, 0, 0, _, 25.0);
+				bData[id][bPickup2] = CreateDynamicPickup(19133, 23, bData[id][bIntposX], bData[id][bIntposY], bData[id][bIntposZ]+0.2, id, bData[id][bInt], _, 25.0);
+			}
+			else
+			{
+				// Normal owned business
+				format(string, sizeof(string), 
+					"[ID: %d]\n{FFFFFF}Name: {FFFF00}%s\n{FFFFFF}Owned by %s\nType: %s\nPress '{FF0000}ENTER{FFFFFF}' to enter", 
+					id, bData[id][bName], bData[id][bOwner], type);
+				
+				bData[id][bPickup] = CreateDynamicPickup(19133, 23, bData[id][bExtposX], bData[id][bExtposY], bData[id][bExtposZ]+0.2, 0, 0, _, 25.0);
+				bData[id][bPickup2] = CreateDynamicPickup(19133, 23, bData[id][bIntposX], bData[id][bIntposY], bData[id][bIntposZ]+0.2, id, bData[id][bInt], _, 25.0);
+			}
+		}
+		else
+		{
+			// Business for sale
+			format(string, sizeof(string), 
+				"[ID: %d]\n{00FF00}This bisnis for sell\n{FFFFFF}Location: {FFFF00}%s\n{FFFFFF}Price: {FFFF00}%s\n{FFFFFF}Type: {FFFF00}%s\n{FFFFFF}Type /buy to purchase", 
+				id, GetLocation(bData[id][bExtposX], bData[id][bExtposY], bData[id][bExtposZ]), FormatMoney(bData[id][bPrice]), type);
+			
 			bData[id][bPickup] = CreateDynamicPickup(19133, 23, bData[id][bExtposX], bData[id][bExtposY], bData[id][bExtposZ]+0.2, 0, 0, _, 25.0);
-			bData[id][bPickup2] = CreateDynamicPickup(19133, 23, bData[id][bIntposX], bData[id][bIntposY], bData[id][bIntposZ]+0.2, id, bData[id][bInt], _, 25.0);
-        }
-        else
-        {
-            format(string, sizeof(string), "[ID: %d]\n{00FF00}This bisnis for sell\n{FFFFFF}Location: {FFFF00}%s\n{FFFFFF}Price: {FFFF00}$%s\n{FFFFFF}Type: {FFFF00}%s\n"WHITE_E"Type /buy to purchase", id, GetLocation(bData[id][bExtposX], bData[id][bExtposY], bData[id][bExtposZ]), FormatMoney(bData[id][bPrice]), type);
-            bData[id][bPickup] = CreateDynamicPickup(19133, 23, bData[id][bExtposX], bData[id][bExtposY], bData[id][bExtposZ]+0.2, 0, 0, _, 25.0);
 			bData[id][bPickup2] = CreateDynamicPickup(19133, 23, bData[id][bIntposX], bData[id][bIntposY], bData[id][bIntposZ]+0.2, id, bData[id][bInt], _, 25.0);
 		}
 		bData[id][bPickPoint] = CreateDynamicPickup(1274, 23, bData[id][bPointX], bData[id][bPointY], bData[id][bPointZ]+0.2, id, bData[id][bInt], _, 8);
@@ -829,7 +879,7 @@ CMD:editbiz(playerid, params[])
 		mysql_tquery(g_SQL, query);
 
 		Bisnis_Refresh(bid);
-        SendAdminMessage(COLOR_RED, "%s has adjusted the price of bisnis ID: %d to "GREEN_E"$%s", pData[playerid][pAdminname], bid, FormatMoney(strval(totalcash)));
+        SendAdminMessage(COLOR_RED, "%s has adjusted the price of bisnis ID: %d to "GREEN_E"%s", pData[playerid][pAdminname], bid, FormatMoney(strval(totalcash)));
     }
 	else if(!strcmp(type, "type", true))
     {
@@ -1036,6 +1086,9 @@ CMD:lockbisnis(playerid, params[])
 		if(IsPlayerInRangeOfPoint(playerid, 2.5, bData[bid][bExtposX], bData[bid][bExtposY], bData[bid][bExtposZ]))
 		{
 			if(!Player_OwnsBisnis(playerid, bid)) return Error(playerid, "Kamu tidak memiliki Bisnis ini.");
+			if(bData[bid][bLocked] == 2)
+                return Error(playerid, "Your business has been confiscated by the government. You cannot lock/unlock it.");
+
 			if(!bData[bid][bLocked])
 			{
 				bData[bid][bLocked] = 1;
@@ -1044,7 +1097,7 @@ CMD:lockbisnis(playerid, params[])
 				mysql_format(g_SQL, query, sizeof(query), "UPDATE bisnis SET locked='%d' WHERE ID='%d'", bData[bid][bLocked], bid);
 				mysql_tquery(g_SQL, query);
 
-				InfoTD_MSG(playerid, 4000, "Bisnis anda berhasil ~r~Dikunci!");
+				InfoTD_MSG(playerid, 4000, "Your business is successful ~r~Locked!");
 				PlayerPlaySound(playerid, 1145, 0.0, 0.0, 0.0);
 			}
 			else
@@ -1055,7 +1108,7 @@ CMD:lockbisnis(playerid, params[])
 				mysql_format(g_SQL, query, sizeof(query), "UPDATE bisnis SET locked='%d' WHERE ID='%d'", bData[bid][bLocked], bid);
 				mysql_tquery(g_SQL, query);
 
-				InfoTD_MSG(playerid, 4000,"Bisnis anda berhasil ~g~Dibuka");
+				InfoTD_MSG(playerid, 4000,"Your business is successful ~g~Unlocked");
 				PlayerPlaySound(playerid, 1145, 0.0, 0.0, 0.0);
 			}
 		}

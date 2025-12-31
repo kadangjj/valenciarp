@@ -14,7 +14,7 @@ enum ladang
 	Float:laExtTanemZ,
 	Float:laExtTanemA,
 	laProduct,
-	laWhite,
+	laWheat,
 	laOrange,
 	laPegawai1[32],
 	laPegawai2[32],
@@ -67,7 +67,7 @@ Ladang_Save(id)
 		laData[id][laExtTanemZ],
 		laData[id][laExtTanemA],
 		laData[id][laProduct],
-		laData[id][laWhite],
+		laData[id][laWheat],
 		laData[id][laOrange],
 		laData[id][laPegawai1],
 		laData[id][laPegawai2],
@@ -111,7 +111,7 @@ Ladang_Refresh(id)
 				"  Wheat: "YELLOW_E"%d\n"\
 				"  Orange: "YELLOW_E"%d", 
 				id, laData[id][laName], laData[id][laOwner], members,
-				laData[id][laProduct], laData[id][laWhite], laData[id][laOrange]);
+				laData[id][laProduct], laData[id][laWheat], laData[id][laOrange]);
 				
 			laData[id][wPickup] = CreateDynamicPickup(19135, 23, laData[id][laExtposX], laData[id][laExtposY], laData[id][laExtposZ]+0.2, 0, 0, _, 8.0);
 			laData[id][wLabelPoint] = CreateDynamic3DTextLabel(string, COLOR_ARWIN, laData[id][laExtposX], laData[id][laExtposY], laData[id][laExtposZ]+0.5, 5.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 1, 0, 0);
@@ -121,7 +121,7 @@ Ladang_Refresh(id)
 			format(string, sizeof(string), 
 				"{00FFFF}[ID:%d]\n"\
 				"{00D900}Farm For Sale\n"\
-				"{FFFF00}Price: {00FF00}$%s\n"\
+				"{FFFF00}Price: {00FF00}%s\n"\
 				"{FFFFFF}Type '/buy' to purchase", 
 				id, FormatMoney(laData[id][laPrice]));
 				
@@ -168,7 +168,7 @@ function LoadFarm()
 			
 			// Load stocks
 			cache_get_value_name_int(i, "product", laData[wid][laProduct]);
-			cache_get_value_name_int(i, "white", laData[wid][laWhite]);
+			cache_get_value_name_int(i, "white", laData[wid][laWheat]);
 			cache_get_value_name_int(i, "orange", laData[wid][laOrange]);
 			
 			// Load pegawai
@@ -224,12 +224,12 @@ CMD:lacreate(playerid, params[])
 	
 	// Initialize stocks
 	laData[wid][laProduct] = 0;
-	laData[wid][laWhite] = 0;
+	laData[wid][laWheat] = 0;
 	laData[wid][laOrange] = 0;
 
 	Iter_Add(FARMS, wid);
 	
-	SendAdminMessage(COLOR_RED, "AdmCmd: %s created Farm ID %d Price $%s", 
+	SendAdminMessage(COLOR_RED, "AdmCmd: %s created Farm ID %d Price %s", 
 		pData[playerid][pAdminname], wid, FormatMoney(price));
 	
 	SendClientMessageEx(playerid, COLOR_YELLOW, "IMPORTANT: Use /laedit %d area to set planting area!", wid);
@@ -293,7 +293,7 @@ CMD:ladelete(playerid, params[])
 	laData[wid][laExtposY] = 0;
 	laData[wid][laExtposZ] = 0;
 	laData[wid][laProduct] = 0;
-	laData[wid][laWhite] = 0;
+	laData[wid][laWheat] = 0;
 	laData[wid][laOrange] = 0;
 	laData[wid][laExtTanemX] = 0;
 	laData[wid][laExtTanemY] = 0;
@@ -319,6 +319,28 @@ CMD:ladelete(playerid, params[])
 	mysql_tquery(g_SQL, query);
 	
 	SendStaffMessage(COLOR_ADMCMD, "AdmCmd: %s deleted Farm ID %d", pData[playerid][pAdminname], wid);
+	return 1;
+}
+
+CMD:gotofarm(playerid, params[])
+{
+	new id;
+	if(pData[playerid][pAdmin] < 4)
+		if(pData[playerid][pServerModerator] < 1)
+			return PermissionError(playerid);
+	
+	if(sscanf(params, "d", id))
+		return Usage(playerid, "/gotofarm [id]");
+		
+	if(!Iter_Contains(FARMS, id)) return Error(playerid, "Farm ID tidak ada.");
+	
+	SetPlayerPosition(playerid, laData[id][laExtposX], laData[id][laExtposY], laData[id][laExtposZ], 2.0);
+	pData[playerid][pInDoor] = -1;
+	pData[playerid][pInHouse] = -1;
+	pData[playerid][pInBiz] = -1;
+	pData[playerid][pInFamily] = -1;
+	
+	Servers(playerid, "Teleport ke ID Farm %d", id);
 	return 1;
 }
 
@@ -526,29 +548,26 @@ CMD:lainfo(playerid, params[])
 	if(pData[playerid][pLadang] == -1)
 		return Error(playerid, "You're not a farm member.");
 
-	ShowPlayerDialog(playerid, FARM_INFO, DIALOG_STYLE_LIST, "Farm Info", "Farm Info", "Select", "Cancel");
+	new ladangid = pData[playerid][pLadang];
+	new string[512];
+
+	format(string, sizeof(string), 
+		"Farm ID\t\t: %d\n"\
+		"Farm Name\t: %s\n"\
+		"Farm Owner\t: %s\n"\
+		"Potato\t\t: %d\n"\
+		"Wheat\t\t: %d\n"\
+		"Orange\t\t: %d",
+		ladangid, 
+		laData[ladangid][laName], 
+		laData[ladangid][laOwner], 
+		laData[ladangid][laProduct], 
+		laData[ladangid][laWheat], 
+		laData[ladangid][laOrange]
+	);
+
+	ShowPlayerDialog(playerid, DIALOG_UNUSED, DIALOG_STYLE_MSGBOX, "Farm Information", string, "Close", "");
 	return 1;
-}
-
-function ShowFarmInfo(playerid)
-{
-	new rows = cache_num_rows();
-	if(rows)
-	{
-		new name[50], owner[50], wheat, orange, product, string[512];
-
-		cache_get_value_index(0, 0, name);
-		cache_get_value_index(0, 1, owner);
-		cache_get_value_index_int(0, 2, product);
-		cache_get_value_index_int(0, 3, wheat);
-		cache_get_value_index_int(0, 4, orange);
-
-		format(string, sizeof(string), 
-			"Farm ID: %d\nFarm Name: %s\nFarm owner: %s\nPotato: %d\nWheat: %d\nOrange: %d",
-			pData[playerid][pLadang], name, owner, product, wheat, orange);
-
-		ShowPlayerDialog(playerid, DIALOG_UNUSED, DIALOG_STYLE_MSGBOX, "Farm Info", string, "Okay", "");
-	}
 }
 
 CMD:sellfarm(playerid, params[])
@@ -565,7 +584,7 @@ CMD:sellfarm(playerid, params[])
 	
 	format(string, sizeof(string), 
 		""WHITE_E"Farm Name: "YELLOW_E"%s\n"\
-		""WHITE_E"Sell Price: "GREEN_E"$%s\n"\
+		""WHITE_E"Sell Price: "GREEN_E"%s\n"\
 		""WHITE_E"Are you sure you want to sell this farm?", 
 		laData[wid][laName], FormatMoney(pay));
 		

@@ -229,28 +229,28 @@ CMD:editsc(playerid, params[])
 CMD:deletesc(playerid, params[])
 {
     if(pData[playerid][pAdmin] < 4)
-		if(pData[playerid][pServerModerator] < 1)
-			return PermissionError(playerid);
+        if(pData[playerid][pServerModerator] < 1)
+            return PermissionError(playerid);
 
-	new id, query[512];
-	if(sscanf(params, "i", id)) return Usage(playerid, "/deletesc [id]");
-	if(!Iter_Contains(Cem, id)) return Error(playerid, "Invalid ID.");
+    new id, query[512];
+    if(sscanf(params, "i", id)) return Usage(playerid, "/deletesc [id]");
+    if(!Iter_Contains(Cem, id)) return Error(playerid, "Invalid ID.");
 
-	DestroyDynamicObject(CamData[id][CamObject]);
-	DestroyDynamic3DTextLabel(CamData[id][CamText3D]);
+    DestroyDynamicObject(CamData[id][CamObject]);
+    DestroyDynamic3DTextLabel(CamData[id][CamText3D]);
 
-	CamData[id][CamPos][0] = CamData[id][CamPos][1] = CamData[id][CamPos][2] = 0.0;
-	CamData[id][CamObject] = -1;
-	CamData[id][CamText3D] = Text3D: -1;
-	Iter_Remove(Cem, id);
+    CamData[id][CamPos][0] = CamData[id][CamPos][1] = CamData[id][CamPos][2] = 0.0;
+    CamData[id][CamObject] = -1;
+    CamData[id][CamText3D] = Text3D: -1;
+    Iter_Remove(Cem, id);
 
-	mysql_format(g_SQL, query, sizeof(query), "DELETE FROM speedcam WHERE id=%d", id);
-	mysql_tquery(g_SQL, query);
-	Servers(playerid, "Menghapus ID Speedcam %d.", id);
-	new str[150];
-	format(str,sizeof(str),"[SpeedCam] %s menghapus speedcam id %d!", GetRPName(playerid), id);
-	LogServer("Admin", str);
-	return 1;
+    mysql_format(g_SQL, query, sizeof(query), "DELETE FROM speedcameras WHERE speedID=%d", id); // ✅ Perbaiki table name
+    mysql_tquery(g_SQL, query);
+    Servers(playerid, "Menghapus ID Speedcam %d.", id);
+    new str[150];
+    format(str,sizeof(str),"[SpeedCam] %s menghapus speedcam id %d!", GetRPName(playerid), id);
+    LogServer("Admin", str);
+    return 1;
 }
 CMD:gotosc(playerid, params[])
 {

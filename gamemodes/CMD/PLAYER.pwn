@@ -13,7 +13,7 @@ CMD:help(playerid, params[])
 	return 1;
 }
 
-CMD:destroycp(playerid, params[])
+CMD:fixcp(playerid, params[])
 {
 	if(IsAtEvent[playerid] == 1)
 		return Error(playerid, "Anda sedang mengikuti event & tidak bisa melakukan ini");
@@ -30,14 +30,12 @@ CMD:destroycp(playerid, params[])
 CMD:credits(playerid)
 {
     static const creditsText[] = \
-    ""LB_E"Founder: "WHITE_E"Rama & Swupiee\n\
-	"LB_E"Lead Developer: "WHITE_E"Yellowcrush\n\
-	"LB_E"Mapping Support: "WHITE_E"Yellowcrush & Tim Valencia\n\
-	"LB_E"Web Support: "WHITE_E"Yellowcrush\n\
+    ""LB_E"Founder: "WHITE_E"Rama, nd0yy, kayzen767\n\
+	"LB_E"Lead Developer: "WHITE_E"Redvelvet\n\
+	"LB_E"Mapping Support: "WHITE_E"Kayzen767 & Tim Valencia\n\
+	"LB_E"Web Support: "WHITE_E"Redvelvet\n\
 	"LB_E"Server Administration: "WHITE_E"Tim Valencia\n\n\
 	"LB_E"Special Thanks: "WHITE_E"%s & komunitas SAMP\n\n\
-	"YELLOW_E"Pengembangan difokuskan pada stabilitas, fitur inti, dan perbaikan rutin.\n\
-	"YELLOW_E"Terima kasih atas dukungannya.\n\n\
 	"WHITE_E"2025 Valencia Roleplay - All Rights Reserved.";
 
     
@@ -84,7 +82,7 @@ CMD:vip(playerid)
 	"YELLOW_E"8) "WHITE_E"Waktu Paycheck/Payday "LB_E"15% "WHITE_E"lebih cepat.\n\
 	"YELLOW_E"9) "WHITE_E"Mendapatkan "LB_E"20% "WHITE_E"bunga bank setiap kali paycheck.\n\n\
 	"LB_E"Pembayaran Via Qris/Dana/BCA/BRI/Gopay. "LB2_E"Harga VIP Gold "LB_E"Rp.1,000/gold.\n\
-	"YELLOW_E"Untuk informasi selengkapnya hubungi YellowCrush (Server Management & Founder)!"
+	"YELLOW_E"Untuk informasi selengkapnya hubungi Redvelvet (Server Management & Founder)!"
 	);
 
 	ShowPlayerDialog(playerid, DIALOG_UNUSED, DIALOG_STYLE_MSGBOX, ""ORANGE_E"Valencia Roleplay "PINK_E"VIP SYSTEM", longstr2, "Close", "");
@@ -143,12 +141,7 @@ CMD:email(playerid)
 
     // Siapkan string dialog
     new longstr[512];
-    format(longstr, sizeof(longstr), 
-        ""WHITE_E"Masukkan Email.\n\
-        "WHITE_E"Ini akan digunakan jika kamu lupa ganti kata sandi.\n\n\
-        "RED_E"* "WHITE_E"Email mu tidak akan termunculkan untuk Publik\n\
-        "RED_E"* "WHITE_E"Email hanya berguna untuk verifikasi Password yang terlupakan dan berita lainnya\n\
-        "RED_E"* "WHITE_E"Pastikan memasukkan alamat email yang valid!");
+    format(longstr, sizeof(longstr), ""WHITE_E"Masukkan Email.\n"WHITE_E"Ini akan digunakan jika kamu lupa ganti kata sandi.\n\n"RED_E"* "WHITE_E"Email mu tidak akan termunculkan untuk Publik\n"RED_E"* "WHITE_E"Email hanya berguna untuk verifikasi Password yang terlupakan dan berita lainnya\n"RED_E"* "WHITE_E"Pastikan memasukkan alamat email yang valid!");
 
     // Tampilkan dialog
     ShowPlayerDialog(playerid, DIALOG_EMAIL, DIALOG_STYLE_INPUT, 
@@ -215,7 +208,6 @@ CMD:gshop(playerid, params[])
 	ShowPlayerDialog(playerid, DIALOG_GOLDSHOP, DIALOG_STYLE_TABLIST_HEADERS, "Gold Shop", Dstring, "Buy", "Cancel");
 	return 1;
 }
-
 CMD:mypos(playerid, params[])
 {
 	new int, Float:px,Float:py,Float:pz, Float:a;
@@ -231,7 +223,7 @@ CMD:mypos(playerid, params[])
 CMD:gps(playerid, params[])
 {
 	if(pData[playerid][pGPS] < 1) return Error(playerid, "Anda tidak memiliki GPS.");
-	ShowPlayerDialog(playerid, DIALOG_GPS, DIALOG_STYLE_LIST, "GPS Menu", "Disable GPS\nGeneral Location\nPublic Location\nJobs\nMy Properties", "Select", "Close");
+	ShowPlayerDialog(playerid, DIALOG_GPS, DIALOG_STYLE_LIST, "GPS Menu", ""RED_E"Disable GPS\n"WHITE_E"Public Location\nPublic Property\nJobs\nMy Properties", "Select", "Close");
 	return 1;
 }
 
@@ -403,11 +395,9 @@ CMD:dice(playerid, params[])
     pData[to_player][pDiceOffer] = playerid;
     pData[to_player][pDiceMoney] = money;
     
-    new string[128];
-    format(string, sizeof(string), "%s invites you to play dice with a bet of $%s (/accept dice, /deny dice)", ReturnName(playerid), FormatMoney(money));
-    SendClientMessage(to_player, COLOR_YELLOW, string);
+    SendConfirmation(to_player, playerid, "drag", 0); // ✅ data = 0
     
-    Info(playerid, "You have invited %s to play dice with a bet of $%s", ReturnName(to_player), FormatMoney(money));
+    Info(playerid, "You have invited %s to play dice with a bet of %s", ReturnName(to_player), FormatMoney(money));
     return 1;
 }
 
@@ -454,18 +444,17 @@ CMD:time(playerid)
     new jail_min = pData[playerid][pJailTime] / 60;
     new jail_sec = pData[playerid][pJailTime] % 60;
     
-    // Hitung sisa waktu claim vehicle (cek semua kendaraan player)
+    // FIXED: Langsung pakai countdown, bukan kurangi gettime()
     new claim_remaining = 0;
     new total_claiming = 0;
     foreach(new i : PVehicles)
     {
         if(pvData[i][cOwner] == pData[playerid][pID] && pvData[i][cClaim] == 1)
         {
-            new remaining = pvData[i][cClaimTime] - gettime();
-            if(remaining > 0)
+            if(pvData[i][cClaimTime] > 0) // Langsung cek countdown
             {
-                if(claim_remaining == 0 || remaining < claim_remaining)
-                    claim_remaining = remaining; // Ambil waktu tercepat
+                if(claim_remaining == 0 || pvData[i][cClaimTime] < claim_remaining)
+                    claim_remaining = pvData[i][cClaimTime]; // Ambil waktu tercepat
                 total_claiming++;
             }
         }
@@ -734,7 +723,6 @@ CMD:buyinsu(playerid, params[])
 	return 1;
 }
 
-// ALTERNATIVE: Simple version tanpa detail
 CMD:claimpv(playerid, params[])
 {
 	if(!IsPlayerInRangeOfPoint(playerid, 3.0, 1296.0533, -1264.1348, 13.5939)) 
@@ -746,7 +734,7 @@ CMD:claimpv(playerid, params[])
 	{
 		if(pvData[i][cOwner] == pData[playerid][pID] && pvData[i][cClaim] == 1)
 		{
-			if(gettime() >= pvData[i][cClaimTime])
+			if(pvData[i][cClaimTime] <= 0) // Cek countdown sudah habis
 			{
 				// Claim ready
 				pvData[i][cClaim] = 0;
@@ -763,6 +751,13 @@ CMD:claimpv(playerid, params[])
 				SetVehicleFuel(pvData[i][cVeh], 1000);
 				ValidRepairVehicle(pvData[i][cVeh]);
 				
+				// Update database
+				new query[128];
+				mysql_format(g_SQL, query, sizeof(query), 
+					"UPDATE vehicle SET claim='0', claim_time='0' WHERE id='%d'", 
+					pvData[i][cID]);
+				mysql_tquery(g_SQL, query);
+				
 				found++;
 			}
 			else
@@ -773,107 +768,128 @@ CMD:claimpv(playerid, params[])
 	}
 	
 	if(found == 0 && waiting == 0)
-	{
-		return Error(playerid, "You don't have any vehicles in claim status!");
-	}
-	else if(found == 0 && waiting > 0)
-	{
-		return Error(playerid, "You have %d vehicle%s waiting, but none are ready to claim yet!", waiting, (waiting > 1) ? "s" : "");
-	}
-	else
-	{
-		Info(playerid, "Successfully claimed %d vehicle%s!", found, (found > 1) ? "s" : "");
-		
-		if(waiting > 0)
-			Info(playerid, "You still have %d vehicle%s waiting to be claimed.", waiting, (waiting > 1) ? "s" : "");
-	}
+		return Error(playerid, "You don't have any vehicles in claim!");
+	
+	if(found == 0 && waiting > 0)
+		return Error(playerid, "You have %d vehicle%s waiting, come back later!", waiting, (waiting > 1) ? "s" : "");
+	
+	Info(playerid, "Successfully claimed %d vehicle%s!", found, (found > 1) ? "s" : "");
+	
+	if(waiting > 0)
+		Info(playerid, "%d vehicle%s still waiting.", waiting, (waiting > 1) ? "s" : "");
 	
 	return 1;
 }
 
-// COMMAND TAMBAHAN: Cek status claim semua vehicle
 CMD:checkclaim(playerid, params[])
 {
-	new count = 0, string[2048], tempstr[128];
-	
-	strcat(string, "Vehicle\tStatus\tTime Remaining\n", sizeof(string));
-	
-	foreach(new i : PVehicles)
-	{
-		if(pvData[i][cOwner] == pData[playerid][pID])
-		{
-			count++;
-			
-			if(pvData[i][cClaim] == 1)
-			{
-				new remaining = pvData[i][cClaimTime] - gettime();
-				
-				if(remaining > 0)
-				{
-					format(tempstr, sizeof(tempstr), "%s\t{FFFF00}Waiting\t{FFFF00}%s\n",
-						GetVehicleModelName(pvData[i][cModel]),
-						ConvertToMinutes(remaining));
-				}
-				else
-				{
-					format(tempstr, sizeof(tempstr), "%s\t{00FF00}Ready to Claim\t{00FF00}-\n",
-						GetVehicleModelName(pvData[i][cModel]));
-				}
-			}
-			else
-			{
-				format(tempstr, sizeof(tempstr), "%s\t{FFFFFF}Active\t{FFFFFF}-\n",
-					GetVehicleModelName(pvData[i][cModel]));
-			}
-			
-			strcat(string, tempstr, sizeof(string));
-		}
-	}
-	
-	if(count == 0)
-	{
-		return Error(playerid, "You don't have any vehicles!");
-	}
-	
-	ShowPlayerDialog(playerid, DIALOG_UNUSED, DIALOG_STYLE_TABLIST_HEADERS, 
-		"Vehicle Claim Status", string, "Close", "");
-	return 1;
+    new count = 0, string[2048], tempstr[128];
+    
+    strcat(string, "Vehicle\tStatus\tTime Remaining\n", sizeof(string));
+    
+    foreach(new i : PVehicles)
+    {
+        if(pvData[i][cOwner] == pData[playerid][pID])
+        {
+            count++;
+            
+            if(pvData[i][cClaim] == 1)
+            {
+                // FIXED: Langsung pakai countdown, bukan kurangi gettime()
+                if(pvData[i][cClaimTime] > 0)
+                {
+                    format(tempstr, sizeof(tempstr), "%s\t{FFFF00}Waiting\t{FFFF00}%s\n",
+                        GetVehicleModelName(pvData[i][cModel]),
+                        ConvertToMinutes(pvData[i][cClaimTime])); // Langsung pakai countdown
+                }
+                else
+                {
+                    format(tempstr, sizeof(tempstr), "%s\t{00FF00}Ready to Claim\t{00FF00}-\n",
+                        GetVehicleModelName(pvData[i][cModel]));
+                }
+            }
+            else
+            {
+                format(tempstr, sizeof(tempstr), "%s\t{FFFFFF}Active\t{FFFFFF}-\n",
+                    GetVehicleModelName(pvData[i][cModel]));
+            }
+            
+            strcat(string, tempstr, sizeof(string));
+        }
+    }
+    
+    if(count == 0)
+        return Error(playerid, "You don't have any vehicles!");
+    
+    ShowPlayerDialog(playerid, DIALOG_UNUSED, DIALOG_STYLE_TABLIST_HEADERS, 
+        "Vehicle Claim Status", string, "Close", "");
+    return 1;
 }
 
-CMD:sellpv(playerid, params[])
+CMD:scrapveh(playerid, params[])
 {
-	if(!IsPlayerInRangeOfPoint(playerid, 3.0, 1296.0533, -1264.1348, 13.5939)) return Error(playerid, "Kamu harus berada di Kantor Insurance!");
-	
-	new vehid;
-	if(sscanf(params, "d", vehid)) return Usage(playerid, "/sellpv [vehid] | /mypv - for find vehid");
-	if(vehid == INVALID_VEHICLE_ID) return Error(playerid, "Invalid id");
-			
-	foreach(new i : PVehicles)
-	{
-		if(vehid == pvData[i][cVeh])
-		{
-			if(pvData[i][cOwner] == pData[playerid][pID])
-			{
-				if(!IsValidVehicle(pvData[i][cVeh])) return Error(playerid, "Your vehicle is not spanwed!");
-				if(pvData[i][cRent] != 0) return Error(playerid, "You can't sell rental vehicle!");
-				new pay = pvData[i][cPrice] / 2;
-				GivePlayerMoneyEx(playerid, pay);
-				
-				Info(playerid, "You sold a vehicle model %s(%d) for "LG_E"$%s", GetVehicleName(vehid), GetVehicleModel(vehid), FormatMoney(pay));
-				new str[150];
-				format(str,sizeof(str),"[VEH]: %s sold a vehicle %s for $%s!", GetRPName(playerid), GetVehicleName(vehid), FormatMoney(pay));
-				LogServer("Property", str);
-				new query[128];
-				mysql_format(g_SQL, query, sizeof(query), "DELETE FROM vehicle WHERE id = '%d'", pvData[i][cID]);
-				mysql_tquery(g_SQL, query);
-				if(IsValidVehicle(pvData[i][cVeh])) DestroyVehicle(pvData[i][cVeh]);
-				pvData[i][cVeh] = INVALID_VEHICLE_ID;
-				Iter_SafeRemove(PVehicles, i, i);
-			}
-			else return Error(playerid, "This vehicle ID does not belong to you! use /mypv to find the ID.");
-		}
-	}
-	return 1;
+    // Check apakah di tempat scrap/insurance office
+    if(!IsPlayerInRangeOfPoint(playerid, 15.0, 2415.4207, -2467.8943, 13.6250)) 
+        return Error(playerid, "You must be at the scrap vehicle area!");
+    
+    // Check apakah player sedang naik kendaraan
+    if(!IsPlayerInAnyVehicle(playerid))
+        return Error(playerid, "You must be inside a vehicle to scrap it!");
+    
+    // Check apakah player adalah driver
+    if(GetPlayerState(playerid) != PLAYER_STATE_DRIVER)
+        return Error(playerid, "You must be the driver to scrap this vehicle!");
+    
+    new vehicleid = GetPlayerVehicleID(playerid);
+    
+    // Cari vehicle di PVehicles
+    new carid = -1;
+    foreach(new i : PVehicles)
+    {
+        if(pvData[i][cVeh] == vehicleid)
+        {
+            carid = i;
+            break;
+        }
+    }
+    
+    // Check apakah ini private vehicle
+    if(carid == -1)
+        return Error(playerid, "This is not a private vehicle!");
+    
+    // Check ownership
+    if(pvData[carid][cOwner] != pData[playerid][pID])
+        return Error(playerid, "This vehicle doesn't belong to you!");
+    
+    // Check rental
+    if(pvData[carid][cRent] != 0)
+        return Error(playerid, "You can't scrap a rental vehicle!");
+    
+    // Check if vehicle is being claimed
+    if(pvData[carid][cClaim] == 1)
+        return Error(playerid, "You can't scrap a vehicle that is being claimed!");
+    
+    // Hitung harga jual (50% dari harga beli)
+    new pay = pvData[carid][cPrice] / 2;
+    
+    // Konfirmasi dialog
+    new str[512];
+    format(str, sizeof(str),
+        "{FFFFFF}Are you sure you want to scrap this vehicle?\n\n\
+        Vehicle: {FFFF00}%s\n\
+        {FFFFFF}Original Price: {00FF00}%s\n\
+        {FFFFFF}Scrap Value: {FFFF00}%s {FFFFFF}(50%%)\n\n\
+        {FF0000}Warning: This action cannot be undone!",
+        GetVehicleModelName(GetVehicleModel(vehicleid)),
+        FormatMoney(pvData[carid][cPrice]),
+        FormatMoney(pay)
+    );
+    
+    SetPVarInt(playerid, "ScrapVehicleID", carid);
+    ShowPlayerDialog(playerid, DIALOG_SCRAP_CONFIRM, DIALOG_STYLE_MSGBOX, 
+        "Scrap Vehicle Confirmation", str, "Scrap", "Cancel");
+    
+    return 1;
 }
 
 CMD:newrek(playerid, params[])
@@ -922,16 +938,16 @@ CMD:pay(playerid, params[])
 				if(strval(totalcash) < 0) return SendClientMessageEx(playerid, COLOR_GREY, "You cannot send less than $1.00!");
 				GivePlayerMoneyEx(playerid, -strval(totalcash));
 				GivePlayerMoneyEx(otherid, strval(totalcash));
-				format(mstr, sizeof(mstr), "PAYINFO: "WHITE_E"You've paid "GREEN_E"$%s "WHITE_E"to "YELLOW_E"%s", FormatMoney(strval(totalcash)), ReturnName(otherid));
+				format(mstr, sizeof(mstr), "PAYINFO: "WHITE_E"You've paid "GREEN_E"%s "WHITE_E"to "YELLOW_E"%s", FormatMoney(strval(totalcash)), ReturnName(otherid));
 				SendClientMessage(playerid, COLOR_ARWIN, mstr);
-				format(mstr, sizeof(mstr), "PAYINFO: "YELLOW_E"%s "WHITE_E"has paid "GREEN_E"$%s "WHITE_E"to you", ReturnName(playerid), FormatMoney(strval(totalcash)));
+				format(mstr, sizeof(mstr), "PAYINFO: "YELLOW_E"%s "WHITE_E"has paid "GREEN_E"%s "WHITE_E"to you", ReturnName(playerid), FormatMoney(strval(totalcash)));
 				SendClientMessage(otherid, COLOR_ARWIN, mstr);
 				ApplyAnimation(playerid, "DEALER", "shop_pay", 4.0, 0, 0, 0, 0, 0);
 				ApplyAnimation(otherid, "DEALER", "shop_pay", 4.0, 0, 0, 0, 0, 0);
-				//SendAdminMessage(COLOR_ARWIN, "PAYLOGS: "WBLUE_E"%s "YELLOW_E"has paid "GREEN_E"$%s "YELLOW_E"to "WBLUE_E"%s", ReturnName2(playerid), FormatMoney(strval(totalcash)), ReturnName2(otherid));
+				//SendAdminMessage(COLOR_ARWIN, "PAYLOGS: "WBLUE_E"%s "YELLOW_E"has paid "GREEN_E"%s "YELLOW_E"to "WBLUE_E"%s", ReturnName2(playerid), FormatMoney(strval(totalcash)), ReturnName2(otherid));
 				
 				new dc[500];
-				format(dc, sizeof(dc),  "```[PAY LOG]%s telah memberikan uang kepada %s sebesar $%s```", ReturnName(playerid), ReturnName(otherid), FormatMoney(strval(totalcash)));
+				format(dc, sizeof(dc),  "```[PAY LOG]%s telah memberikan uang kepada %s sebesar %s```", ReturnName(playerid), ReturnName(otherid), FormatMoney(strval(totalcash)));
 				SendDiscordMessage(1, dc);
 				new query[512];
 				mysql_format(g_SQL, query, sizeof(query), "INSERT INTO logpay (player,playerid,toplayer,toplayerid,ammount,time) VALUES('%s','%d','%s','%d','%d',UNIX_TIMESTAMP())", pData[playerid][pName], pData[playerid][pID], pData[otherid][pName], pData[otherid][pID], totalcash);
@@ -974,7 +990,7 @@ CMD:pay(playerid, params[])
         return Error(playerid, "You cannot send less than $1!");
 
     // Tampilkan konfirmasi kepada player
-    format(mstr, sizeof(mstr), ""WHITEP_E"Apakah Anda yakin ingin mengirim %s(%d) "GREEN_E"$%s?", ReturnName(otherid), otherid, FormatMoney(money));
+    format(mstr, sizeof(mstr), ""WHITEP_E"Apakah Anda yakin ingin mengirim %s(%d) "GREEN_E"%s?", ReturnName(otherid), otherid, FormatMoney(money));
     ShowPlayerDialog(playerid, DIALOG_PAY, DIALOG_STYLE_MSGBOX, ""GREEN_E"Pay", mstr, "Kirim", "Batal");
 
     // Simpan jumlah uang dan ID player yang akan menerima uang
@@ -1020,13 +1036,7 @@ CMD:settings(playerid)
 	togwt = (pData[playerid][pTogWT] == 0) ? ""LG_E"ON" : ""RED_E"OFF";
 	
 	format(str, sizeof(str),
-    ""WHITEP_E"Email:\t\t\t"GREEN_E"%s\n\
-    "WHITEP_E"Change Password\n\
-    "WHITEP_E"HBE Mode:\t\t"GREEN_E"%s\n\
-    "WHITEP_E"Private Messages:\t"GREEN_E"%s\n\
-    "WHITEP_E"Server Logs:\t\t"GREEN_E"%s\n\
-    "WHITEP_E"Advertisements:\t"GREEN_E"%s\n\
-    "WHITEP_E"Walkie-Talkie:\t"GREEN_E"%s",
+    ""WHITEP_E"Email:\t\t\t"GREEN_E"%s\n"WHITEP_E"Change Password\n"WHITEP_E"HBE Mode:\t"GREEN_E"%s\n"WHITEP_E"Private Messages:\t"GREEN_E"%s\n"WHITEP_E"Server Logs:\t\t"GREEN_E"%s\n"WHITEP_E"Advertisements:\t"GREEN_E"%s\n"WHITEP_E"Walkie-Talkie:\t"GREEN_E"%s",
     pData[playerid][pEmail],
     hbemode,
     togpm,
@@ -1258,8 +1268,10 @@ CMD:frisk(playerid, params[])
 
     pData[otherid][pFriskOffer] = playerid;
 
-    Info(otherid, "%s has offered to frisk you (type \"/accept frisk or /deny frisk\").", ReturnName(playerid));
-    Info(playerid, "You have offered to frisk %s.", ReturnName(otherid));
+    // ✅ PERBAIKAN: Ganti 'factionid' dengan 0 (tidak perlu data tambahan)
+    SendConfirmation(otherid, playerid, "frisk", 0);
+	Info(playerid, "You have offered to frisk %s.", ReturnName(otherid));
+
 	return 1;
 }
 
@@ -1280,7 +1292,8 @@ CMD:inspect(playerid, params[])
 
     pData[otherid][pInsOffer] = playerid;
 
-    Info(otherid, "%s has offered to inspect you (type \"/accept inspect or /deny inspect\").", ReturnName(playerid));
+    SendConfirmation(otherid, playerid, "inspect", 0); // ✅ data = 0
+
     Info(playerid, "You have offered to inspect %s.", ReturnName(otherid));
 	return 1;
 }
@@ -1323,7 +1336,8 @@ CMD:reqloc(playerid, params[])
     pData[playerid][pDelayReqloc] = 60;
     pData[otherid][pLocOffer] = playerid;
 
-    Info(otherid, "Phone %d is requesting to share your location (type \"/accept reqloc\" or \"/deny reqloc\").", pData[playerid][pPhone]);
+    SendConfirmation(otherid, playerid, "drag", 0); // ✅ data = 0
+
     Info(playerid, "You have sent a location request to phone number %d.", phone);
     
     return 1;
@@ -1408,18 +1422,6 @@ CMD:accept(playerid, params[])
 			SendNearbyMessage(dragby, 30.0, COLOR_PURPLE, "* %s grabs %s and starts dragging them, (/undrag).", ReturnName(dragby), ReturnName(playerid));
 			return true;
 		}
-		else if(strcmp(params,"frisk",true) == 0)
-		{
-			if(pData[playerid][pFriskOffer] == INVALID_PLAYER_ID || !IsPlayerConnected(pData[playerid][pFriskOffer]))
-				return Error(playerid, "The player is not logged in!");
-			
-			if(!NearPlayer(playerid, pData[playerid][pFriskOffer], 5.0))
-				return Error(playerid, "Kamu harus didekat Player.");
-				
-			DisplayItems(pData[playerid][pFriskOffer], playerid);
-			Servers(playerid, "You have successfully accepted the frisk offer from %s.", ReturnName(pData[playerid][pFriskOffer]));
-			pData[playerid][pFriskOffer] = INVALID_PLAYER_ID;
-		}
 		else if(strcmp(params,"inspect",true) == 0)
 		{
 			if(pData[playerid][pInsOffer] == INVALID_PLAYER_ID || !IsPlayerConnected(pData[playerid][pFriskOffer]))
@@ -1503,15 +1505,15 @@ CMD:accept(playerid, params[])
 			{
 				GivePlayerMoneyEx(otherid, -money);
 				GivePlayerMoneyEx(playerid, money);
-				SendClientMessageEx(playerid, COLOR_WHITE, "Anda menang! Menerima "GREEN_E"$%s"WHITE_E" dari %s.", FormatMoney(money), ReturnName(otherid));
-				SendClientMessageEx(otherid, COLOR_WHITE, "Anda kalah. Kehilangan "RED_E"$%s"WHITE_E" untuk %s.", FormatMoney(money), ReturnName(playerid));
+				SendClientMessageEx(playerid, COLOR_WHITE, "Anda menang! Menerima "GREEN_E"%s"WHITE_E" dari %s.", FormatMoney(money), ReturnName(otherid));
+				SendClientMessageEx(otherid, COLOR_WHITE, "Anda kalah. Kehilangan "RED_E"%s"WHITE_E" untuk %s.", FormatMoney(money), ReturnName(playerid));
 			}
 			else if(otherTotal > playerTotal)
 			{
 				GivePlayerMoneyEx(playerid, -money);
 				GivePlayerMoneyEx(otherid, money);
-				SendClientMessageEx(otherid, COLOR_WHITE, "Anda menang! Menerima "GREEN_E"$%s"WHITE_E" dari %s.", FormatMoney(money), ReturnName(playerid));
-				SendClientMessageEx(playerid, COLOR_WHITE, "Anda kalah. Kehilangan "RED_E"$%s"WHITE_E" untuk %s.", FormatMoney(money), ReturnName(otherid));
+				SendClientMessageEx(otherid, COLOR_WHITE, "Anda menang! Menerima "GREEN_E"%s"WHITE_E" dari %s.", FormatMoney(money), ReturnName(playerid));
+				SendClientMessageEx(playerid, COLOR_WHITE, "Anda kalah. Kehilangan "RED_E"%s"WHITE_E" untuk %s.", FormatMoney(money), ReturnName(otherid));
 			}
 			else
 			{
@@ -1548,7 +1550,7 @@ CMD:deny(playerid, params[])
         if(isnull(params)) 
 		{
             Usage(playerid, "USAGE: /deny [name]");
-            Info(playerid, "Names: faction, drag, frisk, inspect, job1, job2, reqloc, rob, dice");
+            Info(playerid, "Names: faction, drag, frisk, inspect, reqloc, rob, dice");
             return 1;
         }
 		if(strcmp(params,"faction",true) == 0) 
@@ -1606,26 +1608,6 @@ CMD:deny(playerid, params[])
 			pData[playerid][pInsOffer] = INVALID_PLAYER_ID;
 			return 1;
 		}
-		else if(strcmp(params,"job1",true) == 0) 
-		{
-			if(pData[playerid][pJob] == 0) return Error(playerid, "You do not have a job.");
-			if(pData[playerid][pJob] != 0)
-			{
-				pData[playerid][pJob] = 0;
-				Info(playerid, "You have successfully left your job.");
-				return 1;
-			}
-		}
-		else if(strcmp(params,"job2",true) == 0) 
-		{
-			if(pData[playerid][pJob2] == 0) return Error(playerid, "You do not have a job.");
-			if(pData[playerid][pJob2] != 0)
-			{
-				pData[playerid][pJob2] = 0;
-				Info(playerid, "You have successfully left your job.");
-				return 1;
-			}
-		}
 		else if(strcmp(params,"reqloc",true) == 0) 
 		{
 			if(pData[playerid][pLocOffer] == INVALID_PLAYER_ID || !IsPlayerConnected(pData[playerid][pLocOffer]))
@@ -1661,6 +1643,40 @@ CMD:deny(playerid, params[])
 	return 1;
 }
 
+CMD:quitjob(playerid, params[])
+{
+    if(isnull(params))
+    {
+        SendClientMessage(playerid, -1, 
+            "USAGE: /quitjob [job1/job2]");
+        return 1;
+    }
+
+    // ===== JOB 1 =====
+    if(strcmp(params, "job1", true) == 0)
+    {
+        if(pData[playerid][pJob] == 0)
+            return Error(playerid, "You do not have a primary job.");
+
+        pData[playerid][pJob] = 0;
+        Info(playerid, "You have successfully left your primary job.");
+        return 1;
+    }
+
+    // ===== JOB 2 =====
+    if(strcmp(params, "job2", true) == 0)
+    {
+        if(pData[playerid][pJob2] == 0)
+            return Error(playerid, "You do not have a secondary job.");
+
+        pData[playerid][pJob2] = 0;
+        Info(playerid, "You have successfully left your secondary job.");
+        return 1;
+    }
+
+    return Error(playerid, "Invalid option. Use /quitjob job1 or job2.");
+}
+
 CMD:give(playerid, params[])
 {
 	if(IsAtEvent[playerid] == 1)
@@ -1672,7 +1688,7 @@ CMD:give(playerid, params[])
         if(sscanf(params, "us[24]d", otherid, name, ammount))
 		{
 			Usage(playerid, "/give [playerid] [name] [ammount]");
-			Info(playerid, "Names: bandage, redmoney, medicine, snack, sprunk, material, component, marijuana, obat");
+			Info(playerid, "Names: bandage, redmoney, medicine, snack, sprunk, material, component, marijuana, obat, weapon");
 			return 1;
 		}
 		if(otherid == INVALID_PLAYER_ID || otherid == playerid || !NearPlayer(playerid, otherid, 3.0))
@@ -1810,6 +1826,10 @@ CMD:give(playerid, params[])
 			ApplyAnimation(playerid, "DEALER", "shop_pay", 4.0, 0, 0, 0, 0, 0);
 			ApplyAnimation(otherid, "DEALER", "shop_pay", 4.0, 0, 0, 0, 0, 0);
 		}
+		else if(strcmp(name,"weapon",true) == 0) 
+		{
+			return callcmd::weapon(playerid, "give");
+		}
 		else if(strcmp(name,"obat",true) == 0) 
 		{
 			if(pData[playerid][pObat] < ammount)
@@ -1875,16 +1895,10 @@ CMD:use(playerid, params[])
 			InfoTD_MSG(playerid, 3000, "Restore +15 Energy");
 			ApplyAnimation(playerid,"SMOKING","M_smkstnd_loop",2.1,0,0,0,0,0);
 		}
-		/*else if(strcmp(params,"sprunk",true) == 0) 
+		else if(strcmp(params,"cigar",true) == 0) 
 		{
-			if(pData[playerid][pSprunk] < 1)
-				return Error(playerid, "Anda tidak memiliki snack.");
-			
-			SetPlayerSpecialAction(playerid,SPECIAL_ACTION_DRINK_SPRUNK);
-			//SendNearbyMessage(playerid, 10.0, COLOR_PURPLE,"* %s opens a can of sprunk.", ReturnName(playerid));
-			SetPVarInt(playerid, "UsingSprunk", 1);
-			pData[playerid][pSprunk]--;
-		}*/
+			return callcmd::cigar(playerid, "");
+		}
 		else if(strcmp(params,"gas",true) == 0) 
 		{
 			if(pData[playerid][pGas] < 1)
@@ -1975,6 +1989,9 @@ CMD:use(playerid, params[])
 		}
 		else if(strcmp(params,"boombox",true) == 0)
 		{
+			if(pData[playerid][pVip] < 1 || pData[playerid][pVip] > 3)
+				return Error(playerid, "You need to be VIP to use boombox.");
+
 			if(pData[playerid][pBoombox] < 1)
 				return Error(playerid, "You dont have boombox");
 			// Cek apakah pemain sedang dalam posisi jongkok
@@ -2245,6 +2262,9 @@ CMD:enter(playerid, params[])
 
 				if(bData[bid][bLocked])
 					return Error(playerid, "This business is locked!");
+
+				if(bData[bid][bLocked] == 2)
+    				return Error(playerid, "This business has been confiscated by the government and cannot be entered.");
 					
 				pData[playerid][pInBiz] = bid;
 				SetPlayerPositionEx(playerid, bData[bid][bIntposX], bData[bid][bIntposY], bData[bid][bIntposZ], bData[bid][bIntposA]);
@@ -2325,7 +2345,8 @@ CMD:drag(playerid, params[])
         return Error(playerid, "You cannot drag a player who is not injured.");
 
     SetPVarInt(otherid, "DragBy", playerid);
-    Info(otherid, "%s has offered to drag you, /accept drag to accept it /deny drag to cancel it.", ReturnName(playerid));
+	SendConfirmation(otherid, playerid, "drag", 0); // ✅ data = 0
+
 	Info(playerid, "You have successfully offered to drag player %s", ReturnName(otherid));
     return 1;
 }
@@ -2347,86 +2368,9 @@ CMD:undrag(playerid, params[])
     return 1;
 }
 
-CMD:myproperties(playerid)
+CMD:myproperty(playerid)
 {
-    // Mengecek dan menampilkan properti yang dimiliki oleh pemain
-    new CMDSString[2048]; // String untuk menyimpan semua informasi
-    CMDSString[0] = '\0'; // Inisialisasi string
-
-    // Menampilkan informasi tentang rumah
-    if(GetOwnedHouses(playerid) != -1) {
-        new hid, lock[128], count = GetOwnedHouses(playerid);
-        strcat(CMDSString, "=== My Houses ===\n", sizeof(CMDSString));
-
-        Loop(itt, (count + 1), 1)
-        {
-            hid = ReturnPlayerHousesID(playerid, itt);
-            if(hData[hid][hLocked] == 1)
-            {
-                format(lock, sizeof(lock), "{FF0000}Locked{ffffff}");
-            }
-            else
-            {
-                format(lock, sizeof(lock), "{00FF00}Unlocked{ffffff}");
-            }
-            new _tmpstring[128]; // Deklarasi _tmpstring di dalam loop
-            format(_tmpstring, sizeof(_tmpstring), "%d.\t{FFFF2A}%s  (%s)\n", itt, hData[hid][hAddress], lock);
-            strcat(CMDSString, _tmpstring);
-        }
-    } else {
-        strcat(CMDSString, "You don't have any houses.\n", sizeof(CMDSString));
-    }
-
-    // Menampilkan informasi tentang workshop
-    if(GetOwnedWorkshop(playerid)) {
-        new wid, lock[128], count = GetOwnedWorkshop(playerid);
-        strcat(CMDSString, "=== My Workshops ===\n", sizeof(CMDSString));
-
-        Loop(itt, (count + 1), 1)
-        {
-            wid = ReturnPlayerWorkshopID(playerid, itt);
-            if(wsData[wid][wStatus] == 1)
-            {
-                format(lock, sizeof(lock), "{7FFF00}Open{ffffff}");
-            }
-            else
-            {
-                format(lock, sizeof(lock), "{FF0000}Closed{ffffff}");
-            }
-            new _tmpstring[128]; // Deklarasi _tmpstring di dalam loop
-            format(_tmpstring, sizeof(_tmpstring), "%d\t%s{ffffff}(%s)\t%s{ffffff}\n", itt, wsData[wid][wName], lock, GetLocation(wsData[wid][wX], wsData[wid][wY], wsData[wid][wZ]));
-            strcat(CMDSString, _tmpstring);
-        }
-    } else {
-        strcat(CMDSString, "You don't have any workshops.\n", sizeof(CMDSString));
-    }
-
-    // Menampilkan informasi tentang bisnis
-    if(GetOwnedBisnis(playerid) != -1) {
-        new hid, lock[128], count = GetOwnedBisnis(playerid);
-        strcat(CMDSString, "=== My Businesses ===\n", sizeof(CMDSString));
-
-        Loop(itt, (count + 1), 1)
-        {
-            hid = ReturnPlayerBisnisID(playerid, itt);
-            if(hData[hid][hLocked] == 1)
-            {
-                format(lock, sizeof(lock), "{FF0000}Locked{ffffff}");
-            }
-            else
-            {
-                format(lock, sizeof(lock), "{00FF00}Unlocked{ffffff}");
-            }
-            new _tmpstring[128]; // Deklarasi _tmpstring di dalam loop
-            format(_tmpstring, sizeof(_tmpstring), "%d.\t{FFFF2A}%s  {ffffff}(%s)\n", itt, bData[hid][bName], lock);
-            strcat(CMDSString, _tmpstring);
-        }
-    } else {
-        strcat(CMDSString, "You don't have any businesses.\n", sizeof(CMDSString));
-    }
-
-    // Menampilkan dialog kepada pemain
-    ShowPlayerDialog(playerid, DIALOG_MY_PROPERTIES, DIALOG_STYLE_LIST, "{0000FF}My Properties", CMDSString, "Select", "Cancel");
+	ShowPlayerDialog(playerid, DIALOG_GPS_PROPERTIES, DIALOG_STYLE_LIST, "My Properties", "House\nBusiness\nDealership\nVending Machine\nVehicle", "Select", "Close");
     return 1;
 }
 
@@ -2447,7 +2391,7 @@ CMD:mask(playerid, params[])
             if(IsValidDynamic3DTextLabel(PlayerLabel[playerid]))
             {
                 format(labeltext, sizeof(labeltext), "Mask_#%d {ffffff}(%d)", pData[playerid][pMaskID], playerid);
-                UpdateDynamic3DTextLabelText(PlayerLabel[playerid], COLOR_RED, labeltext);
+                UpdateDynamic3DTextLabelText(PlayerLabel[playerid], COLOR_WHITE, labeltext);
             }
         }
         case 1: // Lepas Mask
@@ -2967,8 +2911,8 @@ CMD:phone(playerid, params[])
 {
 	if (pData[playerid][pPhone] == 0) 
     	return Error(playerid, "You do not have a phone!");
-	if (pData[playerid][pPhoneStatus] == 0) 
-    	return Error(playerid, "Your phone is turned off.");
+	//if (pData[playerid][pPhoneStatus] == 0) 
+    	//return Error(playerid, "Your phone is turned off.");
 
 
 	ShowPlayerDialog(playerid, DIALOG_PHONE, DIALOG_STYLE_LIST,"Phone","Call\nContact\nGPS\nM-Banking\nSms\nAdsvertisement\nRequest Location\nSettings", "Select", "Cancel");
@@ -2985,18 +2929,7 @@ CMD:call(playerid, params[])
 	if(pData[playerid][pPhoneStatus] == 0) return Error(playerid, "Your phone is turned off.");
 	if(pData[playerid][pPhoneCredit] <= 0) return Error(playerid, "You do not have a phone credits!");
 	
-	if(sscanf(params, "d", ph))
-	{
-		Usage(playerid, "/call [phone number] 933 - Taxi Call | 911 - Emergency Call");
-		foreach(new ii : Player)
-		{	
-			if(pData[ii][pMechDuty] == 1)
-			{
-				SendClientMessageEx(playerid, COLOR_GREEN, "Mechanic Duty: %s | PH: [%d]", ReturnName(ii), pData[ii][pPhone]);
-			}
-		}
-		return 1;
-	}
+	Usage(playerid, "/call [phone number] 933 - Taxi or Mechanic Call | 911 - Emergency Call");
 	
 	// 911 Emergency Call - Set status menunggu konfirmasi
 	if(ph == 911)
@@ -3006,27 +2939,19 @@ CMD:call(playerid, params[])
 		
 		// Set player sedang dalam proses 911 call
 		SetPVarInt(playerid, "Calling911", 1);
-		Info(playerid, "911 Emergency Call 'police' or 'paramedic'");
+		Custom(playerid, "SERVICE: "WHITE_E"911 Emergency Call 'police' or 'paramedic'");
 		return 1;
 	}
 	
 	// 933 Taxi Call
-	if(ph == 933)
+	if(ph == 911)
 	{
 		if(pData[playerid][pCallTime] >= gettime())
 			return Error(playerid, "You must wait %d seconds before sending another call.", pData[playerid][pCallTime] - gettime());
 		
-		new Float:x, Float:y, Float:z;
-		GetPlayerPos(playerid, x, y, z);
-		Info(playerid, "Your calling has sent to the taxi driver. please wait for respon!");
-		pData[playerid][pCallTime] = gettime() + 60;
-		foreach(new tx : Player)
-		{
-			if(pData[tx][pJob] == 1 || pData[tx][pJob2] == 1)
-			{
-				SendClientMessageEx(tx, COLOR_YELLOW, "[TAXI CALL] "WHITE_E"%s calling the taxi for order! Ph: ["GREEN_E"%d"WHITE_E"] | Location: %s", ReturnName(playerid), pData[playerid][pPhone], GetLocation(x, y, z));
-			}
-		}
+		// Set player sedang dalam proses 933 call
+		SetPVarInt(playerid, "Calling933", 1);
+		Custom(playerid, "SERVICE: "WHITE_E"933 Service Call 'taxi' or 'mechanic'");
 		return 1;
 	}
 	
@@ -3295,12 +3220,12 @@ CMD:tutorial(playerid, params[])
 	{
 		if(pData[ii][pTogAds] == 0)
 		{
-			SendClientMessageEx(ii, COLOR_RED, "Ad: "GREEN_E"$%s.", params);
-			SendClientMessageEx(ii, COLOR_RED, "Contact Info: ["GREEN_E"$%s"RED_E"] Phone Number: ["GREEN_E"%d"RED_E"]", pData[playerid][pName], pData[playerid][pPhone]);
+			SendClientMessageEx(ii, COLOR_RED, "Ad: "GREEN_E"%s.", params);
+			SendClientMessageEx(ii, COLOR_RED, "Contact Info: ["GREEN_E"%s"RED_E"] Phone Number: ["GREEN_E"%d"RED_E"]", pData[playerid][pName], pData[playerid][pPhone]);
 		}
 	}
-	//SendClientMessageToAllEx(COLOR_ORANGE2, "[ADS] "GREEN_E"$%s.", params);
-	//SendClientMessageToAllEx(COLOR_ORANGE2, "Contact Info: ["GREEN_E"$%s"ORANGE_E2"] Ph: ["GREEN_E"%d"ORANGE_E2"] Bank Rek: ["GREEN_E"%d"ORANGE_E2"]", pData[playerid][pName], pData[playerid][pPhone], pData[playerid][pBankRek]);
+	//SendClientMessageToAllEx(COLOR_ORANGE2, "[ADS] "GREEN_E"%s.", params);
+	//SendClientMessageToAllEx(COLOR_ORANGE2, "Contact Info: ["GREEN_E"%s"ORANGE_E2"] Ph: ["GREEN_E"%d"ORANGE_E2"] Bank Rek: ["GREEN_E"%d"ORANGE_E2"]", pData[playerid][pName], pData[playerid][pPhone], pData[playerid][pBankRek]);
 	return 1;
 }
 CMD:ad(playerid, params[])
@@ -3360,6 +3285,7 @@ CMD:ad(playerid, params[])
 	}
 	return 1;
 }
+
 //------------------[ Bisnis and Buy Commands ]-------
 CMD:buy(playerid, params[])
 {
@@ -3367,7 +3293,7 @@ CMD:buy(playerid, params[])
 	if(IsPlayerInRangeOfPoint(playerid, 50, 2184.32, -1023.32, 1018.68))
 		return Error(playerid, "Anda tidak dapat melakukan ini jika sedang berada di OOC Zone");
 	//trucker product
-	if(IsPlayerInRangeOfPoint(playerid, 3.5, 1229.8157, 145.2586, 20.4609))
+	if(IsPlayerInRangeOfPoint(playerid, 3.5, 1208.0065, 185.8374, 20.5067))
 	{
 		if(pData[playerid][pJob] == 4 || pData[playerid][pJob2] == 4)
 		{
@@ -3380,7 +3306,7 @@ CMD:buy(playerid, params[])
 				if(modelid == 414 || modelid == 456 || modelid == 499 || modelid == 498)
 				{
 					new mstr[256];
-					format(mstr, sizeof(mstr), ""WHITE_E"Input the product quantity.\nProduct Stock: "GREEN_E"%d\n"WHITE_E"Product Price"GREEN_E" $%s / item", Product, FormatMoney(ProductPrice));
+					format(mstr, sizeof(mstr), ""WHITE_E"Input the product quantity.\nProduct Stock: "GREEN_E"%d\n"WHITE_E"Product Price"GREEN_E" %s / item", Product, FormatMoney(ProductPrice));
 					ShowPlayerDialog(playerid, DIALOG_PRODUCT, DIALOG_STYLE_INPUT, "Buy Product", mstr, "Buy", "Cancel");
 				}
 				else return Error(playerid, "You must use a trucker vehicle (Mule, Yankee, Benson, or Boxville).");
@@ -3389,53 +3315,72 @@ CMD:buy(playerid, params[])
 		}
 		else return Error(playerid, "You are not trucker job.");
 	}
-	if(IsPlayerInRangeOfPoint(playerid, 3.5, 323.5624, 904.4940, 21.5862))
-	{
-		if(pData[playerid][pJobTime] > 0) return Error(playerid, "You must wait %d seconds to perform this action.", pData[playerid][pJobTime]);
-		if(pData[playerid][pJob] == 4 || pData[playerid][pJob2] == 4)
-		{
-				new mstr[256];
-				format(mstr, sizeof(mstr), ""WHITE_E"Input the Component quantity:\nComponent Stock: "GREEN_E"%d\n"WHITE_E"Component Price"GREEN_E" $%s / item\n\n"YELLOW_E"** Anda akan mendapatkan bonus 60 persen dari hasil penjualan crate.", RawComponent, FormatMoney(ComponentPrice));
-				ShowPlayerDialog(playerid, DIALOG_RAWCOMPONENT, DIALOG_STYLE_INPUT, "Buy Component", mstr, "Buy", "Cancel");
-			
-		}
-		else return Error(playerid, "You are not trucker job.");
-	}
-	if(IsPlayerInRangeOfPoint(playerid, 3.5, 2836.5061,-1540.5342,11.0991))
-	{
-		if(pData[playerid][pJobTime] > 0) return Error(playerid, "You must wait %d seconds to perform this action.", pData[playerid][pJobTime]);
-		if(pData[playerid][pJob] == 4 || pData[playerid][pJob2] == 4)
-		{
-			//if(GetPlayerState(playerid) == PLAYER_STATE_DRIVER)
-			
-				new mstr[256];
-				format(mstr, sizeof(mstr), ""WHITE_E"Input the Fish quantity:\nFish Stock: "GREEN_E"%d\n"WHITE_E"Fish Price"GREEN_E" $%s / kg\n\n"YELLOW_E"** Anda akan mendapatkan bonus 60 persen dari hasil penjualan crate.", RawFish, FormatMoney(FishPrice));
-				ShowPlayerDialog(playerid, DIALOG_RAWFISH, DIALOG_STYLE_INPUT, "Buy Fish", mstr, "Buy", "Cancel");
-			
-			//else return Error(playerid, "You are not in vehicle trucker.");
-		}
-		else return Error(playerid, "You are not trucker job.");
-	}
+	//Gasoil
 	if(IsPlayerInRangeOfPoint(playerid, 3.5, 336.70, 895.54, 20.40))
 	{
-		if(pData[playerid][pJob] == 4 || pData[playerid][pJob2] == 4)
-		{
-			if(GetPlayerState(playerid) == PLAYER_STATE_DRIVER)
-			{
-				new mstr[128];
-				format(mstr, sizeof(mstr), ""WHITE_E"Input the gasoil quantity:\nGasOil Stock: "GREEN_E"%d\n"WHITE_E"GasOil Price"GREEN_E" $%s / liters", GasOil, FormatMoney(GasOilPrice));
-				ShowPlayerDialog(playerid, DIALOG_GASOIL, DIALOG_STYLE_INPUT, "Buy GasOil", mstr, "Buy", "Cancel");
-			}
-			else return Error(playerid, "You are not in vehicle trucker.");
-		}
-		else return Error(playerid, "You are not trucker job.");
+		if(pData[playerid][pJob] != 4 && pData[playerid][pJob2] != 4)
+			return Error(playerid, "You are not trucker job.");
+		
+		if(pData[playerid][pJobTime] > 0)
+			return Error(playerid, "You must wait %d seconds to perform this action.", pData[playerid][pJobTime]);
+		
+		if(GetPlayerState(playerid) != PLAYER_STATE_DRIVER)
+			return Error(playerid, "You must be driving a vehicle.");
+		
+		// ✅ CEK APAKAH ADA TRAILER ATTACHED
+		new trailerid = GetVehicleTrailer(GetPlayerVehicleID(playerid));
+		if(!trailerid) // Atau cek: if(trailerid == 0 || trailerid == INVALID_VEHICLE_ID)
+			return Error(playerid, "Your vehicle trailer is not attached!");
+		
+		// ✅ CEK APAKAH TRAILER ADALAH TRUCKER TRAILER
+		new vehicleid = GetPlayerVehicleID(playerid);
+		new modelid = GetVehicleModel(vehicleid);
+		
+		// Model trucker dengan trailer: 403 (Linerunner), 514 (Tanker), 515 (Roadtrain), dll
+		if(modelid != 403 && modelid != 514 && modelid != 515)
+			return Error(playerid, "You are not in a trucker vehicle.");
+		
+		// ✅ TAMPILKAN DIALOG
+		new mstr[256];
+		format(mstr, sizeof(mstr),"{FFFFFF}Input the gasoil quantity:\nGasOil Stock: {00FF00}%d\n{FFFFFF}GasOil Price: {00FF00}%s {FFFFFF}/ liter", GasOil, FormatMoney(GasOilPrice));
+		ShowPlayerDialog(playerid, DIALOG_GASOIL, DIALOG_STYLE_INPUT, "Buy GasOil", mstr, "Buy", "Cancel");
+	}
+	//restok dealer
+	if(IsPlayerInRangeOfPoint(playerid, 3.5, -198.4669, -203.1409, 1.4219))
+	{
+		if(pData[playerid][pJob] != 4 && pData[playerid][pJob2] != 4)
+			return Error(playerid, "You are not trucker job.");
+		
+		if(pData[playerid][pJobTime] > 0)
+			return Error(playerid, "You must wait %d seconds to perform this action.", pData[playerid][pJobTime]);
+		
+		if(GetPlayerState(playerid) != PLAYER_STATE_DRIVER)
+			return Error(playerid, "You must be driving a vehicle.");
+		
+		// ✅ CEK APAKAH ADA TRAILER ATTACHED
+		new trailerid = GetVehicleTrailer(GetPlayerVehicleID(playerid));
+		if(!trailerid) // Atau cek: if(trailerid == 0 || trailerid == INVALID_VEHICLE_ID)
+			return Error(playerid, "Your vehicle trailer is not attached!");
+		
+		// ✅ CEK APAKAH TRAILER ADALAH TRUCKER TRAILER
+		new vehicleid = GetPlayerVehicleID(playerid);
+		new modelid = GetVehicleModel(vehicleid);
+		
+		// Model trucker dengan trailer: 403 (Linerunner), 514 (Tanker), 515 (Roadtrain), dll
+		if(modelid != 403 && modelid != 514 && modelid != 515)
+			return Error(playerid, "You are not in a trucker vehicle.");
+		
+		// ✅ TAMPILKAN DIALOG
+		new mstr[256];
+		format(mstr, sizeof(mstr),"{FFFFFF}Input the product quantity:\nProduct Stock: {00FF00}%d\n{FFFFFF}Product Price: {00FF00}%s {FFFFFF}/ item", Product, FormatMoney(ProductPrice));
+		ShowPlayerDialog(playerid, DIALOG_PRODUCT, DIALOG_STYLE_INPUT, "Buy Product", mstr, "Buy", "Cancel");
 	}
 	//Material
 	if(IsPlayerInRangeOfPoint(playerid, 2.5, -258.54, -2189.92, 28.97))
 	{
 		if(pData[playerid][pMaterial] >= 500) return Error(playerid, "Anda sudah membawa 500 Material!");
 		new mstr[128];
-		format(mstr, sizeof(mstr), ""WHITE_E"Input the material quantity:\nMaterial Stock: "GREEN_E"%d\n"WHITE_E"Material Price"GREEN_E" $%s / item", Material, FormatMoney(MaterialPrice));
+		format(mstr, sizeof(mstr), ""WHITE_E"Input the material quantity:\nMaterial Stock: "GREEN_E"%d\n"WHITE_E"Material Price"GREEN_E" %s / item", Material, FormatMoney(MaterialPrice));
 		ShowPlayerDialog(playerid, DIALOG_MATERIAL, DIALOG_STYLE_INPUT, "Buy Material", mstr, "Buy", "Cancel");
 	}
 	//Component
@@ -3443,7 +3388,7 @@ CMD:buy(playerid, params[])
 	{
 		if(pData[playerid][pComponent] >= 500) return Error(playerid, "Anda sudah membawa 500 Component!");
 		new mstr[128];
-		format(mstr, sizeof(mstr), ""WHITE_E"Input the Component quantity:\nComponent Stock: "GREEN_E"%d\n"WHITE_E"Component Price"GREEN_E" $%s / item", Component, FormatMoney(ComponentPrice));
+		format(mstr, sizeof(mstr), ""WHITE_E"Input the Component quantity:\nComponent Stock: "GREEN_E"%d\n"WHITE_E"Component Price"GREEN_E" %s / item", Component, FormatMoney(ComponentPrice));
 		ShowPlayerDialog(playerid, DIALOG_COMPONENT, DIALOG_STYLE_INPUT, "Buy Component", mstr, "Buy", "Cancel");
 	}
 	//Apotek
@@ -3454,8 +3399,8 @@ CMD:buy(playerid, params[])
 			
 		new mstr[128];
 		format(mstr, sizeof(mstr), "Product\tPrice\n\
-		Medicine\t"GREEN_E"$%s\n\
-		Medkit\t"GREEN_E"$%s\n\
+		Medicine\t"GREEN_E"%s\n\
+		Medkit\t"GREEN_E"%s\n\
 		Bandage\t"GREEN_E"$100.00\n\
 		", FormatMoney(MedicinePrice), FormatMoney(MedkitPrice));
 		ShowPlayerDialog(playerid, DIALOG_APOTEK, DIALOG_STYLE_TABLIST_HEADERS, "Apotek", mstr, "Buy", "Cancel");
@@ -3465,7 +3410,7 @@ CMD:buy(playerid, params[])
 	{
 		new mstr[512];
 		format(mstr, sizeof(mstr), 
-			"Product\tPrice\nFood\t"GREEN_E"$%s\nSeed\t"GREEN_E"$%s\n", 
+			"Product\tPrice\nFood\t"GREEN_E"%s\nSeed\t"GREEN_E"%s\n", 
 			FormatMoney(FoodPrice), 
 			FormatMoney(SeedPrice)
 		);
@@ -3474,10 +3419,10 @@ CMD:buy(playerid, params[])
 	//Drugs
 	if(IsPlayerInRangeOfPoint(playerid, 2.5, 874.52, -15.98, 63.19))
 	{
-		if(pData[playerid][pMarijuana] >= 100) return Error(playerid, "Anda sudah membawa 100 kg Marijuana!");
+		if(pData[playerid][pMarijuana] >= 100) return Error(playerid, "Anda sudah membawa 100gr Marijuana!");
 		
 		new mstr[128];
-		format(mstr, sizeof(mstr), ""WHITE_E"Input the marijuana quantity:\nMarijuana Stock: "GREEN_E"%d\n"WHITE_E"Marijuana Price"GREEN_E" $%s / item", Marijuana, FormatMoney(MarijuanaPrice));
+		format(mstr, sizeof(mstr), ""WHITE_E"Input the marijuana quantity:\nMarijuana Stock: "GREEN_E"%d\n"WHITE_E"Marijuana Price"GREEN_E" %s / item", Marijuana, FormatMoney(MarijuanaPrice));
 		ShowPlayerDialog(playerid, DIALOG_DRUGS, DIALOG_STYLE_INPUT, "Buy Drugs", mstr, "Buy", "Cancel");
 	}
 	// Obat Myr
@@ -3486,7 +3431,7 @@ CMD:buy(playerid, params[])
 		if(pData[playerid][pObat] >= 5) return Error(playerid, "Anda sudah membawa 5 Obat Myr!");
 		
 		new mstr[128];
-		format(mstr, sizeof(mstr), ""WHITE_E"Input the obat quantity:\nObat Stock: "GREEN_E"%d\n"WHITE_E"Obat Price"GREEN_E" $%s / item", ObatMyr, FormatMoney(ObatPrice));
+		format(mstr, sizeof(mstr), ""WHITE_E"Input the obat quantity:\nObat Stock: "GREEN_E"%d\n"WHITE_E"Obat Price"GREEN_E" %s / item", ObatMyr, FormatMoney(ObatPrice));
 		ShowPlayerDialog(playerid, DIALOG_OBAT, DIALOG_STYLE_INPUT, "Buy Obat", mstr, "Buy", "Cancel");
 	}
 	//Buy House
@@ -3526,7 +3471,7 @@ CMD:buy(playerid, params[])
 			hData[hid][hOwnerID] = pData[playerid][pID];
 			hData[hid][hVisit] = gettime();
 			new str[150];
-			format(str,sizeof(str),"[HOUSE]: %s membeli rumah id %d seharga $%s!", GetRPName(playerid), hid, FormatMoney(hData[hid][hPrice]));
+			format(str,sizeof(str),"[HOUSE]: %s membeli rumah id %d seharga %s!", GetRPName(playerid), hid, FormatMoney(hData[hid][hPrice]));
 			LogServer("Property", str);
 
 			new query[128];
@@ -3573,7 +3518,7 @@ CMD:buy(playerid, params[])
 			bData[bid][bOwnerID] = pData[playerid][pID];
 			bData[bid][bVisit] = gettime();
 			new str[150];
-			format(str,sizeof(str),"[BIZ]: %s membeli bisnis id %d seharga $%s!", GetRPName(playerid), bid, FormatMoney(bData[bid][bPrice]));
+			format(str,sizeof(str),"[BIZ]: %s membeli bisnis id %d seharga %s!", GetRPName(playerid), bid, FormatMoney(bData[bid][bPrice]));
 			LogServer("Property", str);
 			
 			new query[128];
@@ -3630,7 +3575,7 @@ CMD:buy(playerid, params[])
 			GetPlayerName(playerid, VendingData[vid][vendingOwner], MAX_PLAYER_NAME);
 			VendingData[vid][vendingOwnerID] = pData[playerid][pID];
 			new str[150];
-			format(str,sizeof(str),"[VEND]: %s membeli vending id %d seharga $%s!", GetRPName(playerid), vid, FormatMoney(VendingData[vid][vendingPrice]));
+			format(str,sizeof(str),"[VEND]: %s membeli vending id %d seharga %s!", GetRPName(playerid), vid, FormatMoney(VendingData[vid][vendingPrice]));
 			LogServer("Property", str);
 			
 			Vending_RefreshText(vid);
@@ -3656,7 +3601,7 @@ CMD:buy(playerid, params[])
 				GetPlayerName(playerid, wsData[wid][wOwner], MAX_PLAYER_NAME);
 				wsData[wid][wOwnerID] = pData[playerid][pID];
 				new str[150];
-				format(str,sizeof(str),"[WS]: %s membeli workshop id %d seharga $%s!", GetRPName(playerid), wid, FormatMoney(wsData[wid][wPrice]));
+				format(str,sizeof(str),"[WS]: %s membeli workshop id %d seharga %s!", GetRPName(playerid), wid, FormatMoney(wsData[wid][wPrice]));
 				LogServer("Property", str);
 
 				Workshop_Refresh(wid);
@@ -3669,25 +3614,33 @@ CMD:buy(playerid, params[])
 		{
 			if(IsPlayerInRangeOfPoint(playerid, 2.5, dsData[did][dX], dsData[did][dY], dsData[did][dZ]))
 			{
-				if(dsData[did][dPrice] > GetPlayerMoney(playerid))
+				// Cek uang
+				if(GetPlayerMoney(playerid) < dsData[did][dPrice])
 					return Error(playerid, "Not enough money, you can't afford this dealership.");
-				if(dsData[did][dOwner] != 0 || strcmp(dsData[did][dOwner], "-")) 
+				
+				// Cek ownership - UNTUK STRING
+				if(strcmp(dsData[did][dOwner], "None", true) != 0 && strcmp(dsData[did][dOwner], "-", true) != 0)
 					return Error(playerid, "Someone already owns this dealership.");
 
 				#if LIMIT_PER_PLAYER > 0
-				if(Player_DealerCount(playerid) + 1 > 1) return Error(playerid, "You can't buy any more dealership.");
+				if(Player_DealerCount(playerid) + 1 > 1) 
+					return Error(playerid, "You can't buy any more dealership.");
 				#endif
 
+				// Proses pembelian
 				GivePlayerMoneyEx(playerid, -dsData[did][dPrice]);
 				Server_AddMoney(dsData[did][dPrice]);
-				GetPlayerName(playerid, dsData[did][dOwner], MAX_PLAYER_NAME);
-				dsData[did][dOwner] = pData[playerid][pID];
+				GetPlayerName(playerid, dsData[did][dOwner], MAX_PLAYER_NAME); // Set owner name
+				
 				new str[150];
-				format(str,sizeof(str),"[DS]: %s membeli dealership id %d seharga $%s!", GetRPName(playerid), did, FormatMoney(dsData[did][dPrice]));
+				format(str, sizeof(str), "[DS]: %s membeli dealership id %d seharga %s!", 
+					GetRPName(playerid), did, FormatMoney(dsData[did][dPrice]));
 				LogServer("Property", str);
 
 				Dealer_Refresh(did);
 				Dealer_Save(did);
+				
+				Servers(playerid, "You have successfully purchased this dealership for %s!", FormatMoney(dsData[did][dPrice]));
 			}
 			
 		}
@@ -3713,13 +3666,6 @@ public Revive(playerid)
     pData[otherid][pLFoot] = 100;
 }
 
-forward DownloadTwitter(playerid);
-public DownloadTwitter(playerid)
-{
-	pData[playerid][pTwitter] = 1;
-	pData[playerid][pKuota] -= 38000;
-	Servers(playerid, "Twitter berhasil di Download");
-}
 
 CMD:selfie(playerid,params[])
 {
@@ -3761,10 +3707,12 @@ CMD:claimsp(playerid, params)
 		pData[playerid][pGold] += 150;
 		pData[playerid][pSnack] += 5;
 		pData[playerid][pSprunk] += 5;
-		pData[playerid][pLevel] += 2;
+		pData[playerid][pGPS] = 1;
+		//pData[playerid][pLevel] += 2;
 		pData[playerid][pIDCard] = 1;
+		pData[playerid][pIDCardTime] = gettime() + (30 * 86400);
 		pData[playerid][pStarterpack] = 1;
-		pData[playerid][pLevelUp] += 24;
+		//pData[playerid][pLevelUp] += 24;
 		
 		new cQuery[1024];
 		new Float:x,Float:y,Float:z, Float:a;
@@ -3922,12 +3870,12 @@ CMD:setbb(playerid, params[])
         }
         else
         {
-            return SendClientMessage(playerid, -1, "You are not close to your boombox.");
+            return Error(playerid, "You are not close to your boombox.");
         }
     }
     else
     {
-        SendClientMessage(playerid, -1, "You have not placed the boombox");
+        Error(playerid, "You have not placed the boombox");
     }
     return 1;
 }
@@ -3944,12 +3892,40 @@ CMD:pickupbb(playerid, params[])
     else if (IsPlayerInRangeOfPoint(playerid, 3.0, GetPVarFloat(playerid, "BBX"), GetPVarFloat(playerid, "BBY"), GetPVarFloat(playerid, "BBZ")))
     {
         PickUpBoombox(playerid);
-        Info(playerid, "Boombox diambil");
+        Custom(playerid, "BOOMBOX: "WHITE_E"You picked up the boombox.");
     }
     return 1;
 }
 
+CMD:cigar(playerid, params[])
+{
+	if(pData[playerid][pCigarette] < 1)
+		return Error(playerid, "You do not have a cigarette!");
 
+	if(pData[playerid][pIsSmoking])
+		return Error(playerid, "You are already smoking!");
+
+	if(GetPlayerState(playerid) == PLAYER_STATE_DRIVER || GetPlayerState(playerid) == PLAYER_STATE_PASSENGER)
+		return Error(playerid, "You cannot smoke inside a vehicle!");
+
+	// Kurangi rokok
+	pData[playerid][pCigarette]--;
+
+	SetPlayerArmedWeapon(playerid, 0);
+
+    // Attach rokok ke tangan
+	SetPlayerAttachedObject(playerid, 9, 19625, 6, 0.10, 0.03, 0.01, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0);
+	SetPlayerAttachedObject(playerid, 8, 18673, 6, 0.14, 0.03, 0.10, 0.0, 0.0, 0.0, 0.5, 0.5, 0.5);
+
+	// Reset puff count
+	pData[playerid][pCigPuffs] = 0;
+	pData[playerid][pIsSmoking] = true;
+
+
+	// Chat bubble
+	SetPlayerChatBubble(playerid, "menyalakan rokok", COLOR_PURPLE, 10.0, 3000);
+	return 1;
+}
 /*CMD:blindfold(playerid,params[])
 {
     new targetid;

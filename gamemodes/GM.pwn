@@ -13,7 +13,7 @@
 
                [================== THANKS TO ==================]
                [ + God   + Parents + Dandy for Base script     ]
-               [ + Rama ( New Dawn Developer )            	       ]
+               [ + Rama ( Valencia Developer )            	       ]
                [ + Valencia Staff's                               ]
                [===============================================]
 
@@ -74,6 +74,7 @@
 // Custom includes
 #include <garageblock>
 
+
 // Command processor - SELALU TERAKHIR!
 #include <Pawn.CMD>
 
@@ -89,9 +90,6 @@ new quiz,
 	answers[256],
 	answermade,
 	qprs;
-
-//-----[ Twitter ]-----
-new tweet[60];
 
 //-----[ Rob ]-----
 new RobMember = 0;
@@ -127,6 +125,7 @@ new AntiBHOP[MAX_PLAYERS];
 //-----[ Discord Connector ]-----
 new pemainic;
 new upt = 0;
+
 
 //-----[ Selfie System ]-----
 new takingselfie[MAX_PLAYERS];
@@ -239,7 +238,6 @@ enum
 	DIALOG_RENT_BIKE,
 	DIALOG_RENT_BIKECONFIRM,
 	DIALOG_GARKOT,
-	DIALOG_MY_VEHICLE,
 	DIALOG_TOY,
 	DIALOG_TOYEDIT,
 	DIALOG_TOYEDIT_ANDROID,
@@ -316,6 +314,7 @@ enum
 	DIALOG_SERVICE_BULLBARS,
 	DIALOG_SERVICE_NEON,
 	DIALOG_MENU_TRUCKER,
+	DIALOG_CRATE_LOCATIONS,
 	DIALOG_SHIPMENTS,
 	DIALOG_SHIPMENTS_VENDING,
 	DIALOG_HAULING,
@@ -349,9 +348,6 @@ enum
 	DIALOG_BANKCONFIRM,
 	DIALOG_BANKSUKSES,
 	DIALOG_PHONE,
-	DIALOG_TWITTER,
-	DIALOG_TWITTERPOST,
-	DIALOG_TWITTERNAME,
 	DIALOG_PHONE_ADDCONTACT,
 	DIALOG_PHONE_CONTACT,
 	DIALOG_PHONE_NEWCONTACT,
@@ -363,8 +359,11 @@ enum
 	DIALOG_TOGGLEPHONE,
 	DIALOG_IBANK,
 	DIALOG_REPORTS,
-	DIALOG_ANSWER_REPORTS,
 	DIALOG_ASKS,
+	DIALOG_ASK_ANSWER,      
+	DIALOG_REPORT_ACTION,   
+	DIALOG_REPORT_ACCEPT,   
+	DIALOG_REPORT_DENY,
 	DIALOG_SALARY,
 	DIALOG_PAYCHECK,
 	DIALOG_SWEEPER,
@@ -461,13 +460,10 @@ enum
 	DIALOG_SAMD_VEHICLES,
 	DIALOG_SANA_VEHICLES,
 	DIALOG_TELEPORT,
-	DIALOG_RAWCOMPONENT,
 	DIALOG_GPS_SENDERCOMPONENT,
 	DIALOG_BOOMBOXLIST,
 	DIALOG_VOUCHER,
 	DIALOG_TOPUPETOLL,
-	//DIALOG_RAWCOMPONENT1,
-	DIALOG_RAWFISH,
 	DIALOG_DRIVELIC_APPLY,
 	//grafiti cak
 	DIALOG_TAGS_MENU,
@@ -500,18 +496,22 @@ enum
 	DIALOG_FARMNAME,
 	DIALOG_FARMSELL,
 	// DEALERSHIP
+	MYDEALER_INFO,
 	DEALER_MENU,
 	DEALER_WITHDRAW,
 	DEALER_VAULT,
 	DEALER_STOCK,
 	DEALER_DEPOSIT,
 	DEALER_BUYPROD,
+	DEALER_COLOR_INPUT,
+	DEALER_CONFIRM_BUY,
 	DEALER_EDITPROD,
 	DEALER_PRICESET,
 	DEALER_INFO,
 	DEALER_NAME,
 	DIALOG_MY_DEALER,
 	DIALOG_TRACKDEALER,
+	DIALOG_HAULING_DEALER,
 	//dialog give item
 	DIALOG_ITEMS_MAIN,
 	DIALOG_ITEM_ACTION,
@@ -519,6 +519,8 @@ enum
 	DIALOG_ITEM_GIVE_AMOUNT,
 	DIALOG_ITEM_DROP_AMOUNT,
 	DIALOG_TRACKTREE,
+	DIALOG_SCRAP_CONFIRM,
+	DIALOG_CONFISCATE_BISNIS
 	
 	
 	
@@ -567,8 +569,6 @@ new
 
 
 
-//-----[ Download System ]-----
-new download[MAX_PLAYERS];
 
 //-----[ Count System ]-----
 new Count = -1;
@@ -705,8 +705,7 @@ stock CleanupFactionVehicle(vehicleid)
 
 
 //-----[ Showroom Checkpoint ]-----	
-new ShowRoomCP,
-	ShowRoomCPRent,
+new ShowRoomCPRent,
 	DoorCP;
 
 new DutyTimer;
@@ -822,6 +821,7 @@ enum E_PLAYERS
 	pSprunk,
 	pGas,
 	pBandage,
+	pCigarette, // Tambahkan di enum
 	pGPS,
 	pEToll,
 	pGpsActive,
@@ -935,7 +935,7 @@ enum E_PLAYERS
 	pActivity,
 	pActivityStatus,
 	pActivityTime,
-	//Jobs
+	//SideJobs
 	pSideJob,
 	pSideJobTime,
 	pSweeperTime,
@@ -960,6 +960,8 @@ enum E_PLAYERS
 	pMechVeh,
 	pMechColor1,
 	pMechColor2,
+	pFailSideJobTimer,      // Tambahkan ini
+	pFailSideJobCountdown,  // Tambahkan ini
 	//ATM
 	EditingATMID,
 	//lumber job
@@ -980,6 +982,7 @@ enum E_PLAYERS
 	pMission,
 	pHauling,
 	pVendingRestock,
+	pDealerHauling,
 	bool: CarryingBox,
 	//Farmer
 	pHarvest,
@@ -1018,13 +1021,7 @@ enum E_PLAYERS
  	pKurirEnd,
  	// Shareloc Offer
  	pLocOffer,
- 	// Twitter
- 	pTwitter,
-	pTwitterStatus, 
-	pTwittername[MAX_PLAYER_NAME],
-	pTwitterPostCooldown,
-	pTwitterNameCooldown,
- 	pRegTwitter,
+ 	
 	// character story
  	// Kuota
  	pKuota,
@@ -1132,11 +1129,29 @@ enum E_PLAYERS
 	// bar ketika hit
 	PlayerText3D:pDamageLabel[MAX_PLAYERS], // Label 3D untuk setiap target
 	pDamageTimer[MAX_PLAYERS], // Timer untuk hide label
-	pShowingDamage[MAX_PLAYERS] // Boolean: sedang show damage
+	pShowingDamage[MAX_PLAYERS], // Boolean: sedang show damage
+	//rokok
+	pCigObject,
+	pCigPuffs,
+	pIsSmoking,
+	//-----[ afk system ]-----
+	pAFK,           // Status AFK (0 = tidak AFK, 1 = AFK)
+	pAFKTime,       // Waktu AFK dalam detik
+	pAFKCode,       // Random code untuk kembali dari AFK
+	Float:pAFKPosX, // Posisi terakhir X
+	Float:pAFKPosY, // Posisi terakhir Y
+	Float:pAFKPosZ, // Posisi terakhir Z
+	//-----[ confirmation system ]-----
+	// Digunakan untuk menyimpan data konfirmasi antar fungsi
+	pConfirmType[32],      // Tipe konfirmasi (faction, drag, frisk, dll)
+    pConfirmFrom,          // Player ID yang mengajukan
+    pConfirmData          // Data tambahan (faction id, money, dll)
 
 };
 new pData[MAX_PLAYERS][E_PLAYERS];
 new g_MysqlRaceCheck[MAX_PLAYERS];
+
+new STREAMER_TAG_3D_TEXT_LABEL:PlayerLabel[MAX_PLAYERS];
 
 //-----[ Smuggler ]-----	
 
@@ -1430,8 +1445,8 @@ main()
 #include "MODULE/RENTAL.pwn"
 #include "MODULE/PRIVATE_VEHICLE.pwn"
 #include "MODULE/VSTORAGE.pwn"
-#include "MODULE/REPORT.pwn"
-#include "MODULE/ASK.pwn"
+#include "MODULE/REPORT_ASK.pwn"
+#include "MODULE/AFK.pwn"
 #include "MODULE/WEAPON_ATTH.pwn"
 #include "MODULE/TOYS.pwn"
 #include "MODULE/HELMET.pwn"
@@ -1468,6 +1483,7 @@ main()
 
 //#include "MODULE/MODSHOP.pwn"
 #include "MODULE/NATAL.pwn"
+#include "MODULE/MERCON.pwn"
 
 
 #include "JOB\JOB_PRODUCTION.pwn"
@@ -1513,18 +1529,64 @@ main()
 #include "CMD\DISCORD.pwn"
 
 
+//-----[cigaret system]-----
+stock StopSmoking(playerid)
+{
+	//if(!pData[playerid][pIsSmoking]) return 0;
+
+	// Remove object
+	if(IsPlayerAttachedObjectSlotUsed(playerid, 9))
+	{
+		RemovePlayerAttachedObject(playerid, 9);
+	}
+	// Remove object
+	if(IsPlayerAttachedObjectSlotUsed(playerid, 8))
+	{
+		RemovePlayerAttachedObject(playerid, 8);
+	}
+	pData[playerid][pCigObject] = 0;
+
+	// Clear animation
+	ClearAnimations(playerid);
+
+	// Reset variables
+	// Reset puff count
+	pData[playerid][pCigPuffs] = 0;
+	pData[playerid][pIsSmoking] = false;
+
+	return 1;
+}
+
+// Timer untuk auto stop smoking setelah habis
+forward AutoStopSmoking(playerid);
+public AutoStopSmoking(playerid)
+{
+	if(pData[playerid][pIsSmoking])
+	{
+		StopSmoking(playerid);
+	}
+	return 1;
+}
 
 //-----[ Discord Status ]-----	
 forward BotStatus();
 public BotStatus()
 {
     new h = 0, m = 0, statuz[256];
-	h = floatround(upt / 3600);
-	m = floatround((upt / 60) - (h * 60));
-	upt++;
-	//format(statuz,sizeof(statuz),"!register [nama ucp]");
-	format(statuz,sizeof(statuz),"%d Players | %dh %02dm Uptime", pemainic, h, m);
-	DCC_SetBotActivity(statuz);
+    h = floatround(upt / 3600);
+    m = floatround((upt / 60) - (h * 60));
+    upt++;
+    
+    if(upt % 10 == 0)
+    {
+        format(statuz, sizeof(statuz), "Author by redvelvet");
+    }
+    else
+    {
+        format(statuz, sizeof(statuz), "%d Players | %dh %02dm Uptime", pemainic, h, m);
+    }
+    
+    DCC_SetBotActivity(statuz);
 }
 
 public DCC_OnMessageCreate(DCC_Message:message)
@@ -1552,13 +1614,12 @@ public DCC_OnMessageCreate(DCC_Message:message)
 
 public OnPlayerClickPlayer(playerid, clickedplayerid, source)
 {
-    if (source == CLICK_SOURCE_SCOREBOARD) // Mengecek apakah pemain mengklik di scoreboard
+    if(source == CLICK_SOURCE_SCOREBOARD)
     {
-        new id_str[16];
-        format(id_str, sizeof(id_str), "%d", clickedplayerid); // Format ID pemain yang diklik
-        // Memanggil command /id secara langsung
-        CallLocalFunction("OnPlayerCommandText", "is", playerid, "/id"); // Panggil perintah /id
-        CallLocalFunction("cmd_id", "is", playerid, id_str); // Eksekusi fungsi cmd_id
+        // Langsung pakai clickedplayerid (ID yang diklik)
+        new params[24];
+        format(params, sizeof(params), "%d", clickedplayerid);
+        return callcmd::id(playerid, params);
     }
     return 1;
 }
@@ -1622,11 +1683,15 @@ public OnGameModeInit()
 	CreateJoinBaggagePoint();
 	CreateCarStealingPoint();
 	LoadMap();
-	LoadDroppedItems();
+	//LoadDroppedItems();
 	LoadKados();
 	InitializeDealerVehicles(); // Tambahkan ini
 
+	fireworkItemType = 1;
+	fireworkLighterType = 2;
+	LoadSequences();
 	
+	SetTimer("HandbrakeTimer", 500, true); // Setiap 500ms
 	ResetCarStealing();
 	SetTimer("CheckFishingArea", 1000, true);
 	SetTimer("UpdateDamageLabels", 500, true);
@@ -1703,8 +1768,12 @@ public OnGameModeInit()
 	CreateDynamic3DTextLabel(strings, COLOR_LBLUE, -2082.9756, 2675.5081, 1500.9647, 5.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 1); // ID Card
 	
 	CreateDynamicPickup(1239, 23, 1296.0533, -1264.1348, 13.5939, -1, -1, -1, 50);
-	format(strings, sizeof(strings), "[Veh Insurance]\n{FFFFFF}/buyinsu - buy insurance\n/claimpv - claim insurance\n/sellpv - sell vehicle");
+	format(strings, sizeof(strings), "[Veh Insurance]\n{FFFFFF}/buyinsu - buy insurance\n/claimpv - claim insurance");
 	CreateDynamic3DTextLabel(strings, COLOR_LBLUE, 1296.0533, -1264.1348, 13.5939, 5.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 1); // Veh insurance
+
+	CreateDynamicPickup(1239, 23, 2415.4207,-2467.8943,13.6250, -1, -1, -1, 50);
+	format(strings, sizeof(strings), "[Scrap Vehicle]\n{FFFFFF}/scrapveh - scrap your vehicle");
+	CreateDynamic3DTextLabel(strings, COLOR_LBLUE, 2415.4207,-2467.8943,13.6250, 5.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 1); // Veh scrap
 
 	CreateDynamicPickup(1239, 23, 1294.1837, -1267.9083, 20.6199, -1, -1, -1, 50);
 	format(strings, sizeof(strings), "[Sparepart Shop]\n{FFFFFF}/buysparepart\n");
@@ -1758,11 +1827,7 @@ public OnGameModeInit()
 	format(strings, sizeof(strings), "[Exchange Money]\n{FFFFFF}/washmoney");
 	CreateDynamic3DTextLabel(strings, COLOR_ORANGE2, -427.3773, -392.3799, 16.5802, 5.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 1); // pencucian uang haram
 	
-	//-----[ Dynamic Checkpoint ]-----	
-	ShowRoomCP = CreateDynamicCP(538.8544, -1292.9434, 17.2422, 1.0, -1, -1, -1, 5.0);
-	CreateDynamicPickup(1239, 23, 538.85, -1292.94, 17.24, -1, -1, -1, 50);
-	CreateDynamic3DTextLabel("{7fffd4}Vehicle Showroom\n{ffffff}Stand Here!", COLOR_GREEN, 538.8544, -1292.9434, 17.2422, 5.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, -1);
-	
+
 	ShowRoomCPRent = CreateDynamicCP(545.7528, -1293.4164, 17.2422, 1.0, -1, -1, -1, 5.0);
 	CreateDynamicPickup(1239, 23, 545.75, -1293.41, 17.24, -1, -1, -1, 50);
 	CreateDynamic3DTextLabel("{7fff00}Rental Vehicle\n{ffffff}Stand Here!"YELLOW_E"\n/unrentpv", COLOR_LBLUE, 545.7528, -1293.4164, 17.2422, 5.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, -1);
@@ -2173,35 +2238,24 @@ public OnPlayerEnterVehicle(playerid, vehicleid, ispassenger)
         {
             if(pData[playerid][pJob] != 10 && pData[playerid][pJob2] != 10)
             {
-                SendClientMessage(playerid, COLOR_RED, "ERROR: {FFFFFF}Kamu tidak bekerja sebagai Baggage Airport");
+                Error(playerid, "You are not working as a Baggage Airport.");
                 ClearAnimations(playerid); // Stop animasi masuk
                 return 0; // Block masuk kendaraan
             }
         }
         
-        // DMV Vehicle (Driving Test)
+        // yg lain-lain bisa ditambahkan di sini
         else if(IsADmvVeh(vehicleid))
-        {
-            if(!pData[playerid][pDriveLicApp])
-            {
-                SendClientMessage(playerid, COLOR_RED, "ERROR: {FFFFFF}You are not currently taking the Driving Test.");
-                ClearAnimations(playerid);
-                return 0;
-            }
-        }
-        
-        // Kurir Vehicle (Jika diaktifkan)
-        /*
-        else if(IsAKurirVeh(vehicleid))
-        {
-            if(pData[playerid][pJob] != 8 && pData[playerid][pJob2] != 8)
-            {
-                SendClientMessage(playerid, COLOR_RED, "ERROR: {FFFFFF}Kamu tidak bekerja sebagai Courier");
-                ClearAnimations(playerid);
-                return 0;
-            }
-        }
-        */
+		{
+			if(!pData[playerid][pDriveLicApp])
+			{
+				RemovePlayerFromVehicle(playerid);
+				new Float:slx, Float:sly, Float:slz;
+				GetPlayerPos(playerid, slx, sly, slz);
+				SetPlayerPos(playerid, slx, sly, slz);
+				Error(playerid, "You are not currently taking the Driving Test.");
+			}
+		}
         
         // ===== CEK 2: APAKAH INI PRIVATE VEHICLE? =====
         // Gunakan loop foreach yang SUDAH ADA di GM
@@ -2332,12 +2386,27 @@ stock SGetName(playerid)
 
 public OnPlayerText(playerid, text[])
 {
+	if(pData[playerid][pAFK] == 1)
+	{
+		Error(playerid, "You are currently AFK! Type '/afk %d'.", pData[playerid][pAFKCode]);
+		return 0; // Block chat
+	}
+	
 	if(isnull(text)) return 0;
+
+	new dc[150];
+	format(dc, sizeof(dc),  "```[CHAT] %s: %s```", GetRPName(playerid), text);
+	SendDiscordMessage(11, dc);
+
 	new str[150];
 	format(str,sizeof(str),"[CHAT] %s: %s", GetRPName(playerid), text);
 	LogServer("Chat", str);
 	printf(str);
 	
+	if(pData[playerid][pAFKTime] > 0)
+    {
+        pData[playerid][pAFKTime] = 0; // Reset saat kirim chat
+    }
 	/*if(pData[playerid][pAdminDuty] == 1)
 	{
 		new lstr[200];
@@ -2531,7 +2600,7 @@ public OnPlayerText(playerid, text[])
 		{
 			new Float:x, Float:y, Float:z;
 			GetPlayerPos(playerid, x, y, z);
-			Info(playerid, "This number for emergency crime only! please wait for SAPD respon!");
+			Custom(playerid, "SERVICE: "WHITE_E"This number for emergency crime only! please wait for SAPD respon!");
 			SendFactionMessage(1, COLOR_BLUE, "[911 POLICE] "WHITE_E"%s calling for police! Ph: ["GREEN_E"%d"WHITE_E"] | Location: %s", ReturnName(playerid), pData[playerid][pPhone], GetLocation(x, y, z));
 			pData[playerid][pCallTime] = gettime() + 60;
 			DeletePVar(playerid, "Calling911");
@@ -2541,7 +2610,7 @@ public OnPlayerText(playerid, text[])
 		{
 			new Float:x, Float:y, Float:z;
 			GetPlayerPos(playerid, x, y, z);
-			Info(playerid, "This number for emergency medical only! please wait for SAMD respon!");
+			Custom(playerid, "SERVICE: "WHITE_E"This number for emergency medical only! please wait for SAMD respon!");
 			SendFactionMessage(3, COLOR_PINK2, "[911 PARAMEDIC] "WHITE_E"%s calling for paramedic! Ph: ["GREEN_E"%d"WHITE_E"] | Location: %s", ReturnName(playerid), pData[playerid][pPhone], GetLocation(x, y, z));
 			pData[playerid][pCallTime] = gettime() + 60;
 			DeletePVar(playerid, "Calling911");
@@ -2550,6 +2619,52 @@ public OnPlayerText(playerid, text[])
 		else
 		{
 			Error(playerid, "Invalid option! Type 'police' or 'paramedic'");
+			return 0;
+		}
+	}
+	if(GetPVarInt(playerid, "Calling933") == 1)
+	{
+		if(strcmp(text, "taxi", true) == 0)
+		{
+			new Float:x, Float:y, Float:z;
+			GetPlayerPos(playerid, x, y, z);
+			Custom(playerid, "SERVICE: "WHITE_E"This number for taxi service! please wait for taxi driver respon!");
+			
+			// Kirim ke semua taxi driver yang online
+			foreach(new i: Player)
+			{
+				if(pData[i][pJob] == 1 || pData[i][pJob2] == 1) // Job Taxi
+				{
+					SendClientMessageEx(i, COLOR_YELLOW, "[TAXI SERVICE] "WHITE_E"%s calling for taxi! Ph: ["GREEN_E"%d"WHITE_E"] | Location: %s", ReturnName(playerid), pData[playerid][pPhone], GetLocation(x, y, z));
+				}
+			}
+			
+			pData[playerid][pCallTime] = gettime() + 60;
+			DeletePVar(playerid, "Calling933");
+			return 0; // Block text dari muncul di chat
+		}
+		else if(strcmp(text, "mechanic", true) == 0)
+		{
+			new Float:x, Float:y, Float:z;
+			GetPlayerPos(playerid, x, y, z);
+			Custom(playerid, "SERVICE: "WHITE_E"This number for mechanic service! please wait for mechanic respon!");
+			
+			// Kirim ke semua mechanic yang online
+			foreach(new i: Player)
+			{
+				if(pData[i][pJob] == 2 || pData[i][pJob2] == 2) // Job Mechanic
+				{
+					SendClientMessageEx(i, COLOR_ORANGE, "[MECHANIC SERVICE] "WHITE_E"%s calling for mechanic! Ph: ["GREEN_E"%d"WHITE_E"] | Location: %s", ReturnName(playerid), pData[playerid][pPhone], GetLocation(x, y, z));
+				}
+			}
+			
+			pData[playerid][pCallTime] = gettime() + 60;
+			DeletePVar(playerid, "Calling933");
+			return 0; // Block text dari muncul di chat
+		}
+		else
+		{
+			Error(playerid, "Invalid option! Type 'taxi' or 'mechanic'");
 			return 0;
 		}
 	}
@@ -2611,6 +2726,15 @@ public OnPlayerText(playerid, text[])
 
 public OnPlayerCommandPerformed(playerid, cmd[], params[], result, flags)
 {
+	
+	// ✅ Reset AFK timer hanya jika command VALID (result bukan -1)
+	if(result != -1) // Command found
+	{
+		if(pData[playerid][pAFKTime] > 0)
+		{
+			pData[playerid][pAFKTime] = 0;
+		}
+	}
     // Jika result adalah -1, artinya perintah tidak ditemukan
     if (result == -1)
     {
@@ -2619,6 +2743,11 @@ public OnPlayerCommandPerformed(playerid, cmd[], params[], result, flags)
         Error(playerid, ""GREY_E"Command '/%s' was not found. need help? use '/help' to see available commands.", cmd);
         return 0;
     }
+
+
+	new dc[150];
+	format(dc, sizeof(dc),  "```[CMD] %s: [%s] [%s]```", GetRPName(playerid), cmd, params);
+	SendDiscordMessage(11, dc);
 
     // Format dan log perintah yang berhasil
     new str[150];
@@ -2631,6 +2760,20 @@ public OnPlayerCommandPerformed(playerid, cmd[], params[], result, flags)
 
 public OnPlayerCommandReceived(playerid, cmd[], params[], flags)
 {
+	// ✅ Block semua command kecuali /afk saat player AFK
+	if(pData[playerid][pAFK] == 1)
+	{
+		if(strcmp(cmd, "afk", true) != 0) // Jika BUKAN afk (tanpa /)
+		{
+			Custom(playerid, "AFK: "WHITE_E"You are currently AFK! Type '/afk %d'.", pData[playerid][pAFKCode]);
+			return 0; // Block command
+		}
+	}
+	// ✅ Reset AFK timer saat player kirim command (berarti aktif)
+	if(pData[playerid][pAFKTime] > 0)
+	{
+		pData[playerid][pAFKTime] = 0;
+	}
 	return 1;
 }
 
@@ -2753,74 +2896,123 @@ public OnPlayerConnect(playerid)
 
 public OnPlayerDisconnect(playerid, reason)
 {
-	pemainic--;
+    pemainic--;    
+    // Logout dari database
+    new query[103];
+    mysql_format(g_SQL, query, sizeof(query), "UPDATE playerucp SET IsLoggedIn = 0 WHERE UCP = '%e'", pData[playerid][pUCP]);
+    mysql_pquery(g_SQL, query);
 
-	UpdatePlayerData(playerid);
-	// Saat logout atau disconnect
-	new query[103];
-	mysql_format(g_SQL, query, sizeof(query), "UPDATE playerucp SET IsLoggedIn = 0 WHERE UCP = '%e'", pData[playerid][pUCP]);
-	mysql_tquery(g_SQL, query, "OnUpdateLoginStatus", "d", playerid);
+    SetPlayerName(playerid, pData[playerid][pUCP]);
+    
+    // Reset status
+    pData[playerid][pProductingStatus] = 0;
+    pData[playerid][pCookingStatus] = 0;
+    pData[playerid][pMechanicStatus] = 0;
+    pData[playerid][pActivityStatus] = 0;
+    pData[playerid][pArmsDealerStatus] = 0;
+    pData[playerid][pForklifterLoadStatus] = 0;
+    pData[playerid][pForklifterUnLoadStatus] = 0;
+    pData[playerid][pFillStatus] = 0;
 
-	SetPlayerName(playerid, pData[playerid][pUCP]);
-	//Pengganti IsValidTimer
-	pData[playerid][pProductingStatus] = 0;
-	pData[playerid][pCookingStatus] = 0;
-	pData[playerid][pMechanicStatus] = 0;
-	pData[playerid][pActivityStatus] = 0;
-	pData[playerid][pArmsDealerStatus] = 0;
-	pData[playerid][pForklifterLoadStatus] = 0;
-	pData[playerid][pForklifterUnLoadStatus] = 0;
-	pData[playerid][pFillStatus] = 0;
+    DestroyDynamic3DTextLabel(pData[playerid][pInjuredLabel]);
+    pData[playerid][pDriveLicApp] = 0;
+    KillTimer(PlayerDrivingTestTimer[playerid]);
+    pData[playerid][pSpawnList] = 0;
+    takingselfie[playerid] = 0;
+    
+    // AFK reset
+    if(pData[playerid][pAFK] == 1)
+    {
+        new labeltext[128];
+        format(labeltext, sizeof(labeltext), "%s (%d)", GetRPName(playerid), playerid);
+        UpdateDynamic3DTextLabelText(PlayerLabel[playerid], COLOR_WHITE, labeltext);
+    }
+    
+    pData[playerid][pAFK] = 0;
+    pData[playerid][pAFKTime] = 0;
+    pData[playerid][pAFKCode] = 0;
 
-	DestroyDynamic3DTextLabel(pData[playerid][pInjuredLabel]);
-	/*LagiKerja[playerid] = false;
-	Kurir[playerid] = false;*/
-	pData[playerid][pDriveLicApp] = 0;
-	KillTimer(PlayerDrivingTestTimer[playerid]);
-	pData[playerid][pSpawnList] = 0;
-	takingselfie[playerid] = 0;
-	//KillTimer(Unload_Timer[playerid]);
-	
-	if(IsPlayerInAnyVehicle(playerid))
+    if(pData[playerid][IsLoggedIn] == true)
+    {
+        // 1. Spectate handling
+        if(pData[playerid][pSpec] != -1)
+        {
+            if(IsPlayerConnected(pData[playerid][pSpec]))
+                pData[pData[playerid][pSpec]][playerSpectated]--;
+            pData[playerid][pSpec] = -1;
+        }
+        
+        foreach(new i : Player)
+        {
+            if(pData[i][pSpec] == playerid)
+            {
+                StopSpectate(i);
+                Servers(i, "The player you were spectating has disconnected.");
+            }
+        }
+    }
+    
+   // Hauling cleanup
+	if(pData[playerid][pHauling] > -1 || pData[playerid][pDealerHauling] > -1)
 	{
+		if(IsValidVehicle(pData[playerid][pTrailer]))
+		{
+			DestroyVehicle(pData[playerid][pTrailer]);
+		}
+		
+		pData[playerid][pHauling] = -1;
+		pData[playerid][pDealerHauling] = -1;
+		pData[playerid][pTrailer] = INVALID_VEHICLE_ID;
+		DisablePlayerRaceCheckpoint(playerid);
+	}
+    
+    // Smoking cleanup
+    if(pData[playerid][pIsSmoking])
+    {
+        StopSmoking(playerid);
+    }
+
+    if(IsPlayerInAnyVehicle(playerid))
+    {
         RemovePlayerFromVehicle(playerid);
     }
-	
-	for(new i; i <= 9; i++)
-	{
-		if(MyBaggage[playerid][i] == true)
-		{
-		    MyBaggage[playerid][i] = false;
-		    DialogBaggage[i] = false;
-			if(IsValidVehicle(pData[playerid][pTrailerBaggage]))
-		    	DestroyVehicle(pData[playerid][pTrailerBaggage]);  //jika player disconnect maka trailer akan kembali seperti awal
-		}
+    
+    // Baggage cleanup
+    for(new i; i <= 9; i++)
+    {
+        if(MyBaggage[playerid][i] == true)
+        {
+            MyBaggage[playerid][i] = false;
+            DialogBaggage[i] = false;
+            if(IsValidVehicle(pData[playerid][pTrailerBaggage]))
+                DestroyVehicle(pData[playerid][pTrailerBaggage]);
+        }
     }
-	
-	// Reset sweeper route jika player menggunakan
-	if(PlayerUsingSweeperRoute[playerid] != 0)
-	{
-		switch(PlayerUsingSweeperRoute[playerid])
-		{
-			case 1: SweeperRouteAUsed = 0;
-			case 2: SweeperRouteBUsed = 0;
-			case 3: SweeperRouteCUsed = 0;
-		}
-		PlayerUsingSweeperRoute[playerid] = 0;
-	}
+    
+    // Sweeper route reset
+    if(PlayerUsingSweeperRoute[playerid] != 0)
+    {
+        switch(PlayerUsingSweeperRoute[playerid])
+        {
+            case 1: SweeperRouteAUsed = 0;
+            case 2: SweeperRouteBUsed = 0;
+            case 3: SweeperRouteCUsed = 0;
+        }
+        PlayerUsingSweeperRoute[playerid] = 0;
+    }
 
-	// Reset bus route jika player menggunakan
-	if(PlayerUsingBusRoute[playerid] != 0)
-	{
-		switch(PlayerUsingBusRoute[playerid])
-		{
-			case 1: BusRouteAUsed = 0;
-			case 2: BusRouteBUsed = 0;
-		}
-		PlayerUsingBusRoute[playerid] = 0;
-	}
+    // Bus route reset
+    if(PlayerUsingBusRoute[playerid] != 0)
+    {
+        switch(PlayerUsingBusRoute[playerid])
+        {
+            case 1: BusRouteAUsed = 0;
+            case 2: BusRouteBUsed = 0;
+        }
+        PlayerUsingBusRoute[playerid] = 0;
+    }
 
-	// Hentikan timer fishing
+    // Fishing cleanup
     if(FishBiteTimer[playerid] != 0)
     {
         KillTimer(FishBiteTimer[playerid]);
@@ -2828,53 +3020,51 @@ public OnPlayerDisconnect(playerid, reason)
     }
     FishBite[playerid] = 0;
     pData[playerid][pInFish] = 0;
+    PlayerInSpecialFishingArea[playerid] = false;
 
-	PlayerInSpecialFishingArea[playerid] = false;
+    // Damage label cleanup
+    for(new i = 0; i < MAX_PLAYERS; i++)
+    {
+        if(pData[playerid][pDamageLabel][i] != PlayerText3D:INVALID_3DTEXT_ID)
+        {
+            DeletePlayer3DTextLabel(playerid, pData[playerid][pDamageLabel][i]);
+            pData[playerid][pDamageLabel][i] = PlayerText3D:INVALID_3DTEXT_ID;
+        }
+        
+        if(pData[playerid][pDamageTimer][i] != 0)
+        {
+            KillTimer(pData[playerid][pDamageTimer][i]);
+            pData[playerid][pDamageTimer][i] = 0;
+        }
+    }
+    
+    for(new i = 0; i < MAX_PLAYERS; i++)
+    {
+        if(!IsPlayerConnected(i)) continue;
+        
+        if(pData[i][pDamageLabel][playerid] != PlayerText3D:INVALID_3DTEXT_ID)
+        {
+            DeletePlayer3DTextLabel(i, pData[i][pDamageLabel][playerid]);
+            pData[i][pDamageLabel][playerid] = PlayerText3D:INVALID_3DTEXT_ID;
+        }
+        
+        if(pData[i][pDamageTimer][playerid] != 0)
+        {
+            KillTimer(pData[i][pDamageTimer][playerid]);
+            pData[i][pDamageTimer][playerid] = 0;
+        }
+    }
 
-// Hapus semua label yang ditampilkan oleh player ini
-	for(new i = 0; i < MAX_PLAYERS; i++)
-	{
-		if(pData[playerid][pDamageLabel][i] != PlayerText3D:INVALID_3DTEXT_ID)
-		{
-			DeletePlayer3DTextLabel(playerid, pData[playerid][pDamageLabel][i]);
-			pData[playerid][pDamageLabel][i] = PlayerText3D:INVALID_3DTEXT_ID;
-		}
-		
-		if(pData[playerid][pDamageTimer][i] != 0)
-		{
-			KillTimer(pData[playerid][pDamageTimer][i]);
-			pData[playerid][pDamageTimer][i] = 0;
-		}
-	}
-	
-	// Hapus label untuk player yang disconnect dari semua player lain
-	for(new i = 0; i < MAX_PLAYERS; i++)
-	{
-		if(!IsPlayerConnected(i)) continue;
-		
-		if(pData[i][pDamageLabel][playerid] != PlayerText3D:INVALID_3DTEXT_ID)
-		{
-			DeletePlayer3DTextLabel(i, pData[i][pDamageLabel][playerid]);
-			pData[i][pDamageLabel][playerid] = PlayerText3D:INVALID_3DTEXT_ID;
-		}
-		
-		if(pData[i][pDamageTimer][playerid] != 0)
-		{
-			KillTimer(pData[i][pDamageTimer][playerid]);
-			pData[i][pDamageTimer][playerid] = 0;
-		}
-	}
+    g_MysqlRaceCheck[playerid]++;
+    
+    if(pData[playerid][IsLoggedIn] == true)
+    {
+        if(IsAtEvent[playerid] == 0)
+        {
+            UpdatePlayerData(playerid);
+        }
 
-	//UpdateWeapons(playerid);
-	g_MysqlRaceCheck[playerid]++;
-	
-	if(pData[playerid][IsLoggedIn] == true)
-	{
-		if(IsAtEvent[playerid] == 0)
-		{
-			UpdatePlayerData(playerid);
-		}
-		RemovePlayerVehicle(playerid);
+        RemovePlayerVehicle(playerid);
 		Report_Clear(playerid);
 		Ask_Clear(playerid);
 		Player_ResetMining(playerid);
@@ -3031,6 +3221,9 @@ public OnPlayerDisconnect(playerid, reason)
 	new Float:x, Float:y, Float:z;
 	GetPlayerPos(playerid, x, y, z);
 	
+	stop LabelNormal(playerid);
+    stop LabelAdmin(playerid);
+
 	foreach(new ii : Player)
 	{
 		if(IsPlayerInRangeOfPoint(ii, 40.0, x, y, z))
@@ -3072,6 +3265,9 @@ public OnPlayerSpawn(playerid)
 	//SpawnPlayer(playerid);
 	//LagiKerja[playerid] = false;
 	//Kurir[playerid] = false;
+	// Reset posisi AFK tracker
+	GetPlayerPos(playerid, pData[playerid][pAFKPosX], pData[playerid][pAFKPosY], pData[playerid][pAFKPosZ]);
+
 	StopAudioStreamForPlayer(playerid);
 	SetPlayerInterior(playerid, pData[playerid][pInt]);
 	SetPlayerVirtualWorld(playerid, pData[playerid][pWorld]);
@@ -3732,10 +3928,6 @@ public OnPlayerEnterDynamicCP(playerid, checkpointid)
 	{
 		//callcmd::enter(playerid, "");
 	}
-	if(checkpointid == ShowRoomCP)
-	{
-		ShowPlayerDialog(playerid, DIALOG_BUYPVCP, DIALOG_STYLE_LIST, "{7fffd4}Showroom", "Motorcycle\nMobil\nKendaraan Unik\nKendaraan Job", "Select", "Cancel");
-	}
 	if(checkpointid == ShowRoomCPRent)
 	{
 		new str[1024];
@@ -3882,7 +4074,7 @@ public OnPlayerEnterRaceCheckpoint(playerid)
 					DialogBaggage[0] = false;
 					MyBaggage[playerid][0] = false;
 					AddPlayerSalary(playerid, "Job(Baggage)", 40000);
-					Info(playerid, "Job(Baggage) telah masuk ke pending salary anda!");
+					Custom(playerid, "SIDEJOB: "WHITE_E"Baggage job has been added to your pending salary!");
 					RemovePlayerFromVehicle(playerid);
 					SetTimerEx("RespawnPV", 3000, false, "d", vehicleid);
 					return 1;
@@ -4002,7 +4194,7 @@ public OnPlayerEnterRaceCheckpoint(playerid)
 					DialogBaggage[1] = false;
 					MyBaggage[playerid][1] = false;
 					AddPlayerSalary(playerid, "Job(Baggage)", 40000);
-					Info(playerid, "Job(Baggage) telah masuk ke pending salary anda!");
+					Custom(playerid, "SIDEJOB: "WHITE_E"Baggage job has been added to your pending salary!");
 					RemovePlayerFromVehicle(playerid);
 					SetTimerEx("RespawnPV", 3000, false, "d", vehicleid);
 					return 1;
@@ -4122,7 +4314,7 @@ public OnPlayerEnterRaceCheckpoint(playerid)
 					DialogBaggage[2] = false;
 					MyBaggage[playerid][2] = false;
 					AddPlayerSalary(playerid, "Job(Baggage)", 40000);
-					Info(playerid, "Job(Baggage) telah masuk ke pending salary anda!");
+					Custom(playerid, "SIDEJOB: "WHITE_E"Baggage job has been added to your pending salary!");
 					RemovePlayerFromVehicle(playerid);
 					SetTimerEx("RespawnPV", 3000, false, "d", vehicleid);
 					return 1;
@@ -4135,81 +4327,141 @@ public OnPlayerEnterRaceCheckpoint(playerid)
 			{
 				if(pData[playerid][pDriveLicApp] == 1)
 				{
-					pData[playerid][pDriveLicApp] = 2;
 					DisablePlayerRaceCheckpoint(playerid);
-					SetPlayerRaceCheckpoint(playerid, 1, dmvpoint2, dmvpoint2, 5.0);
+					pData[playerid][pDriveLicApp] = 2;
+					SetPlayerRaceCheckpoint(playerid, 0, dmvpoint2, dmvpoint3, 5.0);
+					PlayerPlaySound(playerid, 1139, 0.0, 0.0, 0.0);
 				}
 				else if(pData[playerid][pDriveLicApp] == 2)
 				{
-					pData[playerid][pDriveLicApp] = 3;
 					DisablePlayerRaceCheckpoint(playerid);
-					SetPlayerRaceCheckpoint(playerid, 1, dmvpoint3, dmvpoint3, 5.0);
+					pData[playerid][pDriveLicApp] = 3;
+					SetPlayerRaceCheckpoint(playerid, 0, dmvpoint3, dmvpoint4, 5.0);
+					PlayerPlaySound(playerid, 1139, 0.0, 0.0, 0.0);
 				}
 				else if(pData[playerid][pDriveLicApp] == 3)
 				{
-					pData[playerid][pDriveLicApp] = 4;
 					DisablePlayerRaceCheckpoint(playerid);
-					SetPlayerRaceCheckpoint(playerid, 1, dmvpoint4, dmvpoint4, 5.0);
+					pData[playerid][pDriveLicApp] = 4;
+					SetPlayerRaceCheckpoint(playerid, 0, dmvpoint4, dmvpoint5, 5.0);
+					PlayerPlaySound(playerid, 1139, 0.0, 0.0, 0.0);
 				}
 				else if(pData[playerid][pDriveLicApp] == 4)
 				{
-					pData[playerid][pDriveLicApp] = 5;
 					DisablePlayerRaceCheckpoint(playerid);
-					SetPlayerRaceCheckpoint(playerid, 1, dmvpoint5, dmvpoint5, 5.0);
+					pData[playerid][pDriveLicApp] = 5;
+					SetPlayerRaceCheckpoint(playerid, 0, dmvpoint5, dmvpoint6, 5.0);
+					PlayerPlaySound(playerid, 1139, 0.0, 0.0, 0.0);
 				}
 				else if(pData[playerid][pDriveLicApp] == 5)
 				{
-					pData[playerid][pDriveLicApp] = 6;
 					DisablePlayerRaceCheckpoint(playerid);
-					SetPlayerRaceCheckpoint(playerid, 1, dmvpoint6, dmvpoint6, 5.0);
+					pData[playerid][pDriveLicApp] = 6;
+					SetPlayerRaceCheckpoint(playerid, 0, dmvpoint6, dmvpoint7, 5.0);
+					PlayerPlaySound(playerid, 1139, 0.0, 0.0, 0.0);
 				}
 				else if(pData[playerid][pDriveLicApp] == 6)
 				{
-					pData[playerid][pDriveLicApp] = 7;
 					DisablePlayerRaceCheckpoint(playerid);
-					SetPlayerRaceCheckpoint(playerid, 1, dmvpoint7, dmvpoint7, 5.0);
+					pData[playerid][pDriveLicApp] = 7;
+					SetPlayerRaceCheckpoint(playerid, 0, dmvpoint7, dmvpoint8, 5.0);
+					PlayerPlaySound(playerid, 1139, 0.0, 0.0, 0.0);
 				}
 				else if(pData[playerid][pDriveLicApp] == 7)
 				{
-					pData[playerid][pDriveLicApp] = 8;
 					DisablePlayerRaceCheckpoint(playerid);
-					SetPlayerRaceCheckpoint(playerid, 1, dmvpoint8, dmvpoint8, 5.0);
+					pData[playerid][pDriveLicApp] = 8;
+					SetPlayerRaceCheckpoint(playerid, 0, dmvpoint8, dmvpoint9, 5.0);
+					PlayerPlaySound(playerid, 1139, 0.0, 0.0, 0.0);
 				}
 				else if(pData[playerid][pDriveLicApp] == 8)
 				{
-					pData[playerid][pDriveLicApp] = 9;
 					DisablePlayerRaceCheckpoint(playerid);
-					SetPlayerRaceCheckpoint(playerid, 1, dmvpoint9, dmvpoint9, 5.0);
+					pData[playerid][pDriveLicApp] = 9;
+					SetPlayerRaceCheckpoint(playerid, 0, dmvpoint9, dmvpoint10, 5.0);
+					PlayerPlaySound(playerid, 1139, 0.0, 0.0, 0.0);
 				}
 				else if(pData[playerid][pDriveLicApp] == 9)
 				{
-					pData[playerid][pDriveLicApp] = 10;
 					DisablePlayerRaceCheckpoint(playerid);
-					SetPlayerRaceCheckpoint(playerid, 1, dmvpoint10, dmvpoint10, 5.0);
+					pData[playerid][pDriveLicApp] = 10;
+					SetPlayerRaceCheckpoint(playerid, 0, dmvpoint10, dmvpoint11, 5.0);
+					PlayerPlaySound(playerid, 1139, 0.0, 0.0, 0.0);
 				}
 				else if(pData[playerid][pDriveLicApp] == 10)
 				{
-					pData[playerid][pDriveLicApp] = 11;
 					DisablePlayerRaceCheckpoint(playerid);
-					SetPlayerRaceCheckpoint(playerid, 1, dmvpoint11, dmvpoint11, 5.0);
+					pData[playerid][pDriveLicApp] = 11;
+					SetPlayerRaceCheckpoint(playerid, 0, dmvpoint11, dmvpoint12, 5.0);
+					PlayerPlaySound(playerid, 1139, 0.0, 0.0, 0.0);
 				}
 				else if(pData[playerid][pDriveLicApp] == 11)
 				{
+					DisablePlayerRaceCheckpoint(playerid);
+					pData[playerid][pDriveLicApp] = 12;
+					SetPlayerRaceCheckpoint(playerid, 0, dmvpoint12, dmvpoint13, 5.0);
+					PlayerPlaySound(playerid, 1139, 0.0, 0.0, 0.0);
+				}
+				else if(pData[playerid][pDriveLicApp] == 12)
+				{
+					DisablePlayerRaceCheckpoint(playerid);
+					pData[playerid][pDriveLicApp] = 13;
+					SetPlayerRaceCheckpoint(playerid, 0, dmvpoint13, dmvpoint14, 5.0);
+					PlayerPlaySound(playerid, 1139, 0.0, 0.0, 0.0);
+				}
+				else if(pData[playerid][pDriveLicApp] == 13)
+				{
+					DisablePlayerRaceCheckpoint(playerid);
+					pData[playerid][pDriveLicApp] = 14;
+					SetPlayerRaceCheckpoint(playerid, 0, dmvpoint14, dmvpoint15, 5.0);
+					PlayerPlaySound(playerid, 1139, 0.0, 0.0, 0.0);
+				}
+				else if(pData[playerid][pDriveLicApp] == 14)
+				{
+					DisablePlayerRaceCheckpoint(playerid);
+					pData[playerid][pDriveLicApp] = 15;
+					SetPlayerRaceCheckpoint(playerid, 0, dmvpoint15, dmvpoint16, 5.0);
+					PlayerPlaySound(playerid, 1139, 0.0, 0.0, 0.0);
+				}
+				else if(pData[playerid][pDriveLicApp] == 15)
+				{
+					DisablePlayerRaceCheckpoint(playerid);
+					pData[playerid][pDriveLicApp] = 16;
+					SetPlayerRaceCheckpoint(playerid, 0, dmvpoint16, dmvpoint17, 5.0);
+					PlayerPlaySound(playerid, 1139, 0.0, 0.0, 0.0);
+				}
+				else if(pData[playerid][pDriveLicApp] == 16)
+				{
+					DisablePlayerRaceCheckpoint(playerid);
+					pData[playerid][pDriveLicApp] = 17;
+					SetPlayerRaceCheckpoint(playerid, 0, dmvpoint17, dmvpoint18, 5.0);
+					PlayerPlaySound(playerid, 1139, 0.0, 0.0, 0.0);
+				}
+				else if(pData[playerid][pDriveLicApp] == 17)
+				{
+					// checkpoint terakhir
+					DisablePlayerRaceCheckpoint(playerid);
+					pData[playerid][pDriveLicApp] = 18;
+					SetPlayerRaceCheckpoint(playerid, 1, dmvpoint18, dmvpoint18, 5.0);
+					PlayerPlaySound(playerid, 1139, 0.0, 0.0, 0.0);
+				}
+				else if(pData[playerid][pDriveLicApp] == 18)
+				{
+					// Selesai test
 					new vehicleid = GetPlayerVehicleID(playerid);
+					DisablePlayerRaceCheckpoint(playerid);
 					pData[playerid][pDriveLicApp] = 0;
 					pData[playerid][pDriveLic] = 1;
 					pData[playerid][pDriveLicTime] = gettime() + (30 * 86400);
 					pData[playerid][pCheckPoint] = CHECKPOINT_NONE;
-					DisablePlayerRaceCheckpoint(playerid);
 					KillTimer(PlayerDrivingTestTimer[playerid]);
-					
-					Info(playerid, "Selamat! Kamu telah berhasil lulus driving test dan mendapatkan SIM!");
+
+					Custom(playerid, "DMV: "WHITE_E"You have successfully passed the Driving Test. Your "YELLOW_E"Driver's License"WHITE_E" has been issued.");
 					RemovePlayerFromVehicle(playerid);
 					SetTimerEx("RespawnPV", 3000, false, "d", vehicleid);
 					PlayerVehicleHealth[playerid] = 0.0;
 					return 1;
 				}
-				
 			}
 		}
 		case CHECKPOINT_BUS:
@@ -4411,7 +4663,7 @@ public OnPlayerEnterRaceCheckpoint(playerid)
 						pData[playerid][pCheckPoint] = CHECKPOINT_NONE;
 						DisablePlayerRaceCheckpoint(playerid);
 						AddPlayerSalary(playerid, "Sidejob(Bus)", 31000);
-						Info(playerid, "Sidejob(Bus) telah masuk ke pending salary anda!");
+						Custom(playerid, "SIDEJOB: "WHITE_E"You've earned your pay for finishing a bus route lap!");
 						RemovePlayerFromVehicle(playerid);
 						
 						// RESET RUTE A
@@ -4602,7 +4854,7 @@ public OnPlayerEnterRaceCheckpoint(playerid)
 						pData[playerid][pCheckPoint] = CHECKPOINT_NONE;
 						DisablePlayerRaceCheckpoint(playerid);
 						AddPlayerSalary(playerid, "Sidejob(Bus)", 29000);
-						Info(playerid, "Sidejob(Bus) telah masuk ke pending salary anda!");
+						Custom(playerid, "SIDEJOB: "WHITE_E"You've earned your pay for finishing a bus route lap!");
 						RemovePlayerFromVehicle(playerid);
 
 						// RESET RUTE B
@@ -4705,7 +4957,7 @@ public OnPlayerEnterRaceCheckpoint(playerid)
 						pData[playerid][pCheckPoint] = CHECKPOINT_NONE;
 						DisablePlayerRaceCheckpoint(playerid);
 						AddPlayerSalary(playerid, "Sidejob(Sweeper)", 12000);
-						Info(playerid, "Sidejob (Sweeper) telah masuk ke pending salary anda!");
+						Custom(playerid, "SIDEJOB: "WHITE_E"You've earned your pay for finishing a sweeper route lap!");
 						
 						// RESET RUTE A
 						SweeperRouteAUsed = 0;
@@ -4847,7 +5099,7 @@ public OnPlayerEnterRaceCheckpoint(playerid)
 						pData[playerid][pCheckPoint] = CHECKPOINT_NONE;
 						DisablePlayerRaceCheckpoint(playerid);
 						AddPlayerSalary(playerid, "Sidejob(Sweeper)", 19000);
-						Info(playerid, "Sidejob (Sweeper) telah masuk ke pending salary anda!");
+						Custom(playerid, "SIDEJOB: "WHITE_E"You've earned your pay for finishing a sweeper route lap!");
 						
 						// RESET RUTE B
 						SweeperRouteBUsed = 0;
@@ -5010,7 +5262,7 @@ public OnPlayerEnterRaceCheckpoint(playerid)
 						pData[playerid][pCheckPoint] = CHECKPOINT_NONE;
 						DisablePlayerRaceCheckpoint(playerid);
 						AddPlayerSalary(playerid, "Sidejob(Sweeper)", 24000);
-						Info(playerid, "Sidejob (Sweeper) telah masuk ke pending salary anda!");
+						Custom(playerid, "SIDEJOB: "WHITE_E"You've earned your pay for finishing a sweeper route lap!");
 						
 						// RESET RUTE C
 						SweeperRouteCUsed = 0;
@@ -5033,7 +5285,7 @@ public OnPlayerEnterRaceCheckpoint(playerid)
 						pData[playerid][pForklifter] = 2;
 						TogglePlayerControllable(playerid, 0);
 						pData[playerid][pForklifterLoadStatus] = 1;
-						pData[playerid][pForklifterLoad] = SetTimerEx("ForklifterLoadBox", 1000, true, "i", playerid);
+						pData[playerid][pForklifterLoad] = SetTimerEx("ForklifterLoadBox", 250, true, "i", playerid);
 						PlayerTextDrawSetString(playerid, ActiveTD[playerid], "Loading...");
 						PlayerTextDrawShow(playerid, ActiveTD[playerid]);
 						ShowPlayerProgressBar(playerid, pData[playerid][activitybar]);
@@ -5043,7 +5295,7 @@ public OnPlayerEnterRaceCheckpoint(playerid)
 						pData[playerid][pForklifter] = 3;
 						TogglePlayerControllable(playerid, 0);
 						pData[playerid][pForklifterUnLoadStatus] = 1;
-						pData[playerid][pForklifterUnLoad] = SetTimerEx("ForklifterUnLoadBox", 1000, true, "i", playerid);
+						pData[playerid][pForklifterUnLoad] = SetTimerEx("ForklifterUnLoadBox", 250, true, "i", playerid);
 						PlayerTextDrawSetString(playerid, ActiveTD[playerid], "Unloaded...");
 						PlayerTextDrawShow(playerid, ActiveTD[playerid]);
 						ShowPlayerProgressBar(playerid, pData[playerid][activitybar]);
@@ -5053,7 +5305,7 @@ public OnPlayerEnterRaceCheckpoint(playerid)
 						pData[playerid][pForklifter] = 4;
 						TogglePlayerControllable(playerid, 0);
 						pData[playerid][pForklifterLoadStatus] = 1;
-						pData[playerid][pForklifterLoad] = SetTimerEx("ForklifterLoadBox", 1000, true, "i", playerid);
+						pData[playerid][pForklifterLoad] = SetTimerEx("ForklifterLoadBox", 250, true, "i", playerid);
 						PlayerTextDrawSetString(playerid, ActiveTD[playerid], "Loading...");
 						PlayerTextDrawShow(playerid, ActiveTD[playerid]);
 						ShowPlayerProgressBar(playerid, pData[playerid][activitybar]);
@@ -5063,7 +5315,7 @@ public OnPlayerEnterRaceCheckpoint(playerid)
 						pData[playerid][pForklifter] = 5;
 						TogglePlayerControllable(playerid, 0);
 						pData[playerid][pForklifterUnLoadStatus] = 1;
-						pData[playerid][pForklifterUnLoad] = SetTimerEx("ForklifterUnLoadBox", 1000, true, "i", playerid);
+						pData[playerid][pForklifterUnLoad] = SetTimerEx("ForklifterUnLoadBox", 250, true, "i", playerid);
 						PlayerTextDrawSetString(playerid, ActiveTD[playerid], "Unloaded...");
 						PlayerTextDrawShow(playerid, ActiveTD[playerid]);
 						ShowPlayerProgressBar(playerid, pData[playerid][activitybar]);
@@ -5073,7 +5325,7 @@ public OnPlayerEnterRaceCheckpoint(playerid)
 						pData[playerid][pForklifter] = 6;
 						TogglePlayerControllable(playerid, 0);
 						pData[playerid][pForklifterLoadStatus] = 1;
-						pData[playerid][pForklifterLoad] = SetTimerEx("ForklifterLoadBox", 1000, true, "i", playerid);
+						pData[playerid][pForklifterLoad] = SetTimerEx("ForklifterLoadBox", 250, true, "i", playerid);
 						PlayerTextDrawSetString(playerid, ActiveTD[playerid], "Loading...");
 						PlayerTextDrawShow(playerid, ActiveTD[playerid]);
 						ShowPlayerProgressBar(playerid, pData[playerid][activitybar]);
@@ -5083,7 +5335,7 @@ public OnPlayerEnterRaceCheckpoint(playerid)
 						pData[playerid][pForklifter] = 7;
 						TogglePlayerControllable(playerid, 0);
 						pData[playerid][pForklifterUnLoadStatus] = 1;
-						pData[playerid][pForklifterUnLoad] = SetTimerEx("ForklifterUnLoadBox", 1000, true, "i", playerid);
+						pData[playerid][pForklifterUnLoad] = SetTimerEx("ForklifterUnLoadBox", 250, true, "i", playerid);
 						PlayerTextDrawSetString(playerid, ActiveTD[playerid], "Unloaded...");
 						PlayerTextDrawShow(playerid, ActiveTD[playerid]);
 						ShowPlayerProgressBar(playerid, pData[playerid][activitybar]);
@@ -5093,7 +5345,7 @@ public OnPlayerEnterRaceCheckpoint(playerid)
 						pData[playerid][pForklifter] = 8;
 						TogglePlayerControllable(playerid, 0);
 						pData[playerid][pForklifterLoadStatus] = 1;
-						pData[playerid][pForklifterLoad] = SetTimerEx("ForklifterLoadBox", 1000, true, "i", playerid);
+						pData[playerid][pForklifterLoad] = SetTimerEx("ForklifterLoadBox", 250, true, "i", playerid);
 						PlayerTextDrawSetString(playerid, ActiveTD[playerid], "Loading...");
 						PlayerTextDrawShow(playerid, ActiveTD[playerid]);
 						ShowPlayerProgressBar(playerid, pData[playerid][activitybar]);
@@ -5103,7 +5355,7 @@ public OnPlayerEnterRaceCheckpoint(playerid)
 						pData[playerid][pForklifter] = 9;
 						TogglePlayerControllable(playerid, 0);
 						pData[playerid][pForklifterUnLoadStatus] = 1;
-						pData[playerid][pForklifterUnLoad] = SetTimerEx("ForklifterUnLoadBox", 1000, true, "i", playerid);
+						pData[playerid][pForklifterUnLoad] = SetTimerEx("ForklifterUnLoadBox", 250, true, "i", playerid);
 						PlayerTextDrawSetString(playerid, ActiveTD[playerid], "Unloaded...");
 						PlayerTextDrawShow(playerid, ActiveTD[playerid]);
 						ShowPlayerProgressBar(playerid, pData[playerid][activitybar]);
@@ -5113,7 +5365,7 @@ public OnPlayerEnterRaceCheckpoint(playerid)
 						pData[playerid][pForklifter] = 10;
 						TogglePlayerControllable(playerid, 0);
 						pData[playerid][pForklifterLoadStatus] = 1;
-						pData[playerid][pForklifterLoad] = SetTimerEx("ForklifterLoadBox", 1000, true, "i", playerid);
+						pData[playerid][pForklifterLoad] = SetTimerEx("ForklifterLoadBox", 250, true, "i", playerid);
 						PlayerTextDrawSetString(playerid, ActiveTD[playerid], "Loading...");
 						PlayerTextDrawShow(playerid, ActiveTD[playerid]);
 						ShowPlayerProgressBar(playerid, pData[playerid][activitybar]);
@@ -5132,7 +5384,7 @@ public OnPlayerEnterRaceCheckpoint(playerid)
 						pData[playerid][pForklifterTime] = 80;
 						DisablePlayerRaceCheckpoint(playerid);
 						AddPlayerSalary(playerid, "Sidejob(Forklift)", 24000);
-						Info(playerid, "Sidejob(Forklift) telah masuk ke pending salary anda!");
+						Custom(playerid, "SIDEJOB: "WHITE_E"You've earned your pay for finishing a forklift route lap!");
 						RemovePlayerFromVehicle(playerid);
 						SetTimerEx("RespawnPV", 3000, false, "d", vehicleid);
 						return 1;
@@ -5288,7 +5540,7 @@ public OnPlayerEnterRaceCheckpoint(playerid)
 						pData[playerid][pCheckPoint] = CHECKPOINT_NONE;
 						DisablePlayerRaceCheckpoint(playerid);
 						AddPlayerSalary(playerid, "Sidejob(Mower)", 8000);
-						Info(playerid, "Sidejob(Mower) telah masuk ke pending salary anda!");
+						Custom(playerid, "SIDEJOB: "WHITE_E"You've earned your pay for finishing a mower route lap!");
 						//RemovePlayerFromVehicle(playerid);
 						SetTimerEx("RespawnPV", 1000, false, "d", vehicleid);
 					}
@@ -5356,6 +5608,27 @@ public OnPlayerEnterRaceCheckpoint(playerid)
 			}
 		}
 	}
+	if(pData[playerid][pDealerHauling] > -1)
+	{
+		if(IsTrailerAttachedToVehicle(GetPlayerVehicleID(playerid)))
+		{
+			DisablePlayerRaceCheckpoint(playerid);
+			Info(playerid, "'/storedealer' untuk menyetor product!");
+		}
+		else
+		{
+			if(IsPlayerInRangeOfPoint(playerid, 10.0, -198.4669, -203.1409, 1.4219))
+			{
+				DisablePlayerRaceCheckpoint(playerid);
+				SetPlayerCheckpoint(playerid, -198.4669, -203.1409, 1.4219, 5.5);
+				Info(playerid, "Silahkan ambil trailer dan menuju ke checkpoint untuk membeli product!");
+			}
+			else
+			{
+				Error(playerid, "Kamu tidak membawa Trailer, Silahkan ambil kembali trailernya!");
+			}
+		}
+	}
 	return 1;
 }
 
@@ -5386,6 +5659,14 @@ public OnPlayerEnterCheckpoint(playerid)
 		{
 			DisablePlayerCheckpoint(playerid);
 			Info(playerid, "/buy, /mymission, /storegas.");
+		}
+	}
+	if(pData[playerid][pDealerHauling] > -1)
+	{
+		if(IsPlayerInRangeOfPoint(playerid, 5.5, -198.4669, -203.1409, 1.4219))
+		{
+			DisablePlayerCheckpoint(playerid);
+			Info(playerid, "/buy, /mymission, /storedealer.");
 		}
 	}
 	/*if(pData[playerid][pCP] == 1)
@@ -5439,188 +5720,7 @@ public OnPlayerEnterCheckpoint(playerid)
 		pData[playerid][pFindEms] = INVALID_PLAYER_ID;
 		DisablePlayerCheckpoint(playerid);
 	}
-	if(pData[playerid][pSideJob] == 1)
-	{
-		new vehicleid = GetPlayerVehicleID(playerid);
-		if(GetVehicleModel(vehicleid) == 574)
-		{
-			if (IsPlayerInRangeOfPoint(playerid, 7.0,sweperpoint1))
-			{
-				SetPlayerCheckpoint(playerid, sweperpoint2, 7.0);
-			}
-			if (IsPlayerInRangeOfPoint(playerid, 7.0,sweperpoint2))
-			{
-				SetPlayerCheckpoint(playerid, sweperpoint3, 7.0);
-			}
-			if (IsPlayerInRangeOfPoint(playerid, 7.0,sweperpoint3))
-			{
-				SetPlayerCheckpoint(playerid, sweperpoint4, 7.0);
-			}
-			if (IsPlayerInRangeOfPoint(playerid, 7.0,sweperpoint4))
-			{
-				SetPlayerCheckpoint(playerid, sweperpoint5, 7.0);
-			}
-			if (IsPlayerInRangeOfPoint(playerid, 7.0,sweperpoint5))
-			{
-				SetPlayerCheckpoint(playerid, sweperpoint6, 7.0);
-			}
-			if (IsPlayerInRangeOfPoint(playerid, 7.0,sweperpoint6))
-			{
-				SetPlayerCheckpoint(playerid, sweperpoint7, 7.0);
-			}
-			if (IsPlayerInRangeOfPoint(playerid, 7.0,sweperpoint7))
-			{
-				SetPlayerCheckpoint(playerid, sweperpoint8, 7.0);
-			}
-			if (IsPlayerInRangeOfPoint(playerid, 7.0,sweperpoint8))
-			{
-				SetPlayerCheckpoint(playerid, sweperpoint9, 7.0);
-			}
-			if (IsPlayerInRangeOfPoint(playerid, 7.0,sweperpoint9))
-			{
-				SetPlayerCheckpoint(playerid, sweperpoint10, 7.0);
-			}
-			if (IsPlayerInRangeOfPoint(playerid, 7.0,sweperpoint10))
-			{
-				SetPlayerCheckpoint(playerid, sweperpoint11, 7.0);
-			}
-			if (IsPlayerInRangeOfPoint(playerid, 7.0,sweperpoint11))
-			{
-				SetPlayerCheckpoint(playerid, sweperpoint12, 7.0);
-			}
-			if(IsPlayerInRangeOfPoint(playerid, 7.0,sweperpoint12))
-			{
-				pData[playerid][pSideJob] = 0;
-				pData[playerid][pSweeperTime] = 120;
-				DisablePlayerCheckpoint(playerid);
-				AddPlayerSalary(playerid, "Sidejob(Sweeper)", 12000);
-				Info(playerid, "Sidejob(Sweeper) telah masuk ke pending salary anda!");
-				RemovePlayerFromVehicle(playerid);
-				SetTimerEx("RespawnPV", 3000, false, "d", vehicleid);
-			}
-		}
-	}
-	if(pData[playerid][pSideJob] == 2)
-	{
-		new vehicleid = GetPlayerVehicleID(playerid);
-		if(GetVehicleModel(vehicleid) == 431)
-		{
-			if (IsPlayerInRangeOfPoint(playerid, 7.0,buspoint1))
-			{
-				SetPlayerCheckpoint(playerid, buspoint2, 7.0);
-			}
-			if (IsPlayerInRangeOfPoint(playerid, 7.0,buspoint2))
-			{
-				SetPlayerCheckpoint(playerid, buspoint3, 7.0);
-			}
-			if (IsPlayerInRangeOfPoint(playerid, 7.0,buspoint3))
-			{
-				SetPlayerCheckpoint(playerid, buspoint4, 7.0);
-			}
-			if (IsPlayerInRangeOfPoint(playerid, 7.0,buspoint4))
-			{
-				SetPlayerCheckpoint(playerid, buspoint5, 7.0);
-			}
-			if (IsPlayerInRangeOfPoint(playerid, 7.0,buspoint5))
-			{
-				SetPlayerCheckpoint(playerid, buspoint6, 7.0);
-			}
-			if (IsPlayerInRangeOfPoint(playerid, 7.0,buspoint6))
-			{
-				SetPlayerCheckpoint(playerid, buspoint7, 7.0);
-			}
-			if (IsPlayerInRangeOfPoint(playerid, 7.0,buspoint7))
-			{
-				SetPlayerCheckpoint(playerid, buspoint8, 7.0);
-			}
-			if (IsPlayerInRangeOfPoint(playerid, 7.0,buspoint8))
-			{
-				SetPlayerCheckpoint(playerid, buspoint9, 7.0);
-			}
-			if (IsPlayerInRangeOfPoint(playerid, 7.0,buspoint9))
-			{
-				SetPlayerCheckpoint(playerid, buspoint10, 7.0);
-			}
-			if (IsPlayerInRangeOfPoint(playerid, 7.0,buspoint10))
-			{
-				SetPlayerCheckpoint(playerid, buspoint11, 7.0);
-			}
-			if (IsPlayerInRangeOfPoint(playerid, 7.0,buspoint11))
-			{
-				SetPlayerCheckpoint(playerid, buspoint12, 7.0);
-			}
-			if (IsPlayerInRangeOfPoint(playerid, 7.0,buspoint12))
-			{
-				SetPlayerCheckpoint(playerid, buspoint13, 7.0);
-			}
-			if (IsPlayerInRangeOfPoint(playerid, 7.0,buspoint13))
-			{
-				SetPlayerCheckpoint(playerid, buspoint14, 7.0);
-			}
-			if (IsPlayerInRangeOfPoint(playerid, 7.0,buspoint14))
-			{
-				SetPlayerCheckpoint(playerid, buspoint15, 7.0);
-			}
-			if (IsPlayerInRangeOfPoint(playerid, 7.0,buspoint15))
-			{
-				SetPlayerCheckpoint(playerid, buspoint16, 7.0);
-			}
-			if (IsPlayerInRangeOfPoint(playerid, 7.0,buspoint16))
-			{
-				SetPlayerCheckpoint(playerid, buspoint17, 7.0);
-			}
-			if (IsPlayerInRangeOfPoint(playerid, 7.0,buspoint17))
-			{
-				SetPlayerCheckpoint(playerid, buspoint18, 7.0);
-			}
-			if (IsPlayerInRangeOfPoint(playerid, 7.0,buspoint18))
-			{
-				SetPlayerCheckpoint(playerid, buspoint19, 7.0);
-			}
-			if (IsPlayerInRangeOfPoint(playerid, 7.0,buspoint19))
-			{
-				SetPlayerCheckpoint(playerid, buspoint20, 7.0);
-			}
-			if (IsPlayerInRangeOfPoint(playerid, 7.0,buspoint20))
-			{
-				SetPlayerCheckpoint(playerid, buspoint21, 7.0);
-			}
-			if (IsPlayerInRangeOfPoint(playerid, 7.0,buspoint21))
-			{
-				SetPlayerCheckpoint(playerid, buspoint22, 7.0);
-			}
-			if (IsPlayerInRangeOfPoint(playerid, 7.0,buspoint22))
-			{
-				SetPlayerCheckpoint(playerid, buspoint23, 7.0);
-			}
-			if (IsPlayerInRangeOfPoint(playerid, 7.0,buspoint23))
-			{
-				SetPlayerCheckpoint(playerid, buspoint24, 7.0);
-			}
-			if (IsPlayerInRangeOfPoint(playerid, 7.0,buspoint24))
-			{
-				SetPlayerCheckpoint(playerid, buspoint25, 7.0);
-			}
-			if (IsPlayerInRangeOfPoint(playerid, 7.0,buspoint25))
-			{
-				SetPlayerCheckpoint(playerid, buspoint26, 7.0);
-			}
-			if (IsPlayerInRangeOfPoint(playerid, 7.0,buspoint26))
-			{
-				SetPlayerCheckpoint(playerid, buspoint27, 7.0);
-			}
-			if(IsPlayerInRangeOfPoint(playerid, 7.0,buspoint27))
-			{
-				pData[playerid][pSideJob] = 0;
-				pData[playerid][pBusTime] = 360;
-				DisablePlayerCheckpoint(playerid);
-				AddPlayerSalary(playerid, "Sidejob(Bus)", 20000);
-				Info(playerid, "Sidejob(Bus) telah masuk ke pending salary anda!");
-				RemovePlayerFromVehicle(playerid);
-				SetTimerEx("RespawnPV", 3000, false, "d", vehicleid);
-			}
-		}
-	}
+
 	//DisablePlayerCheckpoint(playerid);
 	return 1;
 }
@@ -5675,7 +5775,12 @@ public CheckDrivingTest(playerid)
 		DisablePlayerRaceCheckpoint(playerid);
 		KillTimer(PlayerDrivingTestTimer[playerid]);
 		
-		Error(playerid, "DRIVING TEST FAILED! You crashed the vehicle.");
+		Error(playerid, "Driving test failed, You crashed the vehicle.");
+
+		// Teleport player ke DMV
+		SetPlayerPosition(playerid, 2049.2742, -1903.6281, 13.5469, 2.0);
+		SetPlayerFacingAngle(playerid, 180.0); // Hadap ke selatan
+		SetCameraBehindPlayer(playerid); // Reset camera
 		
 		RemovePlayerFromVehicle(playerid);
 		SetTimerEx("RespawnPV", 3000, false, "d", vehicleid);
@@ -5752,6 +5857,22 @@ public OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 			DisablePlayerCheckpoint(playerid);
 		}
 	}
+	if(strlen(pData[playerid][pConfirmType]) > 0)
+    {
+        // Tekan Y (KEY_YES)
+        if(newkeys & KEY_YES)
+        {
+            ProcessConfirmation(playerid, true);
+            return 1;
+        }
+        
+        // Tekan N (KEY_NO)
+        if(newkeys & KEY_NO)
+        {
+            ProcessConfirmation(playerid, false);
+            return 1;
+        }
+    }
 	if((newkeys & KEY_SECONDARY_ATTACK))
     {
 
@@ -5996,6 +6117,50 @@ public OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 			break;
 	    }
 	}
+	// Detect KEY_FIRE (klik kiri / left click)
+	if(newkeys & KEY_FIRE && !(oldkeys & KEY_FIRE))
+	{
+		if(pData[playerid][pIsSmoking])
+		{
+			// ✅ Pastikan tidak sedang pegang weapon
+			if(GetPlayerWeapon(playerid) != 0)
+				return 1; // Skip jika pegang weapon
+			
+			// ✅ CEK DI AWAL - Cek apakah sudah maksimal hisapan
+			if(pData[playerid][pCigPuffs] >= 7)
+			{
+				return 1; // Stop langsung, jangan proses apapun
+			}
+
+			// Tambah puff count
+			pData[playerid][pCigPuffs]++;
+
+			// Tambah health +1
+			new Float:health;
+			GetPlayerHealth(playerid, health);
+			
+			if(health < 100.0)
+			{
+				SetPlayerHealth(playerid, health + 1.0);
+				
+			}
+			// Animasi hisap rokok
+			ApplyAnimation(playerid, "SMOKING", "M_smk_drag", 4.1, 0, 0, 0, 0, 0, 1);
+			SetTimerEx("BackToSmokingLoop", 1500, false, "i", playerid);
+
+			// Chat bubble
+			new string[64];
+			format(string, sizeof(string), "menghisap rokok (%d/7)", pData[playerid][pCigPuffs]);
+			SetPlayerChatBubble(playerid, string, COLOR_PURPLE, 10.0, 2000);
+
+			// Jika sudah 7 hisapan, rokok habis
+			if(pData[playerid][pCigPuffs] >= 7)
+			{
+				SetTimerEx("AutoStopSmoking", 2000, false, "i", playerid);
+				return 1; // ✅ Stop execution agar tidak bisa klik lagi
+			}
+		}
+	}
 	//-----[ Vehicle ]-----	
 	if((newkeys & KEY_FIRE ))
 	{
@@ -6027,10 +6192,6 @@ public OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 	}
 	if((newkeys & KEY_YES ))
 	{
-		if(GetNearbyGarkot(playerid) >= 0)
-		{
-			ShowPlayerDialog(playerid, DIALOG_GARKOT, DIALOG_STYLE_MSGBOX, "Garasi Kota ", ">> {FFFF00}ParkVeh: {ffffff}Untuk Memarkir Kendaraanmu.\n>> {FFFF00}PickupVeh: {ffffff}Untuk Mengambil Kendaraanmu.","ParkVeh", "PickupVeh");
-		}	
 		if(IsPlayerInAnyVehicle(playerid) && GetPlayerState(playerid) == PLAYER_STATE_DRIVER)
 		{
 			return callcmd::engine(playerid, "");
@@ -6046,6 +6207,11 @@ public OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 	//-----[ Toll System ]-----	
 	if(newkeys & KEY_CROUCH)
 	{
+		if(GetNearbyGarkot(playerid) >= 0) // Check jika di area garkot
+        {
+            ShowPlayerDialog(playerid, DIALOG_GARKOT, DIALOG_STYLE_MSGBOX, "Public Parking", ">> {FFFF00}ParkVeh: {ffffff}Untuk Memarkir Kendaraanmu.\n>> {FFFF00}PickupVeh: {ffffff}Untuk Mengambil Kendaraanmu.","ParkVeh", "PickupVeh");
+            return 1;
+        }
 		if(GetPlayerState(playerid) != PLAYER_STATE_SPECTATING)
 		{
 			new forcount = MuchNumber(sizeof(BarrierInfo));
@@ -6066,7 +6232,7 @@ public OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 								{
 									//Toll(playerid, "Kamu telah melewati tol menggunakan kartu eToll.");
 								}
-								else if(pData[playerid][pMoney] >= 500) // Bayar cash
+								else if(pData[playerid][pMoney] >= 5000) // Bayar cash
 								{
 									pData[playerid][pMoney] -= 500;
 									//Toll(playerid, "Kamu telah membayar toll menggunakan uang tunai.");
@@ -6236,6 +6402,11 @@ public OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
     // Cek tombol H (KEY_CTRL_BACK)
 	if((newkeys & KEY_CTRL_BACK) && !(oldkeys & KEY_CTRL_BACK))
 	{
+		if(GetNearbyGarkot(playerid) >= 0) // Check jika di area garkot
+        {
+            ShowPlayerDialog(playerid, DIALOG_GARKOT, DIALOG_STYLE_MSGBOX, "Public Parking", ">> {FFFF00}ParkVeh: {ffffff}Untuk Memarkir Kendaraanmu.\n>> {FFFF00}PickupVeh: {ffffff}Untuk Mengambil Kendaraanmu.","ParkVeh", "PickupVeh");
+            return 1;
+        }
 		// Cek jika sedang fishing dan ikan sedang menyambar
 		if(pData[playerid][pInFish] == 1 && FishBite[playerid] == 1)
 		{
@@ -6246,8 +6417,8 @@ public OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 			
 			// Update GameText dengan progress
 			new string[128];
-			format(string, sizeof(string), "~r~PULLING!~n~~w~Tap ~y~H ~r~%d/%d~w~ times!", FishPullCount[playerid], FISH_PULL_REQUIRED);
-			GameTextForPlayer(playerid, string, 2000, 3);
+			format(string, sizeof(string), "~r~Pulling~n~~w~Tap ~y~H ~r~%d/%d~w~ times!", FishPullCount[playerid], FISH_PULL_REQUIRED);
+			InfoTD_MSG(playerid, 500, string);
 			
 			// Cek apakah sudah mencapai target tap
 			if(FishPullCount[playerid] >= FISH_PULL_REQUIRED)
@@ -6269,23 +6440,22 @@ public OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
 			Error(playerid, "Wait for the fish to bite first!");
 		}
 	}
-	if(PRESSED( KEY_CTRL_BACK ))
+	if(PRESSED(KEY_CTRL_BACK))
 	{
 		if(GetPlayerState(playerid) == PLAYER_STATE_ONFOOT && pData[playerid][pCuffed] == 0)
 		{
 			if(pData[playerid][pLoopAnim])
-	    	{	
-	        	pData[playerid][pLoopAnim] = 0;
+			{	
+				pData[playerid][pLoopAnim] = 0;
 
 				ClearAnimations(playerid, 1);
 				StopLoopingAnim(playerid);
 				SetPlayerSpecialAction(playerid, SPECIAL_ACTION_NONE);
-		    	ApplyAnimation(playerid, "CARRY", "crry_prtial", 4.0, 0, 0, 0, 0, 0, 1);
-		    	TextDrawHideForPlayer(playerid, AnimationTD);
+				ApplyAnimation(playerid, "CARRY", "crry_prtial", 4.0, 0, 0, 0, 0, 0, 1);
+				TextDrawHideForPlayer(playerid, AnimationTD);
 			}
-			
 		}
-    }
+	}
 	if(IsKeyJustDown(KEY_SECONDARY_ATTACK, newkeys, oldkeys))
 	{
 		if(GetPVarInt(playerid, "UsingSprunk"))
@@ -6398,6 +6568,28 @@ public OnPlayerStateChange(playerid, newstate, oldstate)
 		TextDrawHideForPlayer(playerid, TDEditor_TD[11]);
 		TextDrawHideForPlayer(playerid, DPvehfare[playerid]);
 	}
+	if(newstate == PLAYER_STATE_DRIVER)
+    {
+        if(pData[playerid][pFailSideJobTimer] != 0)
+        {
+            new vehid = GetPlayerVehicleID(playerid);
+            new model = GetVehicleModel(vehid);
+            
+            new bool:isJobVehicle = false;
+            if(pData[playerid][pSweeper] > 0 && model == 574) isJobVehicle = true;
+            if(pData[playerid][pBus] > 0 && model == 431) isJobVehicle = true;
+            if(pData[playerid][pMower] > 0 && model == 572) isJobVehicle = true;
+            
+            if(isJobVehicle)
+            {
+                KillTimer(pData[playerid][pFailSideJobTimer]);
+                pData[playerid][pFailSideJobTimer] = 0;
+                pData[playerid][pFailSideJobCountdown] = 0;
+                
+                //GameTextForPlayer(playerid, "~g~Sidejob Dilanjutkan!", 2000, 6);
+            }
+        }
+    }
 	if(oldstate == PLAYER_STATE_DRIVER)
     {	
 		if(GetPlayerSpecialAction(playerid) == SPECIAL_ACTION_CARRY || GetPlayerSpecialAction(playerid) == SPECIAL_ACTION_CUFFED)
@@ -6406,6 +6598,8 @@ public OnPlayerStateChange(playerid, newstate, oldstate)
 		PlayerTextDrawHide(playerid, DPvehname[playerid]);
         PlayerTextDrawHide(playerid, DPvehengine[playerid]);
         PlayerTextDrawHide(playerid, DPvehspeed[playerid]);
+		HidePlayerProgressBar(playerid, pData[playerid][fuelbar]);
+		HidePlayerProgressBar(playerid, pData[playerid][damagebar]);
 		
         TextDrawHideForPlayer(playerid, TDEditor_TD[5]);
 		TextDrawHideForPlayer(playerid, TDEditor_TD[6]);
@@ -6471,7 +6665,7 @@ public OnPlayerStateChange(playerid, newstate, oldstate)
 		/*if(IsSRV(vehicleid))
 		{
 			new tstr[128], price = GetVehicleCost(GetVehicleModel(vehicleid));
-			format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleName(vehicleid), FormatMoney(price));
+			format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleName(vehicleid), FormatMoney(price));
 			ShowPlayerDialog(playerid, DIALOG_BUYPV, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 		}
 		else if(IsVSRV(vehicleid))
@@ -6509,13 +6703,40 @@ public OnPlayerStateChange(playerid, newstate, oldstate)
 				}
 			}
 		}
-		
+
+		if(IsADmvVeh(vehicleid))
+		{
+			if(!pData[playerid][pDriveLicApp])
+			{
+				RemovePlayerFromVehicle(playerid);
+				new Float:slx, Float:sly, Float:slz;
+				GetPlayerPos(playerid, slx, sly, slz);
+				SetPlayerPos(playerid, slx, sly, slz);
+				Error(playerid, "You are not currently taking the Driving Test.");
+			}
+			else 
+			{
+				GetVehicleHealth(vehicleid, PlayerVehicleHealth[playerid]);
+				PlayerDrivingTestTimer[playerid] = SetTimerEx("CheckDrivingTest", 500, true, "d", playerid);
+				Info(playerid, "Driving test started! Follow the checkpoints on this car's GPS.");
+				Info(playerid, "Don't crash or exit the vehicle!");
+				SetPlayerRaceCheckpoint(playerid, 1, dmvpoint1, dmvpoint1, 5.0);
+			}
+		}
 		if(IsASweeperVeh(vehicleid))
 		{
+			if(pData[playerid][pSweeper] > 0 || pData[playerid][pFailSideJobTimer] != 0)
+			{
+				return 1;
+			}
 			ShowPlayerDialog(playerid, DIALOG_SWEEPER, DIALOG_STYLE_MSGBOX, "Side Job - Sweeper", "Will you work as a street cleaner?", "Start Job", "Close");
 		}
 		if(IsABusVeh(vehicleid))
 		{
+			if(pData[playerid][pBus] > 0 || pData[playerid][pFailSideJobTimer] != 0)
+			{
+				return 1;
+			}
 			ShowPlayerDialog(playerid, DIALOG_BUS, DIALOG_STYLE_MSGBOX, "Side Job - Bus", "Will you work as a bus passenger transporter?", "Start Job", "Close");
 		}
 		if(IsAForVeh(vehicleid))
@@ -6524,6 +6745,10 @@ public OnPlayerStateChange(playerid, newstate, oldstate)
 		}
 		if(IsAMowerVeh(vehicleid))
 		{
+			if(pData[playerid][pMower] > 0 || pData[playerid][pFailSideJobTimer] != 0)
+			{
+				return 1;
+			}
 			ShowPlayerDialog(playerid, DIALOG_MOWER, DIALOG_STYLE_MSGBOX, "Side Job - Mower", "Will you work as a park lawn mower?", "Start Job", "Close");
 		}
 		if(IsABaggageVeh(vehicleid))
@@ -6756,46 +6981,76 @@ public OnPlayerTakeDamage(playerid, issuerid, Float:amount, weaponid, bodypart)
 public OnPlayerUpdate(playerid)
 {
     // === OPTIMASI SPEEDCAM ===
-    if(GetTickCount() - pData[playerid][pLastUpdate] > 1500) // Check setiap 1.5 detik
-    {
-        if(GetPlayerState(playerid) == PLAYER_STATE_DRIVER && !pData[playerid][pSpeedTime])
-        {
-            new vehicled = Vehicle_Nearest2(playerid);
-            if(vehicled != -1 && pvData[vehicled][cOwner] == pData[playerid][pID] && GetEngineStatus(vehicled))
-            {
-                new id = SpeedCam_Nearest(playerid);
-                if(id != -1 && GetPlayerSpeedCam(playerid) > CamData[id][CamLimit])
-                {
-                    if (!IsACruiser(vehicled) && !IsABoat(vehicled) && !IsAPlane(vehicled) && !IsAHelicopter(vehicled))
-                    {
-                        new price = 2000 + floatround(GetPlayerSpeedCam(playerid) - CamData[id][CamLimit]);
-                        static str[128]; // Gunakan static
-                        format(str, sizeof(str), "Kecepatan (%.0f/%.0f mph)", GetPlayerSpeedCam(playerid), CamData[id][CamLimit]);
-                        SetTimerEx("HidePlayerBox", 500, false, "dd", playerid, _:ShowPlayerBox(playerid, 0xFFFFFF66));
-                        
-                        format(str, sizeof(str), "{ff0000}[SpeedCam]: {ffffff}Kamu telah melebihi kecepatan dan mendapatkan denda sebesar {3BBD44}$%s", FormatMoney(price));
-                        SendClientMessage(playerid, -1, str);
-                        
-                        pvData[vehicled][cTicket] += price;
-
-                        static query[128]; // Gunakan static
-                        mysql_format(g_SQL, query, sizeof(query), "UPDATE vehicle SET ticket = '%d' WHERE id = '%d'", pvData[vehicled][cTicket], pvData[vehicled][cID]);
-                        mysql_tquery(g_SQL, query);
-                        
-                        pData[playerid][pSpeedTime] = 5;
-                    }
-                }
-            }
-        }
-    }
+    if(GetTickCount() - pData[playerid][pLastUpdate] > 250)
+	{
+		if(GetPlayerState(playerid) == PLAYER_STATE_DRIVER && !pData[playerid][pSpeedTime])
+		{
+			new vehicleid = GetPlayerVehicleID(playerid);
+			
+			if(vehicleid != INVALID_VEHICLE_ID && GetEngineStatus(vehicleid))
+			{
+				// Jangan cek ownership, speedcam berlaku untuk semua kendaraan
+				new id = SpeedCam_Nearest(playerid);
+				
+				if(id != -1)
+				{
+					new Float:speed = GetPlayerSpeedCam(playerid);
+					
+					if(speed > CamData[id][CamLimit])
+					{
+						if(!IsACruiser(vehicleid) && !IsABoat(vehicleid) && !IsAPlane(vehicleid) && !IsAHelicopter(vehicleid))
+						{
+							new price = 2000 + floatround(speed - CamData[id][CamLimit]);
+							
+							SetTimerEx("HidePlayerBox", 500, false, "dd", playerid, _:ShowPlayerBox(playerid, 0xFFFFFF66));
+							
+							new str[128];
+							format(str, sizeof(str), "{ff0000}[SpeedCam]: {ffffff}Kamu telah melebihi kecepatan (%.0f/%.0f KM/H) dan mendapatkan denda sebesar {3BBD44}%s", speed, CamData[id][CamLimit], FormatMoney(price));
+							SendClientMessage(playerid, -1, str);
+							
+							// Cari vehicle data untuk update ticket
+							for(new i = 0; i < MAX_VEHICLES; i++)
+							{
+								if(pvData[i][cVeh] == vehicleid)
+								{
+									pvData[i][cTicket] += price;
+									
+									new query[128];
+									mysql_format(g_SQL, query, sizeof(query), "UPDATE vehicle SET ticket = '%d' WHERE id = '%d'", pvData[i][cTicket], pvData[i][cID]);
+									mysql_tquery(g_SQL, query);
+									break;
+								}
+							}
+							
+							pData[playerid][pSpeedTime] = 5;
+						}
+					}
+				}
+			}
+		}
+		
+		pData[playerid][pLastUpdate] = GetTickCount();
+	}
 
     // === FUNGSI REAL-TIME ===
     UpdateTazer(playerid);
     CheckPlayerInSpike(playerid);
+	HandbrakeUpdate();
 
     //AntiCheat - update terakhir
     pData[playerid][pLastUpdate] = gettime();
 
+	// Di OnPlayerUpdate atau checker lain
+	new weaponid = GetPlayerWeapon(playerid);
+
+	// ✅ Ganti jadi cek firearms only
+	if(IsFirearmWeapon(weaponid) && pData[playerid][pPlayerCS] == 0)
+	{
+		ResetWeapon(playerid, weaponid); // Reset weapon tertentu
+		//SendClientMessage(playerid, COLOR_RED, "ANTI-CHEAT: {FFFFFF}Kamu tidak bisa menggunakan senjata api tanpa Character Story!");
+		//SendClientMessage(playerid, COLOR_YELLOW, "Hubungi admin untuk mendapatkan Character Story terlebih dahulu.");
+		return 0;
+	}
     return 1;
 }
 
@@ -6850,6 +7105,7 @@ task VehicleUpdate[40000]()
 	}
 }
 
+// Di OnVehicleSpawn - ganti dari timestamp ke countdown detik
 public OnVehicleSpawn(vehicleid) 
 { 
     foreach(new ii : PVehicles) 
@@ -6858,66 +7114,55 @@ public OnVehicleSpawn(vehicleid)
         { 
             if(pvData[ii][cInsu] > 0) 
             { 
-                // Kurangi 1 insurance
                 pvData[ii][cInsu]--; 
                 pvData[ii][cClaim] = 1; 
-                pvData[ii][cClaimTime] = gettime() + (2 * 3600); // FIXED: 2 jam = 7200 detik (bukan 1 * 7200)
+                pvData[ii][cClaimTime] = 3600; // 2 jam = 7200 detik (countdown)
                 
-                // Simpan ke database
                 new query[256];
                 mysql_format(g_SQL, query, sizeof(query), 
-                    "UPDATE vehicle SET insu='%d', claim='%d', claimtime='%d' WHERE id='%d'", 
+                    "UPDATE vehicle SET insu='%d', claim='%d', claim_time='%d' WHERE id='%d'", 
                     pvData[ii][cInsu], pvData[ii][cClaim], pvData[ii][cClaimTime], pvData[ii][cID]);
                 mysql_tquery(g_SQL, query);
                 
-                // Notify owner
                 foreach(new pid : Player) 
                 {
                     if(pvData[ii][cOwner] == pData[pid][pID]) 
                     { 
-                        Info(pid, "Your vehicle has been destroyed, claim it at the Insurance Center after 2 hours.", pvData[ii][cInsu]); 
-                        //Info(pid, "You can claim it at the Insurance Center after 2 hours.");
-                        break; // Keluar setelah ketemu owner
+                        Custom(pid, "VEHICLE: "WHITE_E"Your vehicle has been destroyed, claim it at the Insurance Center after 1 hours."); 
+                        break;
                     } 
                 }
                 
-                // Destroy vehicle
                 if(IsValidVehicle(pvData[ii][cVeh])) 
                     DestroyVehicle(pvData[ii][cVeh]); 
                 pvData[ii][cVeh] = 0; 
             } 
-            else // Tidak ada insurance
+            else 
             { 
-                // Notify owner dan hapus vehicle
                 foreach(new pid : Player) 
                 {
                     if(pvData[ii][cOwner] == pData[pid][pID]) 
                     { 
-                        Info(pid, "Your vehicle has been destroyed and you have no insurance left!"); 
-                       // Info(pid, "The vehicle has been permanently removed from your account.");
-                        break; // Keluar setelah ketemu owner
+                        Custom(pid, "VEHICLE: "WHITE_E"Your vehicle has been destroyed and you have no insurance left!"); 
+                        break;
                     } 
                 }
                 
-                // Hapus dari database
                 new query[128]; 
                 mysql_format(g_SQL, query, sizeof(query), "DELETE FROM vehicle WHERE id = '%d'", pvData[ii][cID]); 
                 mysql_tquery(g_SQL, query); 
                 
-                // Destroy vehicle
                 if(IsValidVehicle(pvData[ii][cVeh])) 
                     DestroyVehicle(pvData[ii][cVeh]); 
                 
-                // Remove dari iterator
                 pvData[ii][cVeh] = 0;
-                Iter_Remove(PVehicles, ii); // FIXED: Pakai Iter_Remove bukan Iter_SafeRemove
+                Iter_Remove(PVehicles, ii);
             } 
             
-            break; // FIXED: Keluar dari loop setelah ketemu vehicleid yang cocok
+            break;
         } 
     } 
     
-    // System Vehicle Admin 
     if(AdminVehicle{vehicleid}) 
     { 
         DestroyVehicle(vehicleid); 
@@ -7430,12 +7675,24 @@ ptask PlayerUpdate[999](playerid)
 		{
 			pData[playerid][pJail] = 0;
 			pData[playerid][pJailTime] = 0;
-			//SpawnPlayer(playerid);
 			SetPlayerPositionEx(playerid, 1482.0356,-1724.5726,13.5469,750, 2000);
 			SetPlayerInterior(playerid, 0);
 			SetPlayerVirtualWorld(playerid, 0);
 			SetPlayerSpecialAction(playerid, SPECIAL_ACTION_NONE);
-			SendClientMessageToAllEx(COLOR_ADMCMD, "Server: "WHITE_E" %s(%d) have been un-jailed by the server. (times up)", pData[playerid][pName], playerid);
+			
+			// ✅ Cek apakah player masih AFK
+			if(pData[playerid][pAFK] == 1)
+			{
+				// Masih AFK, freeze lagi
+				TogglePlayerControllable(playerid, false);
+			}
+			else
+			{
+				// Tidak AFK, unfreeze normal
+				TogglePlayerControllable(playerid, true);
+			}
+			
+			SendClientMessageToAllEx(COLOR_ADMCMD, "Server: %s(%d) have been un-jailed by the server. (times up)", pData[playerid][pName], playerid);
 		}
 	}
 	//Arreset Player
@@ -7460,6 +7717,66 @@ ptask PlayerUpdate[999](playerid)
 			Info(playerid, "You have been auto release. (times up)");
 		}
 	}
+}
+
+forward CountdownFailJob(playerid, vehicleid);
+public CountdownFailJob(playerid, vehicleid)
+{
+    // Tampilkan countdown
+    if(pData[playerid][pFailSideJobCountdown] > 0)
+    {
+        new string[128];
+        format(string, sizeof(string), "Return to vehicle in %d seconds", pData[playerid][pFailSideJobCountdown]);
+        InfoTD_MSG(playerid, 1100, string);
+        
+        pData[playerid][pFailSideJobCountdown]--;
+    }
+    else
+    {
+        // Waktu habis, fail sidejob
+        KillTimer(pData[playerid][pFailSideJobTimer]);
+        pData[playerid][pFailSideJobTimer] = 0;
+        
+        //GameTextForPlayer(playerid, "~r~Sidejob Gagal!", 3000, 6);
+        
+        new model = GetVehicleModel(vehicleid);
+
+        if(pData[playerid][pSweeper] > 0 && model == 574)
+        {
+            pData[playerid][pSweeper] = 0;
+            Custom(playerid, "SIDEJOB: "WHITE_E"Sidejob Sweeper gagal karena kamu keluar dari kendaraan.");
+            SweeperRouteAUsed = 0;
+            SweeperRouteBUsed = 0;
+            SweeperRouteCUsed = 0;
+        }
+
+        if(pData[playerid][pBus] > 0 && model == 431)
+        {
+            pData[playerid][pBus] = 0;
+            Custom(playerid, "SIDEJOB: "WHITE_E"Sidejob Bus gagal karena kamu keluar dari kendaraan.");
+            BusRouteAUsed = 0;
+            BusRouteBUsed = 0;
+        }
+
+        if(pData[playerid][pMower] > 0 && model == 572)
+        {
+            pData[playerid][pMower] = 0;
+            Custom(playerid, "SIDEJOB: "WHITE_E"Sidejob Mower gagal karena kamu keluar dari kendaraan.");
+        }
+
+        pData[playerid][pSideJob] = 0;
+        pData[playerid][pCheckPoint] = CHECKPOINT_NONE;
+        DisablePlayerRaceCheckpoint(playerid);
+        PlayerUsingSweeperRoute[playerid] = 0;
+        PlayerUsingBusRoute[playerid] = 0;
+
+        if(vehicleid > 0)
+        {
+            SetTimerEx("RespawnPV", 1000, false, "d", vehicleid);
+        }
+    }
+    
+    return 1;
 }
 
 forward AppuieJump(playerid);
@@ -7507,7 +7824,6 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[]) {
 
 public OnPlayerExitVehicle(playerid, vehicleid)
 {
-	
     if(pData[playerid][pDriveLicApp] > 0)
 	{
 		//new vehicleid = GetPlayerVehicleID(playerid);
@@ -7522,9 +7838,16 @@ public OnPlayerExitVehicle(playerid, vehicleid)
 		}
 	}
 
-	FailSideJob(playerid, vehicleid);
+ 	// Panggil FailSideJob
+    FailSideJob(playerid, vehicleid);
 
-	return 1;
+    return 1;
+}
+
+forward LowerPlayerToGround(playerid, Float:x, Float:y, Float:z);
+public LowerPlayerToGround(playerid, Float:x, Float:y, Float:z)
+{
+    SetPlayerPosFindZ(playerid, x, y, z);
 }
 
 public OnPlayerClickMap(playerid, Float:fX, Float:fY, Float:fZ)
@@ -7541,11 +7864,6 @@ public OnPlayerClickMap(playerid, Float:fX, Float:fY, Float:fZ)
             "Apakah Anda ingin teleport ke lokasi yang ditandai di peta?", "Ya", "Tidak");
     }
     return 1;
-}
-forward LowerPlayerToGround(playerid, Float:x, Float:y, Float:z);
-public LowerPlayerToGround(playerid, Float:x, Float:y, Float:z)
-{
-    SetPlayerPosFindZ(playerid, x, y, z);
 }
 
 // buat kirim log ke discord
@@ -7620,9 +7938,15 @@ stock SendDiscordMessage(channel, message[]) {
 			DCC_SendChannelMessage(ChannelId, message);
 			return 1;
 		}
-		case 10: //cmd admin di discord
+		case 10: //ketik cmd admin di discord
 		{
 			ChannelId = DCC_FindChannelById("1444800090827915375");
+			DCC_SendChannelMessage(ChannelId, message);
+			return 1;
+		}
+		case 11:
+		{
+			ChannelId = DCC_FindChannelById("1452861870863028376");
 			DCC_SendChannelMessage(ChannelId, message);
 			return 1;
 		}
@@ -7687,7 +8011,7 @@ public OnPlayerSelectionMenuResponse(playerid, extraid, response, listitem, mode
 				pData[playerid][pSkin] = modelid;
 				SetPlayerSkin(playerid, modelid);
 				GivePlayerMoneyEx(playerid, -price);
-				SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s telah membeli skin ID %d seharga $%s", ReturnName(playerid), modelid, FormatMoney(price));
+				SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s telah membeli skin ID %d seharga %s", ReturnName(playerid), modelid, FormatMoney(price));
 				bData[bizid][bProd]--;
 				bData[bizid][bMoney] += Server_Percent(price);
 				Server_AddPercent(price);
@@ -7711,7 +8035,7 @@ public OnPlayerSelectionMenuResponse(playerid, extraid, response, listitem, mode
 				pData[playerid][pSkin] = modelid;
 				SetPlayerSkin(playerid, modelid);
 				GivePlayerMoneyEx(playerid, -price);
-				SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s telah membeli skin ID %d seharga $%s", ReturnName(playerid), modelid, FormatMoney(price));
+				SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s telah membeli skin ID %d seharga %s", ReturnName(playerid), modelid, FormatMoney(price));
 				bData[bizid][bProd]--;
 				bData[bizid][bMoney] += Server_Percent(price);
 				Server_AddPercent(price);
@@ -7858,7 +8182,7 @@ public OnPlayerSelectionMenuResponse(playerid, extraid, response, listitem, mode
 				strcat(finstring, "\n"dot"Right calf\n"dot"Left calf\n"dot"Left forearm\n"dot"Right forearm\n"dot"Left clavicle\n"dot"Right clavicle\n"dot"Neck\n"dot"Jaw");
 				ShowPlayerDialog(playerid, DIALOG_TOYPOSISIBUY, DIALOG_STYLE_LIST, ""WHITE_E"Select Bone", finstring, "Select", "Cancel");
 				
-				SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s telah membeli object ID %d seharga $%s", ReturnName(playerid), modelid, FormatMoney(price));
+				SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s telah membeli object ID %d seharga %s", ReturnName(playerid), modelid, FormatMoney(price));
 				bData[bizid][bProd]--;
 				bData[bizid][bMoney] += Server_Percent(price);
 				Server_AddPercent(price);

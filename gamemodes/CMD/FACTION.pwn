@@ -14,7 +14,7 @@ CMD:factionhelp(playerid)
 	{
 		new str[3500];
 		strcat(str, ""LB_E"SAGS: /locker /or (/r)adio /od /d(epartement) (/gov)ernment (/m)egaphone /invite /uninvite /setrank\n");
-		strcat(str, ""WHITE_E"SAGS: /sagsonline /(un)cuff /checkcitymoney\n");
+		strcat(str, ""WHITE_E"SAGS: /sagsonline /(un)cuff /checkcitymoney /confiscate\n");
 		strcat(str, ""WHITE_E"NOTE: Lama waktu duty anda akan menjadi gaji anda pada saat paycheck!\n");
 		ShowPlayerDialog(playerid, DIALOG_UNUSED, DIALOG_STYLE_MSGBOX, ""RED_E"SAGS", str, "Close", "");
 	}
@@ -382,8 +382,10 @@ CMD:invite(playerid, params[])
 		
 	pData[otherid][pFacInvite] = pData[playerid][pFaction];
 	pData[otherid][pFacOffer] = playerid;
-	Servers(playerid, "Anda telah menginvite %s untuk menjadi faction.", pData[otherid][pName]);
-	Servers(otherid, "%s telah menginvite anda untuk menjadi faction. Type: /accept faction or /deny faction!", pData[playerid][pName]);
+	SendConfirmation(otherid, playerid, "Faction", 0); // ✅ data = 0
+
+	Info(playerid, "Anda telah menginvite %s untuk menjadi faction.", pData[otherid][pName]);
+
 	new str[150];
 	format(str,sizeof(str),"[FACTION]: %s mengundang %s menjadi fraksi!", GetRPName(playerid), GetRPName(otherid));
 	LogServer("Faction", str);
@@ -409,7 +411,7 @@ CMD:respawncak(playerid, params[])
         // SwitchVehicleDoors(vehicleid, false); // Menutup pintu kendaraan jika diperlukan
 
         // Memberikan pesan kepada pemain
-        SendClientMessage(playerid, COLOR_ARWIN, "VEHICLE:"WHITE_E" Kendaraan Anda telah di despawn");
+        Custom(playerid, "VEHICLE:"WHITE_E" Kendaraan Anda telah di despawn");
     }
     else
     {
@@ -826,7 +828,7 @@ CMD:arrest(playerid, params[])
         return Error(playerid, "The specified cell id can't be below 1 or above 4.");
 		
 	if(denda < 100 || denda > 20000)
-        return Error(playerid, "The specified denda can't be below 100 or above 20,000.");
+        return Error(playerid, "The specified denda can't be below $100.00 or above $20,000.00");
 
     /*if(!IsPlayerNearArrest(playerid))
         return Error(playerid, "You must be near an arrest point.");*/
@@ -840,7 +842,7 @@ CMD:arrest(playerid, params[])
 	SetPlayerArrest(otherid, cellid);
 
     
-    SendClientMessageToAllEx(COLOR_BLUE, "[ARREST]"WHITE_E" %s telah ditangkap dan dipenjarakan oleh polisi selama %d hari dengan denda "GREEN_E"$%s", ReturnName(otherid), times, FormatMoney(denda));
+    SendClientMessageToAllEx(COLOR_BLUE, "[ARREST]"WHITE_E" %s telah ditangkap dan dipenjarakan oleh polisi selama %d hari dengan denda "RED_E"%s", ReturnName(otherid), times, FormatMoney(denda));
     new str[150];
 	format(str,sizeof(str),"[FACTION]: %s mempenjarakan %s selama %d hari dan denda %s!", GetRPName(playerid), GetRPName(otherid), times, FormatMoney(denda));
 	LogServer("Faction", str);
@@ -860,7 +862,7 @@ CMD:getloc(playerid, params[])
 	}
 
 	if(pData[playerid][pSuspectTimer] > 1)
-		return Error(playerid, "Anad harus menunggu %d detik untuk melanjutkan GetLoc",pData[playerid][pSuspectTimer]);
+		return Error(playerid, "Tracking system cooling down. Retry in %d seconds.",pData[playerid][pSuspectTimer]);
 
     if(otherid == INVALID_PLAYER_ID)
         return Error(playerid, "The player is not logged in!");
@@ -868,8 +870,8 @@ CMD:getloc(playerid, params[])
 	if(otherid == playerid)
 		return Error(playerid, "You cant getloc yourself!");
 
-	if(pData[otherid][pPhone] == 0) return Error(playerid, "Player tersebut belum memiliki Ponsel");
-	if(pData[otherid][pPhoneStatus] == 0) return Error(playerid, "Tidak dapat mendeteksi lokasi, Ponsel tersebut yang dituju sedang Offline");
+	if(pData[otherid][pPhone] == 0) return Error(playerid, "Player not have a phone.");
+	if(pData[otherid][pPhoneStatus] == 0) return Error(playerid, "Tracking failed. The target phone is currently offline.");
 
     new zone[MAX_ZONE_NAME];
 	GetPlayer3DZone(otherid, zone, sizeof(zone));
@@ -877,10 +879,9 @@ CMD:getloc(playerid, params[])
 	GetPlayerPos(otherid, sX, sY, sZ);
 	SetPlayerCheckpoint(playerid, sX, sY, sZ, 5.0);
 	pData[playerid][pSuspectTimer] = 120;
-	Info(playerid, "Target Nama : %s", pData[otherid][pName]);
-	//Info(playerid, "Target Akun Twitter : %s", pData[otherid][pTwittername]);
-	Info(playerid, "Lokasi : %s", zone);
-	Info(playerid, "Nomer Telepon : %d", pData[otherid][pPhone]);
+
+	Custom(playerid, "DISPATCH: "WHITE_E"%s is currently located at %s. Contact number: %d", pData[otherid][pName], zone, pData[otherid][pPhone]);
+	
 	return 1;
 }
 
@@ -1070,6 +1071,7 @@ CMD:takemarijuana(playerid, params[])
         return Error(playerid, "The specified player is disconnected or not near you.");
 		
 	pData[otherid][pMarijuana] = 0;
+
 	Info(playerid, "You have taken all of %s marijuana.", ReturnName(otherid));
 	Info(otherid, "Officer %s has taken all your marijuana.", ReturnName(playerid));
 	return 1;
@@ -1144,9 +1146,106 @@ CMD:checkcitymoney(playerid, params)
 		return Error(playerid, "Kamu harus memiliki peringkat tertinggi!");
 
 	new lstr[300];
-	format(lstr, sizeof(lstr), "City Money: {3BBD44}$%s", FormatMoney(ServerMoney));
+	format(lstr, sizeof(lstr), "City Money: {3BBD44}%s", FormatMoney(ServerMoney));
 	ShowPlayerDialog(playerid, DIALOG_SERVERMONEY, DIALOG_STYLE_MSGBOX, "Valencia City Money", lstr, "Manage", "Close");
 	return 1;
+}
+
+CMD:confiscate(playerid, params[])
+{
+    if(pData[playerid][pFaction] != 2)
+        return Error(playerid, "You must be a SAGS officer.");
+    
+    if(pData[playerid][pFactionRank] < 5)
+        return Error(playerid, "You must have the highest rank!");
+    
+    new bid;
+    if(sscanf(params, "d", bid))
+        return Usage(playerid, "/confiscate [bisnis id]");
+
+    if(IsPlayerInRangeOfPoint(playerid, 2.5, bData[bid][bExtposX], bData[bid][bExtposY], bData[bid][bExtposZ]))
+		return Error(playerid, "You are not near the business");
+
+    if(!Iter_Contains(Bisnis, bid))
+        return Error(playerid, "Invalid business ID.");
+    
+    if(!strcmp(bData[bid][bOwner], "-", true))
+        return Error(playerid, "This business has no owner.");
+    
+    // Toggle sistem
+    if(bData[bid][bLocked] == 2)
+    {
+        // Unconfiscate
+        bData[bid][bLocked] = 1;
+        
+        new query[128];
+        mysql_format(g_SQL, query, sizeof(query), "UPDATE bisnis SET locked='1' WHERE ID='%d'", bid);
+        mysql_tquery(g_SQL, query);
+        
+        Bisnis_Refresh(bid);
+        
+        Info(playerid, "Business ID %d (%s) has been released back to owner %s.", bid, bData[bid][bName], bData[bid][bOwner]);
+        
+        // Log
+        new logstr[256];
+        format(logstr, sizeof(logstr), "[UNSITA BIZ] %s released business ID %d back to owner %s", pData[playerid][pName], bid, bData[bid][bOwner]);
+        LogServer("Business", logstr);
+        
+        // Notif owner
+        foreach(new i : Player)
+        {
+            if(pData[i][pID] == bData[bid][bOwnerID])
+            {
+                Info(i, "Your business '%s' (ID: %d) has been released by the government.", bData[bid][bName], bid);
+                break;
+            }
+        }
+    }
+    else
+    {
+        // Confiscate - tampilkan konfirmasi
+        SetPVarInt(playerid, "ConfiscateBisnisID", bid);
+        
+        new str[512];
+        format(str, sizeof(str), "{FFFFFF}Are you sure you want to confiscate this business?\n\nBusiness ID: {FFFF00}%d\n{FFFFFF}Name: {FFFF00}%s\n{FFFFFF}Owner: {FFFF00}%s\n{FFFFFF}Type: {FFFF00}%s\n{FFFFFF}Money: {00FF00}%s\n{FFFFFF}Product: {FFFF00}%d\n\n{FF0000}Warning: Business will be locked and owner cannot access it!", 
+            bid, bData[bid][bName], bData[bid][bOwner], GetBisnisTypeName(bid), FormatMoney(bData[bid][bMoney]), bData[bid][bProd]
+        );
+        ShowPlayerDialog(playerid, DIALOG_CONFISCATE_BISNIS, DIALOG_STYLE_MSGBOX, "Confiscate Business Confirmation", str, "Confiscate", "Cancel");
+    }
+    
+    return 1;
+}
+
+// Command untuk cek daftar bisnis yang disita
+CMD:listconfiscate(playerid, params[])
+{
+    if(pData[playerid][pFaction] != 2)
+        return Error(playerid, "You must be a SAGS officer.");
+    
+    new str[2048], count = 0, temp[256];
+    strcat(str, "ID\tName\tOwner\tType\n");
+    
+    foreach(new i : Bisnis)
+    {
+        if(bData[i][bLocked] == 2) // Locked by government
+        {
+            count++;
+            format(temp, sizeof(temp), "%d\t%s\t%s\t%s\n",
+                i,
+                bData[i][bName],
+                bData[i][bOwner],
+                GetBisnisTypeName(i)
+            );
+            strcat(str, temp);
+        }
+    }
+    
+    if(count == 0)
+        return Error(playerid, "No confiscated businesses found.");
+    
+    ShowPlayerDialog(playerid, DIALOG_UNUSED, DIALOG_STYLE_TABLIST_HEADERS, "Confiscated Businesses", str, "Close", "");
+    
+    return 1;
 }
 
 //SAMD Commands
@@ -1751,25 +1850,25 @@ public DutyHour(playerid)
 	{
 		if(pData[playerid][pFaction] == 1)
 		{
-			AddPlayerSalary(playerid, "Duty(SAPD)", 150000);
+			AddPlayerSalary(playerid, "Duty(SAPD)", 300000);
 			pData[playerid][pDutyHour] = 0;
 			Servers(playerid, "Anda telah Duty selama 1 Jam dan Anda mendapatkan Pending Salary anda");
 		}
 		else if(pData[playerid][pFaction] == 2)
 		{
-			AddPlayerSalary(playerid, "Duty(SAGS)", 150000);
+			AddPlayerSalary(playerid, "Duty(SAGS)", 300000);
 			pData[playerid][pDutyHour] = 0;
 			Servers(playerid, "Anda telah Duty selama 1 Jam dan Anda mendapatkan Pending Salary anda");
 		}
 		else if(pData[playerid][pFaction] == 3)
 		{
-			AddPlayerSalary(playerid, "Duty(SAMD)", 150000);
+			AddPlayerSalary(playerid, "Duty(SAMD)", 300000);
 			pData[playerid][pDutyHour] = 0;
 			Servers(playerid, "Anda telah Duty selama 1 Jam dan Anda mendapatkan Pending Salary anda");
 		}
 		else if(pData[playerid][pFaction] == 4)
 		{
-			AddPlayerSalary(playerid, "Duty(SANEWS)", 150000);
+			AddPlayerSalary(playerid, "Duty(SANEWS)", 300000);
 			pData[playerid][pDutyHour] = 0;
 			Servers(playerid, "Anda telah Duty selama 1 Jam dan Anda mendapatkan Pending Salary anda");
 		}

@@ -48,11 +48,11 @@ DisplaySalary(playerid)
 		format(list, sizeof(list), ""WHITE_E"Date\tInfo\tAmmount\n");
 		if(pData[playerid][pFaction] >= 1)
 		{
-			format(list, sizeof(list), "%sCurrent Time\tFaction\t"LG_E"$%s\n", list, FormatMoney(gajiduty));
+			format(list, sizeof(list), "%sCurrent Time\tFaction\t"LG_E"%s\n", list, FormatMoney(gajiduty));
 		}
 		if(pData[playerid][pJob] == 1 || pData[playerid][pJob2] == 1)
 		{
-			format(list, sizeof(list), "%s"WHITE_E"Current Time\tTaxi Duty\t"LG_E"$%s\n", list, FormatMoney(gajiduty));
+			format(list, sizeof(list), "%s"WHITE_E"Current Time\tTaxi Duty\t"LG_E"%s\n", list, FormatMoney(gajiduty));
 		}
 		for(new i; i < rows; ++i)
 	    {
@@ -60,11 +60,11 @@ DisplaySalary(playerid)
 			cache_get_value_name(i, "date", date);
 			cache_get_value_name_int(i, "money", money);
 			
-			format(list, sizeof(list), "%s"WHITE_E"%s\t%s\t"LG_E"$%s\n", list, date, info, FormatMoney(money));
+			format(list, sizeof(list), "%s"WHITE_E"%s\t%s\t"LG_E"%s\n", list, date, info, FormatMoney(money));
 			totalsal += money;
 		}
 		total = gajiduty + totalsal;
-		format(list, sizeof(list), "%s"WHITE_E"     \tTotal:\t"LG_E"$%s\n", list, FormatMoney(total));
+		format(list, sizeof(list), "%s"WHITE_E"     \tTotal:\t"LG_E"%s\n", list, FormatMoney(total));
 		
 		new title[48];
 		format(title, sizeof(title), "Salary: %s", pData[playerid][pName]);
@@ -86,13 +86,13 @@ DisplaySalary(playerid)
 		format(list, sizeof(list), ""WHITE_E"Date\tInfo\tAmmount\n");
 		if(pData[playerid][pFaction] >= 1)
 		{
-			format(list, sizeof(list), "%sCurrent Time\tFaction\t"LG_E"$%s\n", list, FormatMoney(gajiduty));
+			format(list, sizeof(list), "%sCurrent Time\tFaction\t"LG_E"%s\n", list, FormatMoney(gajiduty));
 		}
 		if(pData[playerid][pJob] == 1 || pData[playerid][pJob2] == 1)
 		{
-			format(list, sizeof(list), "%s"WHITE_E"Current Time\tTaxi Duty\t"LG_E"$%s\n", list, FormatMoney(gajiduty));
+			format(list, sizeof(list), "%s"WHITE_E"Current Time\tTaxi Duty\t"LG_E"%s\n", list, FormatMoney(gajiduty));
 		}
-		format(list, sizeof(list), "%s"WHITE_E"     \tTotal:\t"LG_E"$%s\n", list, FormatMoney(gajiduty));
+		format(list, sizeof(list), "%s"WHITE_E"     \tTotal:\t"LG_E"%s\n", list, FormatMoney(gajiduty));
 		
 		new title[48];
 		format(title, sizeof(title), "Salary: %s", pData[playerid][pName]);
@@ -124,11 +124,11 @@ DisplayPaycheck(playerid)
 		format(list, sizeof(list), ""WHITE_E"Date\tInfo\tAmmount\n");
 		if(pData[playerid][pFaction] >= 1)
 		{
-			format(list, sizeof(list), "%sCurrent Time\tFaction\t"LG_E"$%s\n", list, FormatMoney(gajiduty));
+			format(list, sizeof(list), "%sCurrent Time\tFaction\t"LG_E"%s\n", list, FormatMoney(gajiduty));
 		}
 		if(pData[playerid][pJob] == 1 || pData[playerid][pJob2] == 1)
 		{
-			format(list, sizeof(list), "%s"WHITE_E"Current Time\tTaxi Duty\t"LG_E"$%s\n", list, FormatMoney(gajiduty));
+			format(list, sizeof(list), "%s"WHITE_E"Current Time\tTaxi Duty\t"LG_E"%s\n", list, FormatMoney(gajiduty));
 		}
 		for(new i; i < rows; ++i)
 	    {
@@ -136,14 +136,14 @@ DisplayPaycheck(playerid)
 			cache_get_value_name(i, "date", date);
 			cache_get_value_name_int(i, "money", money);
 			
-			format(list, sizeof(list), "%s"WHITE_E"%s\t%s\t"LG_E"$%s\n", list, date, info, FormatMoney(money));
+			format(list, sizeof(list), "%s"WHITE_E"%s\t%s\t"LG_E"%s\n", list, date, info, FormatMoney(money));
 			totalsal += money;
 		}
 		total = gajiduty + totalsal;
 		pajak = total / 100 * 10;
 		hasil = total - pajak;
 		format(list, sizeof(list), "%s"WHITE_E"     \tTax:\t"RED_E"%s\n", list, FormatMoney(pajak));
-		format(list, sizeof(list), "%s"WHITE_E"     \tTotal:\t"LG_E"$%s\n", list, FormatMoney(hasil));
+		format(list, sizeof(list), "%s"WHITE_E"     \tTotal:\t"LG_E"%s\n", list, FormatMoney(hasil));
 		new title[48];
 		format(title, sizeof(title), "Paycheck: %s", pData[playerid][pName]);
 		ShowPlayerDialog(playerid, DIALOG_PAYCHECK, DIALOG_STYLE_TABLIST_HEADERS, title, list, "Get", "Close");
@@ -164,18 +164,18 @@ DisplayPaycheck(playerid)
 		format(list, sizeof(list), ""WHITE_E"Date\tInfo\tAmmount\n");
 		if(pData[playerid][pFaction] >= 1)
 		{
-			format(list, sizeof(list), "%sCurrent Time\tFaction\t"LG_E"$%s\n", list, FormatMoney(gajiduty));
+			format(list, sizeof(list), "%sCurrent Time\tFaction\t"LG_E"%s\n", list, FormatMoney(gajiduty));
 		}
 		if(pData[playerid][pJob] == 1 || pData[playerid][pJob2] == 1)
 		{
-			format(list, sizeof(list), "%s"WHITE_E"Current Time\tTaxi Duty\t"LG_E"$%s\n", list, FormatMoney(gajiduty));
+			format(list, sizeof(list), "%s"WHITE_E"Current Time\tTaxi Duty\t"LG_E"%s\n", list, FormatMoney(gajiduty));
 		}
 		
 		total = gajiduty;
 		pajak = total / 100 * 10;
 		hasil = total - pajak;
 		format(list, sizeof(list), "%s"WHITE_E"     \tTax:\t"RED_E"%s\n", list, FormatMoney(pajak));
-		format(list, sizeof(list), "%s"WHITE_E"     \tTotal:\t"LG_E"$%s\n", list, FormatMoney(hasil));
+		format(list, sizeof(list), "%s"WHITE_E"     \tTotal:\t"LG_E"%s\n", list, FormatMoney(hasil));
 		new title[48];
 		format(title, sizeof(title), "Paycheck: %s", pData[playerid][pName]);
 		ShowPlayerDialog(playerid, DIALOG_PAYCHECK, DIALOG_STYLE_TABLIST_HEADERS, title, list, "Get", "Close");

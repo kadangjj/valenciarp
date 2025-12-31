@@ -31,6 +31,7 @@ new Float:ForklifterAB[][] = //Ambil Box
 	{2472.3818, -2566.6160, 13.6514, 2472.3818, -2566.6160, 13.6514, 3.0},
 	{2769.2969, -2528.6450, 13.6391, 2769.2969, -2528.6450, 13.6391, 3.0}
 };
+
 new Float:ForklifterTB[][] = //Taruh Box
 {
     {2794.8391, -2451.0833, 13.3937, 2794.8391, -2451.0833, 13.3937, 3.0},
@@ -44,7 +45,6 @@ new Float:ForklifterTB[][] = //Taruh Box
 	{2795.4946, -2460.9917, 13.6318, 2795.4946, -2460.9917, 13.6318, 3.0},
 	{2779.5471, -2412.6257, 13.6357, 2779.5471, -2412.6257, 13.6357, 3.0},
 	{2794.9368, -2412.8442, 13.6319, 2794.9368, -2412.8442, 13.6319, 3.0}
-
 };
 
 function ForklifterLoadBox(playerid)
@@ -52,24 +52,34 @@ function ForklifterLoadBox(playerid)
 	new vehicleid = GetPlayerVehicleID(playerid), rand = random(sizeof(ForklifterTB));
 	if(!IsPlayerConnected(playerid)) return 0;
 	if(pData[playerid][pForklifterLoadStatus] != 1) return 0;
+	
 	if(pData[playerid][pActivityTime] >= 100)
 	{
 		TogglePlayerControllable(playerid, 1);
-		InfoTD_MSG(playerid, 3000, "Loaded!");
+		InfoTD_MSG(playerid, 3000, "Box berhasil dimuat ke forklift!");
 		KillTimer(pData[playerid][pForklifterLoad]);
 		pData[playerid][pForklifterLoadStatus] = 0;
 		pData[playerid][pActivityTime] = 0;
+		
+		// Buat box object di forklift
 		VehicleObject[vehicleid] = CreateDynamicObject(1220, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
 		AttachDynamicObjectToVehicle(VehicleObject[vehicleid], vehicleid, 0.0, 0.6, 0.28, 0.0, 0.0, 0.0);
+		
 		HidePlayerProgressBar(playerid, pData[playerid][activitybar]);
 		PlayerTextDrawHide(playerid, ActiveTD[playerid]);
 		DisablePlayerRaceCheckpoint(playerid);
+		
+		// Set checkpoint untuk unload box
 		SetPlayerRaceCheckpoint(playerid, 1, ForklifterTB[rand][0], ForklifterTB[rand][1], ForklifterTB[rand][2], ForklifterTB[rand][3], ForklifterTB[rand][4], ForklifterTB[rand][5], ForklifterTB[rand][6]);
+		InfoTD_MSG(playerid, 5000, "Bawa box ke tempat penyimpanan!");
 	}
 	else if(pData[playerid][pActivityTime] < 100)
 	{
-		pData[playerid][pActivityTime] += 13;
+		// Progress smooth: 2% per tick
+		// Dengan timer 250ms = total waktu 12.5 detik (balance antara cepat dan realistis)
+		pData[playerid][pActivityTime] += 2;
 		SetPlayerProgressBarValue(playerid, pData[playerid][activitybar], pData[playerid][pActivityTime]);
+		
 	}
 	return 0;	
 }
@@ -79,23 +89,32 @@ function ForklifterUnLoadBox(playerid)
 	new vehicleid = GetPlayerVehicleID(playerid), rand = random(sizeof(ForklifterAB));
 	if(!IsPlayerConnected(playerid)) return 0;
 	if(pData[playerid][pForklifterUnLoadStatus] != 1) return 0;
+	
 	if(pData[playerid][pActivityTime] >= 100)
 	{
 		TogglePlayerControllable(playerid, 1);
-		InfoTD_MSG(playerid, 3000, "Unloaded!");
+
 		KillTimer(pData[playerid][pForklifterUnLoad]);
 		pData[playerid][pForklifterUnLoadStatus] = 0;
 		pData[playerid][pActivityTime] = 0;
+		
+		// Hapus box object
 		DestroyDynamicObject(VehicleObject[vehicleid]);
 		VehicleObject[vehicleid] = INVALID_OBJECT_ID;
+		
 		HidePlayerProgressBar(playerid, pData[playerid][activitybar]);
 		PlayerTextDrawHide(playerid, ActiveTD[playerid]);
 		DisablePlayerRaceCheckpoint(playerid);
+		
+		// Set checkpoint baru untuk ambil box lagi
 		SetPlayerRaceCheckpoint(playerid, 2, ForklifterAB[rand][0], ForklifterAB[rand][1], ForklifterAB[rand][2], ForklifterAB[rand][3], ForklifterAB[rand][4], ForklifterAB[rand][5], ForklifterAB[rand][6]);
+		InfoTD_MSG(playerid, 5000, "Pergi ke lokasi pengambilan box berikutnya!");
 	}
 	else if(pData[playerid][pActivityTime] < 100)
 	{
-		pData[playerid][pActivityTime] += 15;
+		// Progress smooth: 3% per tick (lebih cepat dari loading)
+		// Dengan timer 250ms = total waktu 8.3 detik (unload lebih cepat)
+		pData[playerid][pActivityTime] += 3;
 		SetPlayerProgressBarValue(playerid, pData[playerid][activitybar], pData[playerid][pActivityTime]);
 	}
 	return 0;

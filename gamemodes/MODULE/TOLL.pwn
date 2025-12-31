@@ -1,7 +1,7 @@
 #define BARRIER_SPEED 	0.030
 #define TEAM_NONE       (0)
 #define BARRIER_COUNT   10
-#define Toll(%1,%2) SendClientMessage(%1, COLOR_YELLOW , "TOLL: "WHITE_E""%2)
+#define Toll(%1,%2) SendClientMessage(%1, COLOR_ARWIN , "TOLL: "WHITE_E""%2)
 
 new gBarrier[10];
 

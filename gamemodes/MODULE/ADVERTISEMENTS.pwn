@@ -45,7 +45,7 @@ Advertisement_Create(playerid, number, type, content[]) {
     GivePlayerMoneyEx(playerid, -payout);
    // bfsanews += payout;
     Server_AddMoney(payout);
-    SendClientMessageEx(playerid, COLOR_WHITE, "ADVERT: "WHITE_E"You've paid {00FF00}$%s.00 {FFFFFF}(%d letters) for the advertisement", FormatMoney(payout), strlen(content));
+    SendClientMessageEx(playerid, COLOR_WHITE, "ADVERT: "WHITE_E"You've paid {00FF00}%s.00 {FFFFFF}(%d letters) for the advertisement", FormatMoney(payout), strlen(content));
     SendClientMessageEx(playerid, COLOR_WHITE, "ADVERT: "WHITE_E"Your advertisement has been added to the queue and it'll be displayed in {FFFF00}%d minute(s)", AdsQueue[index][adsMinutes]/60);
     return 1;
 }

@@ -26,7 +26,7 @@ GStation_Refresh(gsid)
         static
         string[255];
 
-		format(string, sizeof(string), "[GAS STATION ID: %d]\n"WHITE_E"Gas Stock: "YELLOW_E"%d liters\n"WHITE_E"Price: "LG_E"$%s /liters\n\n"WHITE_E"Type '"RED_E"/fill"WHITE_E"' to refill", gsid, gsData[gsid][gsStock], FormatMoney(GStationPrice));
+		format(string, sizeof(string), "[GAS STATION ID: %d]\n"WHITE_E"Gas Stock: "YELLOW_E"%d liters\n"WHITE_E"Price: "LG_E"%s /liters\n\n"WHITE_E"Type '"RED_E"/fill"WHITE_E"' to refill", gsid, gsData[gsid][gsStock], FormatMoney(GStationPrice));
 		gsData[gsid][gsPickup] = CreateDynamicPickup(1650, 23, gsData[gsid][gsPosX], gsData[gsid][gsPosY], gsData[gsid][gsPosZ]+0.2, -1, -1, -1, 50.0);
 		gsData[gsid][gsLabel] = CreateDynamic3DTextLabel(string, COLOR_GREEN, gsData[gsid][gsPosX], gsData[gsid][gsPosY], gsData[gsid][gsPosZ]+0.5, 5.5);
 	}
@@ -257,9 +257,10 @@ CMD:fill(playerid, params[])
 			// Animasi pegang nozzle
 			ApplyAnimation(playerid, "BD_FIRE", "wash_up", 4.1, 0, 0, 0, 0, 0, 1);
 			SetPlayerAttachedObject(playerid, 9, 19819, 6, 0.095, 0.03, -0.01, 0.0, 90.0, 90.0, 1.0, 1.0, 1.0); // Nozzle
+			TogglePlayerControllable(playerid, false);
 			
-			// Mulai timer filling dengan progress bar
-			pData[playerid][pFillTime] = SetTimerEx("Filling", 1000, true, "i", playerid);
+			// Mulai timer filling dengan progress bar (250ms untuk smooth)
+			pData[playerid][pFillTime] = SetTimerEx("Filling", 250, true, "i", playerid);
 			PlayerTextDrawSetString(playerid, ActiveTD[playerid], "Filling...");
 			PlayerTextDrawShow(playerid, ActiveTD[playerid]);
 			ShowPlayerProgressBar(playerid, pData[playerid][activitybar]);
@@ -295,7 +296,7 @@ function Filling(playerid)
 		return 1;
 	}
 	
-	// Validasi: Uang cukup
+	// Validasi: Uang cukup untuk continue
 	if(GetPlayerMoney(playerid) < GStationPrice)
 	{
 		Error(playerid, "Not enough money to continue filling!");
@@ -312,7 +313,7 @@ function Filling(playerid)
 	}
 	
 	// Validasi: Stock gas station
-	if(gsData[gsid][gsStock] < 10)
+	if(gsData[gsid][gsStock] < 1)
 	{
 		Error(playerid, "Gas station is out of stock!");
 		StopFilling(playerid);
@@ -331,41 +332,75 @@ function Filling(playerid)
 		pData[playerid][pActivityTime] = floatround(progress);
 		SetPlayerProgressBarValue(playerid, pData[playerid][activitybar], pData[playerid][pActivityTime]);
 		
-		// Proses isi bensin
-		new Float:newfuel = currentFuel + 50.0; // +50 liter per detik
+		// Proses isi bensin dengan rate realistis
+		// 12.5 liter per tick (dengan timer 250ms = 50 liter/detik)
+		// Total waktu untuk full tank (1000 liter) = 20 detik
+		new Float:fillRate = 12.5;
+		new Float:newfuel = currentFuel + fillRate;
+		
+		// Feedback sound effect setiap detik (setiap 4 tick)
+		static tickCount[MAX_PLAYERS];
+		tickCount[playerid]++;
+		
 		
 		// Cek jika sudah penuh atau akan penuh
 		if(newfuel >= 1000.0)
 		{
 			newfuel = 1000.0;
 			SetVehicleFuel(vehid, floatround(newfuel));
-			pData[playerid][pFillPrice] += GStationPrice;
-			gsData[gsid][gsStock] -= 10;
+			
+			// Hitung biaya final untuk sisa fuel
+			new Float:lastFill = newfuel - currentFuel;
+			new lastPrice = floatround((lastFill / 10.0) * GStationPrice);
+			pData[playerid][pFillPrice] += lastPrice;
+			
+			// Update stock
+			new stockUsed = floatround(lastFill / 10.0);
+			gsData[gsid][gsStock] -= stockUsed;
 			
 			// Set progress ke 100
 			pData[playerid][pActivityTime] = 100;
 			SetPlayerProgressBarValue(playerid, pData[playerid][activitybar], 100);
 			
-			// Auto stop karena penuh
-			InfoTD_MSG(playerid, 8000, "Tank is full!");
 			StopFilling(playerid);
 			return 1;
 		}
 		
-		// Update fuel, price, dan stock
+		// Update fuel normally
 		SetVehicleFuel(vehid, floatround(newfuel));
-		pData[playerid][pFillPrice] += GStationPrice;
-		gsData[gsid][gsStock] -= 10;
+		
+		// Hitung biaya per tick
+		new pricePerTick = floatround((fillRate / 10.0) * GStationPrice);
+		pData[playerid][pFillPrice] += pricePerTick;
+		
+		// Update stock
+		new stockUsed = floatround(fillRate / 10.0);
+		gsData[gsid][gsStock] -= stockUsed;
+		
+		// Update info TD dengan current price
+		new str[128];
+		format(str, sizeof(str), "Filling... ~g~%s", FormatMoney(pData[playerid][pFillPrice]));
+		PlayerTextDrawSetString(playerid, ActiveTD[playerid], str);
 	}
 	else
 	{
 		// Progress sudah 100%, stop filling
-		InfoTD_MSG(playerid, 8000, "Tank is full!");
+		PlayerPlaySound(playerid, 1138, 0.0, 0.0, 0.0); // Sound complete
 		StopFilling(playerid);
 	}
 	
 	return 1;
 }
+
+CMD:stopfill(playerid, params[])
+{
+	if(pData[playerid][pFill] == -1)
+		return Error(playerid, "You are not filling any vehicle!");
+	
+	StopFilling(playerid);
+	return 1;
+}
+
 
 StopFilling(playerid)
 {
@@ -378,7 +413,7 @@ StopFilling(playerid)
 	{
 		GivePlayerMoneyEx(playerid, -pData[playerid][pFillPrice]);
 		//gsData[gsid][gsMoney] += pData[playerid][pFillPrice];
-		Info(playerid, "Vehicle tank is full! You paid "GREEN_E"$%s "WHITE_E"for fuel.", FormatMoney(pData[playerid][pFillPrice]));
+		Info(playerid, "Vehicle tank is full! You paid "GREEN_E"%s "WHITE_E"for fuel.", FormatMoney(pData[playerid][pFillPrice]));
 	}
 	else
 	{
@@ -388,6 +423,7 @@ StopFilling(playerid)
 	// Stop animasi dan hapus object
 	ClearAnimations(playerid);
 	RemovePlayerAttachedObject(playerid, 9);
+	TogglePlayerControllable(playerid, true);
 	
 	// Refresh gas station
 	GStation_Refresh(gsid);

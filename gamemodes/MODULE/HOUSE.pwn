@@ -525,7 +525,7 @@ House_Refresh(houseid)
 		}
         else
         {
-            format(string, sizeof(string), "[ID: %d]\n{00FF00}This house for sell\n{FFFFFF}House Location: {FFFF00}%s\n{FFFFFF}House Type: {FFFF00}%s\n{FFFFFF}House Price: {FFFF00}$%s\n"WHITE_E"Type /buy to purchase", houseid, GetLocation(hData[houseid][hExtposX], hData[houseid][hExtposY], hData[houseid][hExtposZ]), type, FormatMoney(hData[houseid][hPrice]));
+            format(string, sizeof(string), "[ID: %d]\n{00FF00}This house for sell\n{FFFFFF}House Location: {FFFF00}%s\n{FFFFFF}House Type: {FFFF00}%s\n{FFFFFF}House Price: {FFFF00}%s\n"WHITE_E"Type /buy to purchase", houseid, GetLocation(hData[houseid][hExtposX], hData[houseid][hExtposY], hData[houseid][hExtposZ]), type, FormatMoney(hData[houseid][hPrice]));
             hData[houseid][hPickup] = CreateDynamicPickup(19524, 23, hData[houseid][hExtposX], hData[houseid][hExtposY], hData[houseid][hExtposZ]+0.2, 0, 0, _, 50.0);
 			hData[houseid][hPickup2] = CreateDynamicPickup(19130, 23, hData[houseid][hIntposX], hData[houseid][hIntposY], hData[houseid][hIntposZ]+0.2, houseid, hData[houseid][hInt], _, 50.0);
 			hData[houseid][hMapIcon] = CreateDynamicMapIcon(hData[houseid][hExtposX], hData[houseid][hExtposY], hData[houseid][hExtposZ], 31, 1, -1, -1, -1, 45.0);
@@ -824,7 +824,7 @@ CMD:edithouse(playerid, params[])
 		House_Refresh(hid);
 
 		// Kirim pesan konfirmasi kepada admin
-		SendAdminMessage(COLOR_RED, "%s has adjusted the price of house ID: %d to "GREEN_E"$%s", 
+		SendAdminMessage(COLOR_RED, "%s has adjusted the price of house ID: %d to "GREEN_E"%s", 
 		pData[playerid][pAdminname], hid, FormatMoney(strval(totalcash)));
 	}
 	else if(!strcmp(type, "type", true))
@@ -1077,12 +1077,12 @@ CMD:myhouse(playerid)
 	    hid = ReturnPlayerHousesID(playerid, itt);
 		if(hData[hid][hLocked] == 1)
 		{
-			lock = "{FF0000}Dikunci";
+			lock = "{FF0000}Locked";
 		
 		}
 		else
 		{
-			lock = "{00FF00}Dibuka";
+			lock = "{00FF00}Unlocked";
 		}
 		if(itt == count)
 		{

@@ -1,15 +1,23 @@
-//========[ DMV ]===========
-#define dmvpoint1   2016.6686, -1929.8794, 13.1538
-#define dmvpoint2   1838.9573, -1930.4949, 13.2007
-#define dmvpoint3   1766.1115, -1822.3604, 13.2002
-#define dmvpoint4   1641.6093, -1729.6578, 13.2009
-#define dmvpoint5   1431.6963, -1648.9756, 13.1967
-#define dmvpoint6   1600.3162, -1595.3844, 13.2809
-#define dmvpoint7   1845.4076, -1556.2655, 13.1508
-#define dmvpoint8   2005.6715, -1526.2715, 3.2457
-#define dmvpoint9   2079.2603, -1658.3865, 13.2081
-#define dmvpoint10  2079.2976, -1808.6200, 13.2023
-#define dmvpoint11  2069.4094, -1919.2617, 13.3618
+//========[ DMV - Updated Coordinates ]===========
+#define dmvpoint1   2039.3669, -1929.9969, 13.0736
+#define dmvpoint2   1961.4358, -1929.5638, 13.0874
+#define dmvpoint3   1827.2887, -1928.4904, 13.0877
+#define dmvpoint4   1823.2869, -1837.9298, 13.1198
+#define dmvpoint5   1693.1897, -1805.4681, 13.0873
+#define dmvpoint6   1692.4103, -1737.9344, 13.0876
+#define dmvpoint7   1694.5463, -1597.2538, 13.0861
+#define dmvpoint8   1820.3014, -1613.1027, 13.0859
+#define dmvpoint9   1848.9766, -1551.8643, 12.9296
+#define dmvpoint10  1925.4437, -1520.5193, 2.9942
+#define dmvpoint11  2020.6552, -1538.4968, 3.6107
+#define dmvpoint12  2039.5223, -1610.6908, 13.0870
+#define dmvpoint13  2076.6672, -1614.6458, 13.0809
+#define dmvpoint14  2079.3772, -1737.8307, 13.0903
+#define dmvpoint15  2086.5969, -1761.6428, 13.1064
+#define dmvpoint16  2079.0024, -1819.0388, 13.0875
+#define dmvpoint17  2078.4399, -1909.6899, 13.0599
+#define dmvpoint18  2060.4077, -1912.5676, 13.2524
+
 
 new DmvVeh[4];
 

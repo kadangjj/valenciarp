@@ -43,6 +43,37 @@ CreateJoinTruckPoint()
 }
 */
 //Mission
+GetRestockDealer()
+{
+	new tmpcount;
+	foreach(new id : Dealer)
+	{
+	    if(dsData[id][dRestock] == 1)
+	    {
+     		tmpcount++;
+		}
+	}
+	return tmpcount;
+}
+
+ReturnRestockDealerID(slot)
+{
+	new tmpcount;
+	if(slot < 1 && slot > MAX_DEALER) return -1;
+	foreach(new id : Dealer)
+	{
+	    if(dsData[id][dRestock] == 1)
+	    {
+     		tmpcount++;
+       		if(tmpcount == slot)
+       		{
+        		return id;
+  			}
+	    }
+	}
+	return -1;
+}
+
 GetRestockBisnis()
 {
 	new tmpcount;
@@ -155,11 +186,13 @@ CMD:mission(playerid, params[])
 {
 	if(pData[playerid][pJob] == 4 || pData[playerid][pJob2] == 4)
 	{
-		new string[400];
-	    string =  "List Delivery\tVehicle Used\n";
+		new string[512];
+	    string =  "List Cargo\tVehicle Used\n";
 	    format(string, sizeof(string), "%sRestock Business\tMule, Yankee, Benson, Boxville\n", string);
 	    format(string, sizeof(string), "%sRestock Gas Station\tRoadtrain, Linerunner, Petrol\n", string);
 		format(string, sizeof(string), "%sRestock Vending Machine\tMule, Yankee, Benson, Boxville\n", string);
+		format(string, sizeof(string), "%sRestock Dealership\tRoadtrain, Linerunner, Petrol\n", string);
+		format(string, sizeof(string), "%sCargo Industry\tMule, Yankee, Benson, Boxville\n", string);
 		ShowPlayerDialog(playerid, DIALOG_MENU_TRUCKER, DIALOG_STYLE_TABLIST_HEADERS, "Menu Trucker", string, "Select","Cancel");
 	}
 	else return Error(playerid, "You are not trucker job.");
@@ -210,16 +243,7 @@ CMD:mymission(playerid, params[])
 		// Calculate distance to business location
 		distance = GetPlayerDistanceFromPoint(playerid, bData[id][bExtposX], bData[id][bExtposY], bData[id][bExtposZ]);
 		
-		format(line, sizeof(line), "{FFFFFF}Active Business Restock Mission:\n\n\
-		Business ID: {00FF00}%d\n\
-		{FFFFFF}Business Owner: {FFFF00}%s\n\
-		{FFFFFF}Business Name: {00FFFF}%s\n\
-		{FFFFFF}Business Type: {FF6347}%s\n\
-		{FFFFFF}Distance to Checkpoint: {00FF00}%.2f meters\n\n\
-		{FFFFFF}Follow the red checkpoint to complete your mission!\n\
-		{FFD700}Tip: {FFFFFF}Make sure you have purchased products from the warehouse first.",
-		id, bData[id][bOwner], bData[id][bName], type, distance);
-		
+		format(line, sizeof(line), "{FFFFFF}Active Business Restock Mission:\n\nBusiness ID: {00FF00}%d\n{FFFFFF}Business Owner: {FFFF00}%s\n{FFFFFF}Business Name: {00FFFF}%s\n{FFFFFF}Business Type: {FF6347}%s\n{FFFFFF}Distance to Checkpoint: {00FF00}%.2f meters\n\n{FFFFFF}Follow the red checkpoint to complete your mission!\n{FFD700}Tip: {FFFFFF}Make sure you have purchased products from the warehouse first.", id, bData[id][bOwner], bData[id][bName], type, distance);
 		ShowPlayerDialog(playerid, DIALOG_UNUSED, DIALOG_STYLE_MSGBOX, "My Mission Info", line, "Close", "");
 		
 		// Re-set checkpoint to make sure it's visible
@@ -241,18 +265,30 @@ CMD:mymission(playerid, params[])
 		// Calculate distance to gas station location
 		distance = GetPlayerDistanceFromPoint(playerid, gsData[id][gsPosX], gsData[id][gsPosY], gsData[id][gsPosZ]);
 		
-		format(line, sizeof(line), "{FFFFFF}Active Gas Station Hauling Mission:\n\n\
-		Gas Station ID: {00FF00}%d\n\
-		{FFFFFF}Location: {FFFF00}%s\n\
-		{FFFFFF}Distance to Checkpoint: {00FF00}%.2f meters\n\n\
-		{FFFFFF}Follow the red checkpoint and deliver the gas oil trailer!\n\
-		{FFD700}Tip: {FFFFFF}Make sure your trailer is attached to your truck.",
-		id, GetLocation(gsData[id][gsPosX], gsData[id][gsPosY], gsData[id][gsPosZ]), distance);
-		
+		format(line, sizeof(line), "{FFFFFF}Active Gas Station Hauling Mission:\n\nGas Station ID: {00FF00}%d\n{FFFFFF}Location: {FFFF00}%s\n{FFFFFF}Distance to Checkpoint: {00FF00}%.2f meters\n\n{FFFFFF}Follow the red checkpoint and deliver the gas oil trailer!\n{FFD700}Tip: {FFFFFF}Make sure your trailer is attached to your truck.", id, GetLocation(gsData[id][gsPosX], gsData[id][gsPosY], gsData[id][gsPosZ]), distance);
 		ShowPlayerDialog(playerid, DIALOG_UNUSED, DIALOG_STYLE_MSGBOX, "My Hauling Info", line, "Close", "");
 		
 		// Re-set checkpoint to gas station location
 		SetPlayerRaceCheckpoint(playerid, 1, gsData[id][gsPosX], gsData[id][gsPosY], gsData[id][gsPosZ], 0.0, 0.0, 0.0, 3.5);
+		
+		return 1;
+	}
+	// Check for Dealer Hauling
+	else if(pData[playerid][pDealerHauling] > -1)
+	{
+		new id = pData[playerid][pDealerHauling];
+		
+		new line[900];
+		new Float:distance;
+		
+		// Calculate distance to dealer location
+		distance = GetPlayerDistanceFromPoint(playerid, dsData[id][dPX], dsData[id][dPY], dsData[id][dPZ]);
+
+		format(line, sizeof(line), "{FFFFFF}Active Dealer Hauling Mission:\n\nDealer ID: {00FF00}%d\n{FFFFFF}Dealer Owner: {FFFF00}%s\n{FFFFFF}Dealer Name: {00FFFF}%s\n{FFFFFF}Location: {FFFF00}%s\n{FFFFFF}Distance to Checkpoint: {00FF00}%.2f meters\n\n{FFFFFF}Follow the red checkpoint and deliver the vehicle trailer!\n{FFD700}Tip: {FFFFFF}Make sure your trailer is attached to your truck.", id, dsData[id][dOwner], dsData[id][dName], GetLocation(dsData[id][dPX], dsData[id][dPY], dsData[id][dPZ]), distance);
+		ShowPlayerDialog(playerid, DIALOG_UNUSED, DIALOG_STYLE_MSGBOX, "My Hauling Info", line, "Close", "");
+		
+		// Re-set checkpoint to dealer location
+		SetPlayerRaceCheckpoint(playerid, 1, dsData[id][dPX], dsData[id][dPY], dsData[id][dPZ], 0.0, 0.0, 0.0, 3.5);
 		
 		return 1;
 	}
@@ -278,7 +314,7 @@ CMD:storeproduct(playerid, params[])
 			pay = total + convert;
 			bData[bid][bProd] += VehProduct[vehicleid];
 			bData[bid][bMoney] -= pay;
-			Info(playerid, "Anda menjual "RED_E"%d "WHITE_E"product dengan seharga "GREEN_E"$%s", VehProduct[vehicleid], FormatMoney(pay));
+			Info(playerid, "Anda menjual "RED_E"%d "WHITE_E"product dengan seharga "GREEN_E"%s", VehProduct[vehicleid], FormatMoney(pay));
 			AddPlayerSalary(playerid, "Trucker (Product)", pay);
 			if((carid = Vehicle_Nearest(playerid)) != -1)
 			{
@@ -290,6 +326,48 @@ CMD:storeproduct(playerid, params[])
 			pData[playerid][pJobTime] = 500;
 		}
 		else return Error(playerid, "Anda harus berada didekat dengan bisnis mission anda.");
+	}
+	else return Error(playerid, "You are not trucker job.");
+	return 1;
+}
+
+CMD:storedealer(playerid, params[])
+{
+	if(pData[playerid][pJob] == 4 || pData[playerid][pJob2] == 4)
+	{
+		new id = pData[playerid][pDealerHauling], vehicleid = GetPlayerVehicleID(playerid), carid = -1, total, Float:percent, pay, convert;
+		if(id == -1) return Error(playerid, "You dont have hauling.");
+		if(IsPlayerInRangeOfPoint(playerid, 5.5, dsData[id][dPX], dsData[id][dPY], dsData[id][dPZ]))
+		{
+			if(GetPlayerState(playerid) != PLAYER_STATE_DRIVER && !IsAHaulTruck(vehicleid)) return Error(playerid, "Anda harus mengendarai truck.");
+			if(!IsTrailerAttachedToVehicle(vehicleid)) return Error(playerid, "Your Vehicle Trailer is not even attached");
+			DetachTrailerFromVehicle(vehicleid);
+
+			if(VehProduct[vehicleid] < 1) return Error(playerid, "Product is empty in this vehicle.");
+			DestroyVehicle(GetVehicleTrailer(vehicleid));
+			pData[playerid][pTrailer] = INVALID_VEHICLE_ID;
+
+			total = VehProduct[vehicleid] * ProductPrice;
+			percent = (total / 100) * 50;
+			convert = floatround(percent, floatround_floor);
+			pay = total + convert;
+			dsData[id][dProduct] += VehProduct[vehicleid];
+			dsData[id][dMoney] -= pay;
+
+			Info(playerid, "Anda menjual "RED_E"%d "WHITE_E"item product dengan seharga "GREEN_E"%s", VehProduct[vehicleid], FormatMoney(pay));
+			AddPlayerSalary(playerid, "Trucker (Hauling)", pay);
+			if((carid = Vehicle_Nearest2(playerid)) != -1)
+			{
+				pvData[carid][cProduct] = 0;
+				Info(playerid, "Anda mendapatkan uang 50 percent dari hasil stock product anda.");
+			}
+			VehProduct[vehicleid] = 0;
+			pData[playerid][pDealerHauling] = -1;
+			pData[playerid][pJobTime] = 2000;
+			Dealer_Refresh(id);
+			Dealer_Save(id);
+		}
+		else return Error(playerid, "Anda harus berada didekat dengan Dealer hauling anda.");
 	}
 	else return Error(playerid, "You are not trucker job.");
 	return 1;
@@ -307,26 +385,27 @@ CMD:storegas(playerid, params[])
 			if(!IsTrailerAttachedToVehicle(vehicleid)) return Error(playerid, "Your Vehicle Trailer is not even attached");
 			DetachTrailerFromVehicle(vehicleid);
 
+			if(VehGasOil[vehicleid] < 1) return Error(playerid, "GasOil is empty in this vehicle.");
 			DestroyVehicle(GetVehicleTrailer(vehicleid));
 			pData[playerid][pTrailer] = INVALID_VEHICLE_ID;
 
-			if(VehGasOil[vehicleid] < 1) return Error(playerid, "GasOil is empty in this vehicle.");
 			total = VehGasOil[vehicleid] * GasOilPrice;
 			percent = (total / 100) * 55;
 			convert = floatround(percent, floatround_ceil);
 			pay = total + convert;
 			gsData[id][gsStock] += VehGasOil[vehicleid];
 			Server_MinMoney(pay);
-			Info(playerid, "Anda menjual "RED_E"%d "WHITE_E"liters gas oil dengan seharga "GREEN_E"$%s", VehGasOil[vehicleid], FormatMoney(pay));
+			Info(playerid, "Anda menjual "RED_E"%d "WHITE_E"liters gas oil dengan seharga "GREEN_E"%s", VehGasOil[vehicleid], FormatMoney(pay));
 			AddPlayerSalary(playerid, "Trucker (Hauling)", pay);
 			if((carid = Vehicle_Nearest2(playerid)) != -1)
 			{
 				pvData[carid][cGasOil] = 0;
 				Info(playerid, "Anda mendapatkan uang 55 percent dari hasil stock liters gas oil anda.");
 			}
+			DisableVehicleSpeedCap(vehicleid);
 			VehGasOil[vehicleid] = 0;
 			pData[playerid][pHauling] = -1;
-			pData[playerid][pJobTime] = 1500;
+			pData[playerid][pJobTime] = 2000;
 			GStation_Refresh(id);
 			GStation_Save(id);
 		}
@@ -336,89 +415,159 @@ CMD:storegas(playerid, params[])
 	return 1;
 }
 
-CMD:storecomponent(playerid, params[])
+CMD:storecrate(playerid, params[])
 {
     if(pData[playerid][pJob] != 4 && pData[playerid][pJob2] != 4)
         return Error(playerid, "You are not trucker job.");
 
-    if(!IsPlayerInRangeOfPoint(playerid, 3.0, 797.5262, -617.7863, 16.3359))
-        return Error(playerid, "You must be at the component store location.");
+    // Cek lokasi store fish (tanpa bool: karena IsPlayerInRangeOfPoint udah return bool)
+    if(IsPlayerInRangeOfPoint(playerid, 3.0, -377.0572, -1445.5399, 25.7266))
+    {
+        // Store Fish
+        if(pData[playerid][pCrateFish] > 0)
+        {
+            new total = pData[playerid][pCrateFish]; // Total raw fish (20)
+            new totalPrice = total * FishPrice; // Harga total ke server
+            new salary = floatround(totalPrice * 0.4); // Player dapat 60% aja
 
-    if(pData[playerid][pCrateComponent] <= 0)
-        return Error(playerid, "You do not have a component crate.");
+            // Tambahkan ke food stock
+            Food += total;
 
-    new total = pData[playerid][pCrateComponent];
-    new pay = total * ComponentPrice;
-    new bonus = floatround(pay * 0.6); // 80% bonus
-    pay += bonus;
+            // Tambahkan uang ke server (40% sisanya masuk server)
+            Server_MinMoney(salary);
 
-    // Tambahkan komponen ke log penyimpanan
-    Component += total;
+            new crateAmount = total / 20; // Hitung berapa crate
+            Info(playerid, "Anda menjual "RED_E"%d "WHITE_E"crate fish (%d kg) dan mendapat gaji "GREEN_E"%s", crateAmount, total, FormatMoney(salary));
 
-    // Tambahkan uang ke server dan beri informasi ke pemain
-    Server_MinMoney(pay);
-    
+            AddPlayerSalary(playerid, "Trucker", salary);
 
-    Info(playerid, "Anda menjual "RED_E"%d "WHITE_E"component dengan harga "GREEN_E"$%s", total, FormatMoney(pay));
-    Info(playerid, "Anda mendapatkan bonus 60 persen dari hasil penjualan component.");
+            // Reset crate
+            pData[playerid][pCrateFish] = 0;
 
-	AddPlayerSalary(playerid, "Trucker", pay);
+            // Hapus objek crate
+            RemovePlayerAttachedObject(playerid, 9);
+            ClearAnimations(playerid);
 
-    // Reset jumlah ikan di crate pemain
-    pData[playerid][pCrateComponent] = 0;
+            // Set cooldown
+            pData[playerid][pJobTime] = 900;
 
-    // Hapus objek crate dari pemain
-    RemovePlayerAttachedObject(playerid, 9);
+            return 1;
+        }
+        else if(pData[playerid][pCrateComponent] > 0)
+        {
+            return Error(playerid, "You cannot store component crate here. Go to component store.");
+        }
+        else
+        {
+            return Error(playerid, "You don't have any fish crate to store.");
+        }
+    }
 
-    // Set waktu cooldown pekerjaan
-    pData[playerid][pJobTime] = 1000;
-	//pData[playerid][pTruckerLevelup] += 1;
+    // Cek lokasi store component
+    if(IsPlayerInRangeOfPoint(playerid, 3.0, 797.5262, -617.7863, 16.3359))
+    {
+        // Store Component
+        if(pData[playerid][pCrateComponent] > 0)
+        {
+            new total = pData[playerid][pCrateComponent]; // Total raw component (20)
+            new totalPrice = total * ComponentPrice; // Harga total ke server
+            new salary = floatround(totalPrice * 0.4); // Player dapat 60% aja
 
-	// Cek level up
-    //CheckTruckerLevelUp(playerid);
+            // Tambahkan ke component stock
+            Component += total;
 
-    return 1;
+            // Tambahkan uang ke server (40% sisanya masuk server)
+            Server_MinMoney(salary);
+
+            new crateAmount = total / 20; // Hitung berapa crate
+            Info(playerid, "Anda menjual "RED_E"%d "WHITE_E"crate component (%d pcs) dan mendapat gaji "GREEN_E"%s", crateAmount, total, FormatMoney(salary));
+
+            AddPlayerSalary(playerid, "Trucker", salary);
+
+            // Reset crate
+            pData[playerid][pCrateComponent] = 0;
+
+            // Hapus objek crate
+            RemovePlayerAttachedObject(playerid, 9);
+            ClearAnimations(playerid);
+
+            // Set cooldown
+            pData[playerid][pJobTime] = 900;
+
+            return 1;
+        }
+        else if(pData[playerid][pCrateFish] > 0)
+        {
+            return Error(playerid, "You cannot store fish crate here. Go to fish store.");
+        }
+        else
+        {
+            return Error(playerid, "You don't have any component crate to store.");
+        }
+    }
+
+    return Error(playerid, "You must be at fish store or component store location.");
 }
 
-CMD:storefish(playerid, params[])
+CMD:takecrate(playerid, params[])
 {
     if(pData[playerid][pJob] != 4 && pData[playerid][pJob2] != 4)
-        return Error(playerid, "You are not trucker job.");
+        return Error(playerid, "Anda bukan pekerja trucker.");
 
-    if(!IsPlayerInRangeOfPoint(playerid, 3.0, -377.0572, -1445.5399, 25.7266))
-        return Error(playerid, "You must be at the fish store location.");
+    if(pData[playerid][pJobTime] > 0)
+        return Error(playerid, "You must wait %d seconds to perform this action.", pData[playerid][pJobTime]);
 
-    if(pData[playerid][pCrateFish] <= 0)
-        return Error(playerid, "You do not have a fish crate.");
+    if(pData[playerid][pCrateFish] > 0 || pData[playerid][pCrateComponent] > 0)
+        return Error(playerid, "Anda masih membawa crate.");
 
-    new total = pData[playerid][pCrateFish];
-    new pay = total * FishPrice;
-    new bonus = floatround(pay * 0.6); // 80% bonus
-    pay += bonus;
+    // Lokasi Fish Crate
+    if(IsPlayerInRangeOfPoint(playerid, 3.5, 2836.5061, -1540.5342, 11.0991))
+    {
+        new totalfish = 20;
 
-    // Tambahkan komponen ke log penyimpanan
-    Food += total;
+        if(RawFish < totalfish)
+            return Error(playerid, "Stok fish tidak mencukupi.");
 
-    // Tambahkan uang ke server dan beri informasi ke pemain
-    Server_MinMoney(pay);
-    
 
-    Info(playerid, "Anda menjual "RED_E"%d "WHITE_E"ikan dengan harga "GREEN_E"$%s", total, FormatMoney(pay));
-    Info(playerid, "Anda mendapatkan bonus 60 persen dari hasil penjualan ikan.");
+        // Ambil crate fish
+        pData[playerid][pCrateFish] = totalfish;
+        RawFish -= totalfish;
 
-	AddPlayerSalary(playerid, "Trucker", pay);
+        // Pastikan slot object kosong
+        if(IsPlayerAttachedObjectSlotUsed(playerid, 9))
+            RemovePlayerAttachedObject(playerid, 9);
 
-    // Reset jumlah ikan di crate pemain
-    pData[playerid][pCrateFish] = 0;
+        SetPlayerAttachedObject(playerid, 9, 2912, 1, 0.0, 0.45, 0.0, 0.0, 90.0, 0.0, 1.0, 1.0, 1.0);
+        ApplyAnimation(playerid, "CARRY", "crry_prtial", 4.1, 1, 1, 1, 1, 1, 1);
 
-    // Hapus objek crate dari pemain
-    RemovePlayerAttachedObject(playerid, 9);
+        //Info(playerid, "Anda mengambil 1 Crate Fish (20 kg). Antar ke Fish Store untuk mendapat gaji.");
+        return 1;
+    }
 
-    // Set waktu cooldown pekerjaan
-    pData[playerid][pJobTime] = 1000;
-	//pData[playerid][pTruckerLevelup] += 1;
+    // Lokasi Component Crate (ganti koordinat sesuai kebutuhan)
+	if(IsPlayerInRangeOfPoint(playerid, 3.5, 323.5624, 904.4940, 21.5862))
+    {
+        new totalcomp = 20;
 
-    return 1;
+        if(RawComponent < totalcomp)
+            return Error(playerid, "Stok component tidak mencukupi.");
+
+        // Ambil crate component
+        pData[playerid][pCrateComponent] = totalcomp;
+        RawComponent -= totalcomp;
+
+        // Pastikan slot object kosong
+        if(IsPlayerAttachedObjectSlotUsed(playerid, 9))
+            RemovePlayerAttachedObject(playerid, 9);
+
+        SetPlayerAttachedObject(playerid, 9, 2912, 1, 0.0, 0.45, 0.0, 0.0, 90.0, 0.0, 1.0, 1.0, 1.0);
+        ApplyAnimation(playerid, "CARRY", "crry_prtial", 4.1, 1, 1, 1, 1, 1, 1);
+
+        //Info(playerid, "Anda mengambil 1 Crate Component (20 pcs). Antar ke Component Store untuk mendapat gaji.");
+        return 1;
+    }
+
+    return Error(playerid, "Anda tidak berada di lokasi pengambilan crate.");
 }
 
 CMD:loadcrate(playerid, params[])
@@ -427,10 +576,14 @@ CMD:loadcrate(playerid, params[])
 
     if(pData[playerid][pJob] != 4 && pData[playerid][pJob2] != 4)
         return Error(playerid, "You are not trucker job.");
-    if(!IsATruck(vehicleid)) return Error(playerid, "You're not near a trucker car.");
 
     if(vehicleid == INVALID_VEHICLE_ID) 
         return Error(playerid, "You are not near any vehicles.");
+
+    // FIXED: Tambah definisi modelid
+    new modelid = GetVehicleModel(vehicleid);
+    if(modelid != 414 && modelid != 456 && modelid != 499 && modelid != 498)
+        return Error(playerid, "You're not near a trucker car.");
 
     new carid = Vehicle_Nearest(playerid);
     if(carid == -1 || !IsValidVehicle(pvData[carid][cVeh]))
@@ -442,26 +595,29 @@ CMD:loadcrate(playerid, params[])
     if(fishToLoad <= 0 && compToLoad <= 0)
         return Error(playerid, "You don't have any crates to load.");
 
-    // Check total crates in vehicle
-    new totalCratesInVehicle = pvData[carid][cFish] + pvData[carid][cComponent];
-    if(totalCratesInVehicle >= 1000)
-        return Error(playerid, "The vehicle is already full. It can't hold any more crates.");
+    new maxCrates = 10 * 20;
+    new totalInVehicle = pvData[carid][cFish] + pvData[carid][cComponent];
+    
+    if(totalInVehicle >= maxCrates)
+        return Error(playerid, "The vehicle is already full (Max: 10 crates).");
 
-    // Check if trying to load different type of crate
     if(fishToLoad > 0 && pvData[carid][cComponent] > 0)
         return Error(playerid, "You can't load fish crate. The vehicle already contains component crates.");
     if(compToLoad > 0 && pvData[carid][cFish] > 0)
         return Error(playerid, "You can't load component crate. The vehicle already contains fish crates.");
 
-    // Calculate how many crates can be loaded
-    new spacesLeft = 1000 - totalCratesInVehicle;
+    new spacesLeft = maxCrates - totalInVehicle;
     
     if(fishToLoad > 0)
     {
         new amountToLoad = (fishToLoad > spacesLeft) ? spacesLeft : fishToLoad;
         pvData[carid][cFish] += amountToLoad;
         pData[playerid][pCrateFish] -= amountToLoad;
-        SendClientMessageEx(playerid, COLOR_ARWIN, "JOB: "WHITE_E"You've loaded %d fish crate(s) into the vehicle.", amountToLoad);
+        
+        UpdateVehicleCrateLabel(carid);
+        
+        new cratesLoaded = amountToLoad / 20;
+        SendClientMessageEx(playerid, COLOR_ARWIN, "JOB: "WHITE_E"You've loaded %d fish crate(s) into the vehicle.", cratesLoaded);
     }
 
     if(compToLoad > 0)
@@ -469,12 +625,17 @@ CMD:loadcrate(playerid, params[])
         new amountToLoad = (compToLoad > spacesLeft) ? spacesLeft : compToLoad;
         pvData[carid][cComponent] += amountToLoad;
         pData[playerid][pCrateComponent] -= amountToLoad;
-        SendClientMessageEx(playerid, COLOR_ARWIN, "JOB: "WHITE_E"You've loaded %d component crate(s) into the vehicle.", amountToLoad);
+        
+        UpdateVehicleCrateLabel(carid);
+        
+        new cratesLoaded = amountToLoad / 20;
+        SendClientMessageEx(playerid, COLOR_ARWIN, "JOB: "WHITE_E"You've loaded %d component crate(s) into the vehicle.", cratesLoaded);
     }
 
     if(pData[playerid][pCrateFish] == 0 && pData[playerid][pCrateComponent] == 0)
     {
         RemovePlayerAttachedObject(playerid, 9);
+        ClearAnimations(playerid);
     }
 
     return 1;
@@ -516,7 +677,18 @@ CMD:unloadcrate(playerid, params[])
         pData[playerid][pCrateComponent] = compToUnload;
         SendClientMessage(playerid, COLOR_ARWIN, "JOB: "WHITE_E"You've unloaded component crate from the vehicle.");
     }
-
+	if(pvData[carid][cFish] == 0 && pvData[carid][cComponent] == 0)
+	{
+		if(IsValidDynamic3DTextLabel(pvData[carid][cTextLabel]))
+		{
+			DestroyDynamic3DTextLabel(pvData[carid][cTextLabel]);
+			pvData[carid][cTextLabel] = Text3D:INVALID_3DTEXT_ID;
+		}
+	}
+	else
+	{
+		UpdateVehicleCrateLabel(carid);
+	}
     SetPlayerAttachedObject(playerid, 9, 2912, 1, 0.0, 0.45, 0.0, 0.0, 90.0, 0.0, 1.0, 1.0, 1.0);
     ApplyAnimation(playerid, "CARRY", "crry_prtial", 4.1, 1, 1, 1, 1, 1, 1);
     return 1;
@@ -537,12 +709,12 @@ CMD:cargo(playerid, params[])
 			if(pData[playerid][CarryingBox] == true)
 				return Error(playerid, "Kamu masih membawa box product!");
 			if(GetPlayerMoney(playerid) < rego)
-				return Error(playerid, "Uangmu tidak cukup untuk membeli box seharga $%s", FormatMoney(rego));
+				return Error(playerid, "Uangmu tidak cukup untuk membeli box seharga %s", FormatMoney(rego));
 
 			Player_GiveBox(playerid);
 			Product -= 15;
 			Server_AddMoney(rego);
-            Servers(playerid,"Kamu berhasil membeli box {ffff00}vending product {ffffff}seharga $%s", FormatMoney(rego));
+            Servers(playerid,"Kamu berhasil membeli box {ffff00}vending product {ffffff}seharga %s", FormatMoney(rego));
         	
 		}
 		else if(!strcmp(params, "sell", true))
@@ -571,7 +743,7 @@ CMD:cargo(playerid, params[])
 				Player_RemoveBox(playerid);
 				GivePlayerMoneyEx(playerid, pay);
 				pData[playerid][pVendingRestock] = -1;
-				Info(playerid, "Anda mendapatkan uang 50 percent dari hasil vending restock anda senilai "GREEN_E"$%s.", FormatMoney(pay));
+				Info(playerid, "Anda mendapatkan uang 50 percent dari hasil vending restock anda senilai "GREEN_E"%s.", FormatMoney(pay));
 			}	
 			else return Error(playerid, "Anda harus berada didekat dengan vending mission anda.");
 		}
@@ -706,7 +878,7 @@ Player_DropBox(playerid, death_drop = 0)
 		BoxData[id][boxSeconds] = BOX_LIFETIME;
 		BoxData[id][boxObjID] = CreateDynamicObject(1271, x, y, z - 0.4, 0.0, 0.0, a);
 		
-		format(label, sizeof(label), "Box (%d)\n"WHITE_E"Dropped By "GREEN_E"$%s\n"WHITE_E"%s\nUse /cargo pickup.", id, BoxData[id][boxDroppedBy], ConvertToMinutes(BOX_LIFETIME));
+		format(label, sizeof(label), "Box (%d)\n"WHITE_E"Dropped By "GREEN_E"%s\n"WHITE_E"%s\nUse /cargo pickup.", id, BoxData[id][boxDroppedBy], ConvertToMinutes(BOX_LIFETIME));
 		BoxData[id][boxLabel] = CreateDynamic3DTextLabel(label, COLOR_GREEN, x, y, z - 0.2, 5.0, .testlos = 1);
 		
 		BoxData[id][boxTimer] = SetTimerEx("RemoveBox", 1000, true, "i", id);
@@ -753,7 +925,7 @@ function RemoveBox(tid)
 	    BoxData[tid][boxSeconds]--;
 
         new label[128];
-	    format(label, sizeof(label), "Box (%d)\n"WHITE_E"Dropped By "GREEN_E"$%s\n"WHITE_E"%s\nUse /cargo pickup.", tid, BoxData[tid][boxDroppedBy], ConvertToMinutes(BoxData[tid][boxSeconds]));
+	    format(label, sizeof(label), "Box (%d)\n"WHITE_E"Dropped By "GREEN_E"%s\n"WHITE_E"%s\nUse /cargo pickup.", tid, BoxData[tid][boxDroppedBy], ConvertToMinutes(BoxData[tid][boxSeconds]));
 		UpdateDynamic3DTextLabelText(BoxData[tid][boxLabel], COLOR_GREEN, label);
 	}
 	else if(BoxData[tid][boxSeconds] == 1) 

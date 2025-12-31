@@ -291,15 +291,17 @@ CreatePlayerTextDraws(playerid)
     PlayerTextDrawSetProportional(playerid, JGMTHIRST[playerid], 1);
     PlayerTextDrawSetSelectable(playerid, JGMTHIRST[playerid], 0);
 
-	//Info textdraw - POSISI LEBIH ATAS SEDIKIT
-	InfoTD[playerid] = CreatePlayerTextDraw(playerid, 148.888, 330.000, "Selamat Datang!"); // ← Y diubah dari 361.385 menjadi 330.000
-	PlayerTextDrawLetterSize(playerid, InfoTD[playerid], 0.326, 1.654);
-	PlayerTextDrawAlignment(playerid, InfoTD[playerid], 1);
+	
+	// Info textdraw - center bawah
+	InfoTD[playerid] = CreatePlayerTextDraw(playerid, 320.0, 350.0, "Selamat Datang!");
+	PlayerTextDrawLetterSize(playerid, InfoTD[playerid], 0.260, 1.200);
+	PlayerTextDrawAlignment(playerid, InfoTD[playerid], 2); // CENTER
 	PlayerTextDrawColor(playerid, InfoTD[playerid], -1);
-	PlayerTextDrawSetOutline(playerid, InfoTD[playerid], -1);
+	PlayerTextDrawSetOutline(playerid, InfoTD[playerid], 1);
 	PlayerTextDrawBackgroundColor(playerid, InfoTD[playerid], 0x000000FF);
 	PlayerTextDrawFont(playerid, InfoTD[playerid], 1);
 	PlayerTextDrawSetProportional(playerid, InfoTD[playerid], 1);
+
 	
 	ActiveTD[playerid] = CreatePlayerTextDraw(playerid, 274.000000, 176.583435, "Mengisi Ulang...");
 	PlayerTextDrawLetterSize(playerid, ActiveTD[playerid], 0.374000, 1.349166);
@@ -687,8 +689,8 @@ CreateTextDraw()
 	
 
 	// Animation textdraw
-	AnimationTD = TextDrawCreate(261.000000, 395.000000, "Gunakan ~b~H~w~ untuk stop anim");
-	TextDrawFont(AnimationTD, 2);
+	AnimationTD = TextDrawCreate(261.000000, 395.000000, "TEKAN ~b~H~w~ UNTUK STOP ANIMASI");
+	TextDrawFont(AnimationTD, 1);
 	TextDrawLetterSize(AnimationTD, 0.199996, 1.649996);
 	TextDrawTextSize(AnimationTD, 636.500000, -174.500000);
 	TextDrawSetOutline(AnimationTD, 1);

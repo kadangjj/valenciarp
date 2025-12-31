@@ -148,7 +148,7 @@ function FishBiteTime(playerid)
         
         new string[128];
         format(string, sizeof(string), "~r~FISH BITE!~n~~w~Press ~y~H ~r~%d/%d~w~ times!", FishPullCount[playerid], FISH_PULL_REQUIRED);
-        GameTextForPlayer(playerid, string, 8000, 3);
+        InfoTD_MSG(playerid, 8000, string);
         
         // Set timer untuk batas waktu menarik ikan (8 detik untuk tap-tap)
         FishPullTimer[playerid] = SetTimerEx("FishEscape", 8000, false, "i", playerid);
@@ -257,7 +257,7 @@ CMD:fish(playerid, params[])
     if(pData[playerid][pInFish] == 1)
         return Error(playerid, "You are already fishing.");
         
-    if(pData[playerid][pFish] >= 100)
+    if(pData[playerid][pFish] >= 50)
         return Error(playerid, "Inventory ikan anda sudah penuh, anda dapat menjualnya terlebih dahulu.");
     
     new random2 = RandomEx(15000, 25000); // Waktu menunggu ikan
@@ -277,6 +277,7 @@ CMD:fish(playerid, params[])
         SendNearbyMessage(playerid, 20.0, COLOR_PURPLE, "** %s swings fishing rod and starts to wait for fish", ReturnName(playerid));
     }
     
+    TogglePlayerControllable(playerid, false);
     ApplyAnimation(playerid, "SWORD", "sword_block", 50.0, 0, 1, 0, 1, 1);
     SetPlayerAttachedObject(playerid, 9, 18632, 6, 0.079376, 0.037070, 0.007706, 181.482910, 0.000000, 0.000000, 1.000000, 1.000000, 1.000000);
     InfoTD_MSG(playerid, 10000, "Waiting for fish bite...");
@@ -296,7 +297,7 @@ CMD:sellfish(playerid, params[])
     new fish = pData[playerid][pFish];
     new pay = fish * FishPrice;
     GivePlayerMoneyEx(playerid, pay);
-    Info(playerid, "Anda menjual semua ikan dengan total uang "GREEN_E"$%s", FormatMoney(pay));
+    Info(playerid, "Anda menjual semua ikan dengan total uang "GREEN_E"%s", FormatMoney(pay));
     RawFish += fish;
     Server_MinMoney(pay);
     pData[playerid][pFish] = 0;

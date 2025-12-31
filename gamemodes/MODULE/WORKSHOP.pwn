@@ -43,7 +43,7 @@ Workshop_Refresh(id)
             stats = "{ff0000}CLOSED{ffffff}";
         }
 
-        format(str, sizeof str,"[Workshop ID:%d]\n{ffffff}Workshop Price: {7fff00}$%s{ffffff}\n{ffffff}Type '/buy' to buy this Workshop", id, FormatMoney(wsData[id][wPrice]));
+        format(str, sizeof str,"[Workshop ID:%d]\n{ffffff}Workshop Price: {7fff00}%s{ffffff}\n{ffffff}Type '/buy' to buy this Workshop", id, FormatMoney(wsData[id][wPrice]));
 
         if(wsData[id][wOwnerID] != 0 || strcmp(wsData[id][wOwner], "-", true))
             format(str, sizeof str,"[Workshop ID:%d]\n{ffffff}Workshop Name: %s\n{ffffff}Workshop Owner: %s\n{ffffff}STATUS: %s", id, wsData[id][wName], wsData[id][wOwner], stats);

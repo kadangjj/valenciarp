@@ -279,6 +279,348 @@ public OnDiscordBanUCPQuery(DCC_Channel:channel, const NameToBan[], banTime, con
     
     return 1;
 }
+DCMD:price(user, channel, params[])
+{
+    // Only active in a specific channel
+    if(channel != DCC_FindChannelById("1444800090827915375"))
+        return 1;
+
+    new string[2048];
+    
+    format(string, sizeof(string), 
+        "**=== SERVER PRICE LIST ===**\n\n\
+        **Materials & Components:**\n\
+        • Material: %s\n\
+        • Lumber: %s\n\
+        • Component: %s\n\
+        • Metal: %s\n\n\
+        **Energy & Resources:**\n\
+        • Gas Oil: %s\n\
+        • Coal: %s\n\
+        • Gas Station: %s\n\n\
+        **Medical & Health:**\n\
+        • Medicine: %s\n\
+        • Medkit: %s\n\
+        • Obat: %s\n\n\
+        **Food & Agriculture:**\n\
+        • Food: %s\n\
+        • Seed: %s\n\
+        • Potato: %s\n\
+        • Wheat: %s\n\
+        • Orange: %s\n\n\
+        **Other Products:**\n\
+        • Product: %s\n\
+        • Fish: %s\n\
+        • Marijuana: %s\n\n\
+        **Server Money:** %s",
+        FormatMoney(MaterialPrice),
+        FormatMoney(LumberPrice),
+        FormatMoney(ComponentPrice),
+        FormatMoney(MetalPrice),
+        FormatMoney(GasOilPrice),
+        FormatMoney(CoalPrice),
+        FormatMoney(GStationPrice),
+        FormatMoney(MedicinePrice),
+        FormatMoney(MedkitPrice),
+        FormatMoney(ObatPrice),
+        FormatMoney(FoodPrice),
+        FormatMoney(SeedPrice),
+        FormatMoney(PotatoPrice),
+        FormatMoney(WheatPrice),
+        FormatMoney(OrangePrice),
+        FormatMoney(ProductPrice),
+        FormatMoney(FishPrice),
+        FormatMoney(MarijuanaPrice),
+        FormatMoney(ServerMoney)
+    );
+    
+    DCC_SendChannelMessage(channel, string);
+    return 1;
+}
+DCMD:setprice(user, channel, params[]) 
+{
+	// Only active in a specific channel
+	if(channel != DCC_FindChannelById("1444800090827915375"))
+		return 1;
+
+	if(isnull(params))
+	{
+		DCC_SendChannelMessage(channel, "**USAGE:** __!setprice__ <name> <price>");
+		DCC_SendChannelMessage(channel, "**NAMES:** materialprice, lumberprice, componentprice, metalprice, gasoilprice, coalprice, productprice");
+		DCC_SendChannelMessage(channel, "**NAMES:** foodprice, fishprice, gsprice, obatprice, potatoprice, orangeprice, wheatprice");
+		return 1;
+	}
+
+	new name[64], priceStr[32];
+	if(sscanf(params, "s[64]s[32]", name, priceStr))
+	{
+		DCC_SendChannelMessage(channel, "**USAGE:** __!setprice__ <name> <price>");
+		return 1;
+	}
+
+	// Parse harga dari string (mendukung desimal)
+	new Float:priceFloat = floatstr(priceStr);
+	
+	if(priceFloat < 0.0 || priceFloat > 5000.0)
+	{
+		DCC_SendChannelMessage(channel, "❌ **ERROR:** Price must be between 0.00 and 5,000.00");
+		return 1;
+	}
+
+	// Konversi ke format internal (dikali 100)
+	new price = floatround(priceFloat * 100.0);
+	new message[256], itemName[64];
+
+	if(!strcmp(name, "materialprice", true))
+	{
+		MaterialPrice = price;
+		itemName = "Material";
+	}
+	else if(!strcmp(name, "lumberprice", true))
+	{
+		LumberPrice = price;
+		itemName = "Lumber";
+	}
+	else if(!strcmp(name, "componentprice", true))
+	{
+		ComponentPrice = price;
+		itemName = "Component";
+	}
+	else if(!strcmp(name, "metalprice", true))
+	{
+		MetalPrice = price;
+		itemName = "Metal";
+	}
+	else if(!strcmp(name, "gasoilprice", true))
+	{
+		GasOilPrice = price;
+		itemName = "Gas Oil";
+	}
+	else if(!strcmp(name, "coalprice", true))
+	{
+		CoalPrice = price;
+		itemName = "Coal";
+	}
+	else if(!strcmp(name, "productprice", true))
+	{
+		ProductPrice = price;
+		itemName = "Product";
+	}
+	else if(!strcmp(name, "foodprice", true))
+	{
+		FoodPrice = price;
+		itemName = "Food";
+	}
+	else if(!strcmp(name, "fishprice", true))
+	{
+		FishPrice = price;
+		itemName = "Fish";
+	}
+	else if(!strcmp(name, "gsprice", true))
+	{
+		GStationPrice = price;
+		foreach(new gsid : GStation)
+		{
+			if(Iter_Contains(GStation, gsid))
+			{
+				GStation_Save(gsid);
+				GStation_Refresh(gsid);
+			}
+		}
+		itemName = "Gas Station";
+	}
+	else if(!strcmp(name, "obatprice", true))
+	{
+		ObatPrice = price;
+		itemName = "Obat";
+	}
+	else if(!strcmp(name, "potatoprice", true))
+	{
+		PotatoPrice = price;
+		itemName = "Potato";
+	}
+	else if(!strcmp(name, "orangeprice", true))
+	{
+		OrangePrice = price;
+		itemName = "Orange";
+	}
+	else if(!strcmp(name, "wheatprice", true))
+	{
+		WheatPrice = price;
+		itemName = "Wheat";
+	}
+	else if(!strcmp(name, "rawcomponent", true))
+	{
+		RawComponent = price;
+		itemName = "Raw Component";
+	}
+	else
+	{
+		DCC_SendChannelMessage(channel, "❌ **ERROR:** Invalid item name!");
+		return 1;
+	}
+
+	Server_Save();
+
+	// Send message to all admins in-game
+	SendAdminMessage(COLOR_RED, "[Discord Admin] Set %s price to %s", itemName, FormatMoney(price));
+
+	// Log to server
+	new logStr[150];
+	format(logStr, sizeof(logStr), "[Discord]: Set %s price to %s", itemName, FormatMoney(price));
+	LogServer("Discord", logStr);
+
+	// Response to Discord
+	format(message, sizeof(message), "✅ **%s** price has been set to **%s**", itemName, FormatMoney(price));
+	return DCC_SendChannelMessage(channel, message);
+}
+
+DCMD:setstock(user, channel, params[]) 
+{
+	// Only active in a specific channel
+	if(channel != DCC_FindChannelById("1444800090827915375"))
+		return 1;
+
+	if(isnull(params))
+	{
+		DCC_SendChannelMessage(channel, "**USAGE:** __!setstock__ <name> <amount>");
+		DCC_SendChannelMessage(channel, "**NAMES:** material, component, product, gasoil, apotek, food, obat, rawcomponent, rawfish");
+		return 1;
+	}
+
+	new name[64], stok;
+	if(sscanf(params, "s[64]d", name, stok))
+	{
+		DCC_SendChannelMessage(channel, "**USAGE:** __!setstock__ <name> <amount>");
+		return 1;
+	}
+
+	if(stok < 0 || stok > 5000)
+	{
+		DCC_SendChannelMessage(channel, "❌ **ERROR:** Stock must be between 0 and 5000");
+		return 1;
+	}
+
+	new message[256], itemName[64];
+
+	if(!strcmp(name, "material", true))
+	{
+		Material = stok;
+		itemName = "Material";
+	}
+	else if(!strcmp(name, "component", true))
+	{
+		Component = stok;
+		itemName = "Component";
+	}
+	else if(!strcmp(name, "product", true))
+	{
+		Product = stok;
+		itemName = "Product";
+	}
+	else if(!strcmp(name, "gasoil", true))
+	{
+		GasOil = stok;
+		itemName = "Gas Oil";
+	}
+	else if(!strcmp(name, "apotek", true))
+	{
+		Apotek = stok;
+		itemName = "Apotek";
+	}
+	else if(!strcmp(name, "food", true))
+	{
+		Food = stok;
+		itemName = "Food";
+	}
+	else if(!strcmp(name, "obat", true))
+	{
+		ObatMyr = stok;
+		itemName = "Obat";
+	}
+	else if(!strcmp(name, "rawcomponent", true))
+	{
+		RawComponent = stok;
+		itemName = "Raw Component";
+	}
+	else if(!strcmp(name, "rawfish", true))
+	{
+		RawFish = stok;
+		itemName = "Raw Fish";
+	}
+	else
+	{
+		DCC_SendChannelMessage(channel, "❌ **ERROR:** Invalid item name!");
+		return 1;
+	}
+
+	Server_Save();
+
+	// Send message to all admins in-game
+	SendAdminMessage(COLOR_RED, "[Discord Admin] Set %s stock to %d", itemName, stok);
+
+	// Log to server
+	new logStr[150];
+	format(logStr, sizeof(logStr), "[Discord]: Set %s stock to %d", itemName, stok);
+	LogServer("Discord", logStr);
+
+	// Response to Discord
+	format(message, sizeof(message), "✅ **%s** stock has been set to **%d**", itemName, stok);
+	return DCC_SendChannelMessage(channel, message);
+}
+DCMD:slap(user, channel, params[]) 
+{
+	// Only active in a specific channel
+	if(channel != DCC_FindChannelById("1444800090827915375"))
+		return 1;
+
+	if(isnull(params))
+		return DCC_SendChannelMessage(channel, "**USAGE:** __!slap__ <player>");
+
+	new PlayerName[MAX_PLAYER_NAME];
+
+	// Parse parameters
+	if(sscanf(params, "s[24]", PlayerName))
+	{
+		return DCC_SendChannelMessage(channel, "**USAGE:** __!slap__ <player>");
+	}
+
+	// Get player ID from name
+	new targetPlayerID = GetPlayerIdByName(PlayerName);
+	if(targetPlayerID == INVALID_PLAYER_ID)
+	{
+		new response[128];
+		format(response, sizeof(response), "**ERROR:** Player `%s` not found or offline.", PlayerName);
+		return DCC_SendChannelMessage(channel, response);
+	}
+
+	// Get current position and slap player up
+	new Float:x, Float:y, Float:z;
+	GetPlayerPos(targetPlayerID, x, y, z);
+	SetPlayerPos(targetPlayerID, x, y, z + 5.0); // Slap 5 units up
+
+	// Apply damage (optional)
+	new Float:health;
+	GetPlayerHealth(targetPlayerID, health);
+	if(health > 10.0)
+		SetPlayerHealth(targetPlayerID, health - 10.0);
+
+	// Send sound effect
+	PlayerPlaySound(targetPlayerID, 1130, 0.0, 0.0, 0.0);
+
+	// Message to player
+	Servers(targetPlayerID, "You have been slapped by Discord Admin!");
+
+	// Log to server
+	new logStr[150];
+	format(logStr, sizeof(logStr), "[Discord]: %s slapped", PlayerName);
+	LogServer("Discord", logStr);
+
+	// Response to Discord
+	new message[128];
+	format(message, sizeof(message), "✅ Player **%s** has been slapped!", PlayerName);
+	return DCC_SendChannelMessage(channel, message);
+}
 
 DCMD:sendto(user, channel, params[]) 
 {
@@ -320,6 +662,139 @@ DCMD:sendto(user, channel, params[])
     new message[128];
     format(message, sizeof(message), "✅ Player **%s** teleported to **%s**.", PlayerName, LocationName);
     return DCC_SendChannelMessage(channel, message);
+}
+
+// ============================================
+// DCMD DISCORD COMMANDS (For Online Players)
+// ============================================
+
+DCMD:setcs(user, channel, params[])
+{
+	// Only active in a specific channel
+	if(channel != DCC_FindChannelById("1444800090827915375"))
+		return 1;
+
+	if(isnull(params))
+		return DCC_SendChannelMessage(channel, "**USAGE:** __!setcs__ <player>");
+
+	new PlayerName[MAX_PLAYER_NAME];
+
+	// Parse parameters
+	if(sscanf(params, "s[24]", PlayerName))
+	{
+		return DCC_SendChannelMessage(channel, "**USAGE:** __!setcs__ <player>");
+	}
+
+	// Get player ID from name
+	new targetPlayerID = GetPlayerIdByName(PlayerName);
+	if(targetPlayerID == INVALID_PLAYER_ID)
+	{
+		new response[128];
+		format(response, sizeof(response), "**ERROR:** Player `%s` not found or offline. Use slash command `/setcs` for offline players.", PlayerName);
+		return DCC_SendChannelMessage(channel, response);
+	}
+
+	// Check if player already has CS
+	if(pData[targetPlayerID][pPlayerCS] != 0)
+	{
+		new response[128];
+		format(response, sizeof(response), "**ERROR:** Player `%s` sudah memiliki Character Story!", PlayerName);
+		return DCC_SendChannelMessage(channel, response);
+	}
+
+	// Set Character Story
+	pData[targetPlayerID][pPlayerCS] = 1;
+
+	// Update database
+	new query[256];
+	mysql_format(g_SQL, query, sizeof(query), "UPDATE players SET characterstory = 1 WHERE reg_id = %i", pData[targetPlayerID][pID]);
+	mysql_tquery(g_SQL, query);
+
+	// Get Discord username who executed command
+	new DCC_User:author;
+	DCC_GetMessageAuthor(DCC_Message:0, author);
+	new discordName[32];
+	//DCC_GetUserName(author, discordName, sizeof(discordName));
+
+	// Message to player in-game
+	Info(targetPlayerID, "Discord Admin telah memberikan Character Story kepada kamu!");
+	//SendClientMessage(targetPlayerID, COLOR_GREEN, "Kamu sekarang bisa menggunakan senjata!");
+
+	// Log to server
+	new logStr[150];
+	format(logStr, sizeof(logStr), "[Discord]: %s set CS for %s (ONLINE)", discordName, PlayerName);
+	LogServer("Discord", logStr);
+
+	// Response to Discord
+	new message[150];
+	format(message, sizeof(message), "✅ Character Story berhasil diberikan kepada **%s** (ONLINE)!", PlayerName);
+	return DCC_SendChannelMessage(channel, message);
+}
+
+DCMD:unsetcs(user, channel, params[])
+{
+	// Only active in a specific channel
+	if(channel != DCC_FindChannelById("1444800090827915375"))
+		return 1;
+
+	if(isnull(params))
+		return DCC_SendChannelMessage(channel, "**USAGE:** __!unsetcs__ <player>");
+
+	new PlayerName[MAX_PLAYER_NAME];
+
+	// Parse parameters
+	if(sscanf(params, "s[24]", PlayerName))
+	{
+		return DCC_SendChannelMessage(channel, "**USAGE:** __!unsetcs__ <player>");
+	}
+
+	// Get player ID from name
+	new targetPlayerID = GetPlayerIdByName(PlayerName);
+	if(targetPlayerID == INVALID_PLAYER_ID)
+	{
+		new response[128];
+		format(response, sizeof(response), "**ERROR:** Player `%s` not found or offline. Use slash command `/unsetcs` for offline players.", PlayerName);
+		return DCC_SendChannelMessage(channel, response);
+	}
+
+	// Check if player has CS
+	if(pData[targetPlayerID][pPlayerCS] != 1)
+	{
+		new response[128];
+		format(response, sizeof(response), "**ERROR:** Player `%s` tidak memiliki Character Story!", PlayerName);
+		return DCC_SendChannelMessage(channel, response);
+	}
+
+	// Remove Character Story
+	pData[targetPlayerID][pPlayerCS] = 0;
+
+	// Remove all weapons
+	ResetPlayerWeapons(targetPlayerID);
+
+	// Update database
+	new query[256];
+	mysql_format(g_SQL, query, sizeof(query), "UPDATE players SET characterstory = 0 WHERE reg_id = %i", pData[targetPlayerID][pID]);
+	mysql_tquery(g_SQL, query);
+
+	// Get Discord username who executed command
+	new DCC_User:author;
+	DCC_GetMessageAuthor(DCC_Message:0, author);
+	new discordName[32];
+	//DCC_GetUserName(author, discordName, sizeof(discordName));
+
+	// Message to player in-game
+	Info(targetPlayerID, "Discord Admin telah menghapus Character Story kamu!");
+	//SendClientMessage(targetPlayerID, COLOR_RED, "Semua senjatamu telah dihapus!");
+
+	// Log to server
+	new logStr[150];
+	format(logStr, sizeof(logStr), "[Discord]: %s unset CS for %s (ONLINE)", discordName, PlayerName);
+	LogServer("Discord", logStr);
+
+	// Response to Discord
+	new message[150];
+	format(message, sizeof(message), "✅ Character Story berhasil dihapus dari **%s** (ONLINE)!", PlayerName);
+	return DCC_SendChannelMessage(channel, message);
 }
 
 // ═══════════════════════════════════════════════════════

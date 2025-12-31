@@ -1,4 +1,3 @@
-new STREAMER_TAG_3D_TEXT_LABEL:PlayerLabel[MAX_PLAYERS];
 // ===== SETTINGS =====
 #define DAMAGE_LABEL_DURATION 1000 // Durasi tampil (ms) - 3 detik
 #define DAMAGE_LABEL_DISTANCE 50.0 // Jarak maksimal lihat label
@@ -44,22 +43,23 @@ timer LabelNormal[1000](playerid)
 
     new labeltext[128], labelcolor = COLOR_WHITE;
 
-    // Admin Duty
+    // Admin Duty - Priority tertinggi
     if(pData[playerid][pAdminDuty])
     {
         defer LabelAdmin(playerid);
         return;
     }
     
-    // Mask On
+    // Mask On - Priority kedua
     if(pData[playerid][pMaskOn])
     {
         format(labeltext, sizeof(labeltext), "Mask_#%d {ffffff}(%d)", pData[playerid][pMaskID], playerid);
         UpdateDynamic3DTextLabelText(PlayerLabel[playerid], COLOR_WHITE, labeltext);
+        defer LabelNormal(playerid); // PENTING: Loop timer
         return;
     }
 
-    // Faction Duty
+    // Faction Duty - Warna berdasarkan faction
     if(pData[playerid][pOnDuty])
     {
         switch(pData[playerid][pFaction])
@@ -76,6 +76,8 @@ timer LabelNormal[1000](playerid)
     // Default Label
     format(labeltext, sizeof(labeltext), "%s (%d)", GetRPName(playerid), playerid);
     UpdateDynamic3DTextLabelText(PlayerLabel[playerid], labelcolor, labeltext);
+    
+    defer LabelNormal(playerid); // PENTING: Loop timer agar terus update
 }
 // ===== ALTERNATIVE 3: Text-based percentage =====
 stock CreateProgressBarText(Float:value, Float:max, output[], size, const color[])

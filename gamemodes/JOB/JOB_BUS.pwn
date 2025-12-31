@@ -67,7 +67,7 @@ AddBusVehicle()
 	BusVeh[0] = AddStaticVehicleEx(431, 1704.6984, -1524.3541, 13.3736, 0.0000, -1, -1, VEHICLE_RESPAWN);
 	BusVeh[1] = AddStaticVehicleEx(431, 1705.1564, -1488.2904, 13.3736, 0.0000, -1, -1, VEHICLE_RESPAWN);
 	BusVeh[2] = AddStaticVehicleEx(431, 1705.3203, -1505.8333, 13.3736, 0.0000, -1, -1, VEHICLE_RESPAWN);
-	BusVeh[3] = AddStaticVehicleEx(431, 1705.1434, -1543.4546, 13.3736, 0.0000, -1, -1, VEHICLE_RESPAWN);
+	//BusVeh[3] = AddStaticVehicleEx(431, 1705.1434, -1543.4546, 13.3736, 0.0000, -1, -1, VEHICLE_RESPAWN);
 }
 
 IsABusVeh(carid)

@@ -132,7 +132,23 @@ ptask PlayerDelay[1000](playerid)
 	NgecekCiter(playerid);
 	NavUpdate(playerid);
 
-		//VIP Expired Checking
+	// Insurance Claim Countdown
+	foreach(new ii : PVehicles)
+	{
+		if(pvData[ii][cOwner] == pData[playerid][pID])
+		{
+			if(pvData[ii][cClaim] == 1 && pvData[ii][cClaimTime] > 0)
+			{
+				pvData[ii][cClaimTime]--;
+				
+				if(pvData[ii][cClaimTime] == 0)
+				{
+					Servers(playerid, "Your vehicle is now ready to claim! Use /claimpv at the Insurance Center.");
+				}
+			}
+		}
+	}
+	//VIP Expired Checking
 	if(pData[playerid][pVip] > 0)
 	{
 		if(pData[playerid][pVipTime] != 0 && pData[playerid][pVipTime] <= gettime())
@@ -188,28 +204,22 @@ ptask PlayerDelay[1000](playerid)
 	if(pData[playerid][pSweeperTime] > 0)
 	{
 		pData[playerid][pSweeperTime]--;
+		Custom(playerid, "SIDEJOB: "WHITE_E"You can now work again as a "YELLOW_E"Sweeper (Sidejob)");
 	}
 	if(pData[playerid][pForklifterTime] > 0)
 	{
 		pData[playerid][pForklifterTime]--;
+		Custom(playerid, "SIDEJOB: "WHITE_E"You can now work again as a "YELLOW_E"Forklifter (Sidejob)");
 	}
 	if(pData[playerid][pBusTime] > 0)
 	{
 		pData[playerid][pBusTime]--;
+		Custom(playerid, "SIDEJOB: "WHITE_E"You can now work again as a "YELLOW_E"Bus Driver (Sidejob)");
 	}
 	if(pData[playerid][pMowerTime] > 0)
 	{
 		pData[playerid][pMowerTime]--;
-	}
-	//Twitter Post
-	if(pData[playerid][pTwitterPostCooldown] > 0)
-	{
-		pData[playerid][pTwitterPostCooldown]--;
-	}
-	//Twitter Changename
-	if(pData[playerid][pTwitterNameCooldown] > 0)
-	{
-		pData[playerid][pTwitterNameCooldown]--;
+		Custom(playerid, "SIDEJOB: "WHITE_E"You can now work again as a "YELLOW_E"Mower (Sidejob)");
 	}
 
 		// Duty Delay
@@ -295,7 +305,7 @@ ptask Player_SprayTagging[1000](playerid)
 				ClearAnimations(playerid);
 				DeletePVar(playerid, "TagsReady");
 
-				if(Tags_Create(playerid) != -1) Servers(playerid, "Sukses membuat "YELLOW_E"spray tag"WHITE_E", akan hilang setelah "PINK_E"3 hari!");
+				if(Tags_Create(playerid) != -1) Custom(playerid, "TAGS: "WHITE_E"Sukses membuat "YELLOW_E"spray tag"WHITE_E", akan hilang setelah "PINK_E"3 hari!");
 				else Error(playerid, "Tags sudah mencapai batas maksimal!");
 
 				Tags_Reset(playerid);
@@ -365,10 +375,33 @@ ptask FarmDetect[1000](playerid)
 	return 1;
 }
 
+task CheckWeaponRestriction[5000]() // Check setiap 5 detik
+{
+	foreach(new i : Player)
+	{
+		if(IsPlayerConnected(i) && !IsPlayerNPC(i))
+		{
+			new weaponid = GetPlayerWeapon(i);
+			
+			// ✅ Ganti jadi cek firearms only
+			if(IsFirearmWeapon(weaponid) && pData[i][pPlayerCS] == 0)
+			{
+				ResetWeapon(i, weaponid); // Reset weapon tertentu, bukan semua
+				//SendClientMessage(i, COLOR_RED, "SYSTEM: {FFFFFF}Senjata api-mu telah dihapus karena kamu tidak memiliki Character Story!");
+			}
+		}
+	}
+}
+
 ptask playerTimer[1000](playerid)
 {
     if(pData[playerid][IsLoggedIn] == true)
     {
+		// ✅ Skip semua progress jika player AFK
+		if(pData[playerid][pAFK] == 1)
+		{
+			return 1; // Stop di sini, tidak ada yang di-increment
+		}
         // JANGAN increment lagi jika sudah >= 1800 (sudah ready)
         if(pData[playerid][pPaycheck] < 1800)
         {
@@ -394,8 +427,8 @@ ptask playerTimer[1000](playerid)
             if(pData[playerid][pPaycheck] >= 1800)
             {
                 pData[playerid][pPaycheck] = 1800; // Cap at 1800
-                Info(playerid, "Waktunya mengambil paycheck!");
-                Servers(playerid, "{ffff00}Silahkan pergi ke bank atau ATM terdekat untuk mengambil paycheck.");
+                //Info(playerid, "Waktunya mengambil paycheck!");
+                Custom(playerid, "PAYCHECK: "WHITE_E"Silahkan pergi ke bank atau ATM terdekat untuk mengambil paycheck.");
                 PlayerPlaySound(playerid, 1139, 0.0, 0.0, 0.0);
             }
         }
@@ -473,13 +506,19 @@ ptask playerTimer[1000](playerid)
                         GameTextForPlayer(playerid, mstr, 6000, 1);
                         PlayerPlaySound(playerid, 1057, 0.0, 0.0, 0.0);
                         
-                        Servers(playerid, "Selamat! Kamu naik ke level %d!", pData[playerid][pLevel]);
+                        //Servers(playerid, "Selamat! Kamu naik ke level %d!", pData[playerid][pLevel]);
 					}
                     else
                     {
-                        // Belum cukup EXP, kasih tau progress
-                        Servers(playerid, "EXP +%d | Progress: %d/%d EXP menuju level %d", exp_gain, pData[playerid][pLevelUp], scoremath, pData[playerid][pLevel] + 1);
-                       
+                        new str[144];
+						format(str, sizeof(str),
+							"~g~EXP +%d~w~ | Progress: %d/%d EXP menuju level %d",
+							exp_gain,
+							pData[playerid][pLevelUp],
+							scoremath,
+							pData[playerid][pLevel] + 1
+						);
+						InfoTD_MSG(playerid, 4000, str);
                     }
                     
                     // Update database

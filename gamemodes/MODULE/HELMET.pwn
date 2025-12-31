@@ -305,42 +305,29 @@ new Float:HelmetPos[300][9] =
 CMD:sb(playerid, params[]) return callcmd::seatbelt(playerid, params);
 CMD:seatbelt(playerid, params[])
 {
-    if(!IsPlayerInAnyVehicle(playerid))
+    if(!IsPlayerInAnyVehicle(playerid)) 
         return Error(playerid, "You are not in a vehicle.");
-
+    
     new vehicleid = GetPlayerVehicleID(playerid);
     new isBike = IsABike(vehicleid);
-
-    // Seatbelt/Hemlet OFF -> ON
+    
+    // Motor tidak bisa pakai seatbelt
+    if(isBike)
+        return Error(playerid, "You cannot use seatbelt on a bike.");
+    
+    // Seatbelt OFF -> ON
     if(pData[playerid][pSeatBelt] == 0)
     {
-        if(isBike && pData[playerid][pHelmetOn] == 0)
-        {
-            SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s takes out a helmet and puts it on.", ReturnName(playerid));
-            pData[playerid][pHelmetOn] = 1;
-            GivePlayerHelmet(playerid);
-        }
-        else
-        {
-            SendClientMessage(playerid, COLOR_ARWIN, "VEHICLE:{FFFFFF} Seatbelt {FFFF00}ON");
-            pData[playerid][pSeatBelt] = 1;
-        }
+        Custom(playerid, "VEHICLE:"WHITE_E" Seatbelt {FFFF00}ON");
+        pData[playerid][pSeatBelt] = 1;
     }
-    // Seatbelt/Helmet ON -> OFF
+    // Seatbelt ON -> OFF
     else
     {
-        if(isBike && pData[playerid][pHelmetOn] == 1)
-        {
-            pData[playerid][pHelmetOn] = 0;
-            SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s takes their helmet off and puts it away.", ReturnName(playerid));
-            RemovePlayerAttachedObject(playerid, 9);
-        }
-        else
-        {
-            SendClientMessage(playerid, COLOR_ARWIN, "VEHICLE:{FFFFFF} Seatbelt {FF0000}OFF");
-            pData[playerid][pSeatBelt] = 0;
-        }
+        Custom(playerid, "VEHICLE:"WHITE_E" Seatbelt {FFFF00}OFF");
+        pData[playerid][pSeatBelt] = 0;
     }
+    
     return 1;
 }
 

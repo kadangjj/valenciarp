@@ -12,7 +12,6 @@ new ServerMoney, //2255.92, -1747.33, 1014.77
 	ProductPrice,
 	RawComponent,
 	RawFish,
-	//RawComponentPrice,
 	Apotek,
 	MedicinePrice,
 	MedkitPrice,
@@ -43,6 +42,8 @@ new MoneyPickup,
 	Text3D:OreText,
 	ProductPickup,
 	Text3D:ProductText,
+	ProductPickup2,
+	Text3D:ProductText2,
 	ApotekPickup,
 	Text3D:ApotekText,
 	FoodPickup,
@@ -73,7 +74,7 @@ CreateServerPoint()
 	//Server Money
 	new strings[1024];
 	MoneyPickup = CreateDynamicPickup(1239, 23, -2694.4294, 810.9385, 1500.9688, -1, -1, -1, 50.0);
-	format(strings, sizeof(strings), "[Server Money]\n"WHITE_E"Goverment Money: "LG_E"$%s", FormatMoney(ServerMoney));
+	format(strings, sizeof(strings), "[Server Money]\n"WHITE_E"Government Money: "LG_E"%s", FormatMoney(ServerMoney));
 	MoneyText = CreateDynamic3DTextLabel(strings, COLOR_LBLUE, -2694.4294, 810.9385, 1500.9688, 5.0);
 	
 	if(IsValidDynamic3DTextLabel(MatText))
@@ -111,6 +112,12 @@ CreateServerPoint()
 		
 	if(IsValidDynamicPickup(ProductPickup))
 		DestroyDynamicPickup(ProductPickup);
+
+	if(IsValidDynamic3DTextLabel(ProductText2))
+            DestroyDynamic3DTextLabel(ProductText2);
+		
+	if(IsValidDynamicPickup(ProductPickup2))
+		DestroyDynamicPickup(ProductPickup2);
 
 	if(IsValidDynamic3DTextLabel(ApotekText))
             DestroyDynamic3DTextLabel(ApotekText);
@@ -172,66 +179,73 @@ CreateServerPoint()
 		
 	//JOBS
 	MatPickup = CreateDynamicPickup(1239, 23, -258.54, -2189.92, 28.97, -1, -1, -1, 50.0);
-	format(strings, sizeof(strings), "[Material]\n"WHITE_E"Material Stock: "LG_E"%d\n\n"WHITE_E"Material Price: "LG_E"$%s /item\n\n"WHITE_E"Lumber Price: "LG_E"$%s /item\n"LB_E"/buy", Material, FormatMoney(MaterialPrice), FormatMoney(LumberPrice));
+	format(strings, sizeof(strings), "[Material]\n"WHITE_E"Material Stock: "LG_E"%d\n\n"WHITE_E"Material Price: "LG_E"%s /item\n\n"WHITE_E"Lumber Price: "LG_E"%s /item\n"LB_E"/buy", Material, FormatMoney(MaterialPrice), FormatMoney(LumberPrice));
 	MatText = CreateDynamic3DTextLabel(strings, COLOR_YELLOW, -258.54, -2189.92, 28.97, 5.0); // lumber
 	
 	CompPickup = CreateDynamicPickup(1239, 23, 854.5555, -605.2056, 18.4219, -1, -1, -1, 50.0);
-	format(strings, sizeof(strings), "[Component]\n"WHITE_E"Component Stock: "LG_E"%d\n\n"WHITE_E"Component Price: "LG_E"$%s /item\n"LB_E"/buy", Component, FormatMoney(ComponentPrice));
+	format(strings, sizeof(strings), "[Component]\n"WHITE_E"Component Stock: "LG_E"%d\n\n"WHITE_E"Component Price: "LG_E"%s /item\n"LB_E"/buy", Component, FormatMoney(ComponentPrice));
 	CompText = CreateDynamic3DTextLabel(strings, COLOR_YELLOW, 854.5555, -605.2056, 18.4219, 5.0); // comp
 	
 	GasOilPickup = CreateDynamicPickup(1239, 23, 336.70, 895.54, 20.40, -1, -1, -1, 50.0);
-	format(strings, sizeof(strings), "[Miner]\n"WHITE_E"GasOil Stock: "LG_E"%d liters\n\n"WHITE_E"GasOil Price: "LG_E"$%s /liters\n"LB_E"/buy", GasOil, FormatMoney(GasOilPrice));
+	format(strings, sizeof(strings), "[Miner]\n"WHITE_E"GasOil Stock: "LG_E"%d liters\n\n"WHITE_E"GasOil Price: "LG_E"%s /liters\n"LB_E"/buy", GasOil, FormatMoney(GasOilPrice));
 	GasOilText = CreateDynamic3DTextLabel(strings, COLOR_YELLOW, 336.70, 895.54, 20.40, 5.0); // gasoil
 
 	TruckerBuyCompoPickup = CreateDynamicPickup(2912, 23, 323.5624, 904.4940, 21.5862, -1, -1, -1, 50.0);
-	format(strings, sizeof(strings), "[Component Crate]\n"WHITE_E"Component Stock: "LG_E"%d\n\n"WHITE_E"Component Price: "LG_E"$%s /item\n"LB_E"/buy", RawComponent, FormatMoney(ComponentPrice));
+	new crateComponentStock = RawComponent / 20; // Hitung berapa crate tersedia
+	format(strings, sizeof(strings), "[Component Crate]\n"WHITE_E"Stock: "LG_E"%d Crates "GREY_E"(%d kg)\n"YELLOW_E"Take crate and deliver to store\n"LB_E"/takecrate", crateComponentStock, RawComponent);
 	TruckerBuyCompoText = CreateDynamic3DTextLabel(strings, COLOR_YELLOW, 323.5624, 904.4940, 21.5862, 5.0); // rawcomponent
 
 	RawComponentPickup = CreateDynamicPickup(1239, 23, 797.5262, -617.7863, 16.3359, -1, -1, -1, 50.0);
-	format(strings, sizeof(strings), "[Trucker Store Component]\n"WHITE_E"Component Stock: "LG_E"%d\n\n"LB_E"/storecomponent", Component);
+	format(strings, sizeof(strings), "[Trucker Store Component]\n"WHITE_E"Component Stock: "LG_E"%d\n\n"LB_E"/storecrate", Component);
 	RawComponentText = CreateDynamic3DTextLabel(strings, COLOR_YELLOW, 797.5262, -617.7863, 16.3359, 5.0); // rawcomponent
 	
+
 	TruckerBuyFishPickup = CreateDynamicPickup(2912, 23, 2836.5061,-1540.5342,11.0991, -1, -1, -1, 50.0);
-	format(strings, sizeof(strings), "[Fish Crate]\n"WHITE_E"Fish Stock: "LG_E"%d\n\n"WHITE_E"Fish Price: "LG_E"$%s /kg\n"LB_E"/buy", RawFish, FormatMoney(FishPrice));
-	TruckerBuyFishText = CreateDynamic3DTextLabel(strings, COLOR_YELLOW, 2836.5061,-1540.5342,11.0991, 5.0); // rawfish
+	new crateFishStock = RawFish / 20; // Hitung berapa crate tersedia
+	format(strings, sizeof(strings), "[Fish Crate]\n"WHITE_E"Stock: "LG_E"%d Crates "GREY_E"(%d kg)\n"YELLOW_E"Take crate and deliver to store\n"LB_E"/takecrate", crateFishStock, RawFish);
+	TruckerBuyFishText = CreateDynamic3DTextLabel(strings, COLOR_YELLOW, 2836.5061,-1540.5342,11.0991, 5.0);
+
 
 	RawFishPickup = CreateDynamicPickup(1239, 23, -377.0572, -1445.5399, 25.7266, -1, -1, -1, 50.0);
-	format(strings, sizeof(strings), "[Trucker Store Fish]\n"WHITE_E"Fish Stock: "LG_E"%d\n\n"LB_E"/storefish", Food);
+	format(strings, sizeof(strings), "[Trucker Store Fish]\n"WHITE_E"Fish Stock: "LG_E"%d\n\n"LB_E"/storecrate", Food);
 	RawFishText = CreateDynamic3DTextLabel(strings, COLOR_YELLOW, -377.0572, -1445.5399, 25.7266, 5.0); // rawfish
 
 	OrePickup = CreateDynamicPickup(1239, 23, 298.0443, 907.1157, 20.4363, -1, -1, -1, 50.0);
-	format(strings, sizeof(strings), "[Miner]\n"WHITE_E"Ore Metal Price: "LG_E"$%s / item\n\n"WHITE_E"Ore Coal Price: "LG_E"$%s /item\n"LB_E"/ore sell", FormatMoney(MetalPrice), FormatMoney(CoalPrice));
+	format(strings, sizeof(strings), "[Miner]\n"WHITE_E"Ore Metal Price: "LG_E"%s / item\n\n"WHITE_E"Ore Coal Price: "LG_E"%s /item\n"LB_E"/ore sell", FormatMoney(MetalPrice), FormatMoney(CoalPrice));
 	OreText = CreateDynamic3DTextLabel(strings, COLOR_YELLOW, 298.0443, 907.1157, 20.4363, 5.0); // sell ore
 	
-	ProductPickup = CreateDynamicPickup(1239, 23, 1229.8157,145.2586,20.4609, -1, -1, -1, 50.0);
-	format(strings, sizeof(strings), "[PRODUCT]\n"WHITE_E"Product Stock: "LG_E"%d\n\n"WHITE_E"Product Price: "LG_E"$%s /item\n"LB_E"/buy", Product, FormatMoney(ProductPrice));
-	ProductText = CreateDynamic3DTextLabel(strings, COLOR_YELLOW, 1229.8157,145.2586,20.4609, 5.0); // product
-	
+	ProductPickup = CreateDynamicPickup(1239, 23, -198.4669, -203.1409, 1.4219, -1, -1, -1, 50.0);
+	ProductPickup2 = CreateDynamicPickup(1239, 23, 1208.0065, 185.8374, 20.5067, -1, -1, -1, 50.0);
+
+	format(strings, sizeof(strings), "[PRODUCT]\n"WHITE_E"Product Stock: "LG_E"%d\n\n"WHITE_E"Product Price: "LG_E"%s /item\n"LB_E"/buy", Product, FormatMoney(ProductPrice));
+	ProductText = CreateDynamic3DTextLabel(strings, COLOR_YELLOW, -198.4669, -203.1409, 1.4219, 5.0);
+	ProductText2 = CreateDynamic3DTextLabel(strings, COLOR_YELLOW, 1208.0065, 185.8374, 20.5067, 5.0); // product
+
 	ApotekPickup = CreateDynamicPickup(1241, 23, -1774.0746, -2005.6477, 1500.7853, -1, -1, -1, 50.0);
 	format(strings, sizeof(strings), "[Hospital]\n"WHITE_E"Apotek Stock: "LG_E"%d\n"LB_E"/buy", Apotek);
 	ApotekText = CreateDynamic3DTextLabel(strings, COLOR_PINK, -1774.0746, -2005.6477, 1500.7853, 5.0); // Apotek hospital
 	
 	FoodPickup = CreateDynamicPickup(1239, 23, -381.44, -1426.13, 25.93, -1, -1, -1, 50.0);
-	format(strings, sizeof(strings), "[Food]\n"WHITE_E"Food Stock: "LG_E"%d\n"WHITE_E"Food Price: "LG_E"$%s /item\n\n"WHITE_E"Seed Price: "LG_E"$%s /item\n"WHITE_E"Potato Price: "LG_E"$%s /kg\n"WHITE_E"Wheat Price: "LG_E"$%s /kg\n"WHITE_E"Orange Price: "LG_E"$%s /kg\n\n"LB_E"/buy", 
+	format(strings, sizeof(strings), "[Food]\n"WHITE_E"Food Stock: "LG_E"%d\n"WHITE_E"Food Price: "LG_E"%s /item\n\n"WHITE_E"Seed Price: "LG_E"%s /item\n"WHITE_E"Potato Price: "LG_E"%s /kg\n"WHITE_E"Wheat Price: "LG_E"%s /kg\n"WHITE_E"Orange Price: "LG_E"%s /kg\n\n"LB_E"/buy", 
 	Food, FormatMoney(FoodPrice), FormatMoney(SeedPrice), FormatMoney(PotatoPrice), FormatMoney(WheatPrice), FormatMoney(OrangePrice), FormatMoney(FishPrice));
 	FoodText = CreateDynamic3DTextLabel(strings, COLOR_YELLOW, -381.44, -1426.13 , 25.93+1, 5.0); // food 
 	
 	FishPickup = CreateDynamicPickup(1239, 23, 2843.9133, -1516.6660, 11.3011, -1, -1, -1, 50.0);
-	format(strings, sizeof(strings), "[Fish Factory]\n"WHITE_E"Fish Price: "LG_E"$%s\n\n"LB_E"/sellfish", FormatMoney(FishPrice));
+	format(strings, sizeof(strings), "[Fish Factory]\n"WHITE_E"Fish Price: "LG_E"%s\n\n"LB_E"/sellfish", FormatMoney(FishPrice));
 	FishText = CreateDynamic3DTextLabel(strings, COLOR_YELLOW, 2843.9133, -1516.6660, 11.3011, 5.0); // fish factory
 
 	DrugPickup = CreateDynamicPickup(1239, 23, 874.52, -15.98, 63.19, -1, -1, -1, 50.0);
-	format(strings, sizeof(strings), "[Black Market]\n"WHITE_E"Marijuana Stock: "LG_E"%d\n\n"WHITE_E"Marijuana Price: "LG_E"$%s /item\n"LB_E"/buy /sellmarijuana", Marijuana, FormatMoney(MarijuanaPrice));
+	format(strings, sizeof(strings), "[Black Market]\n"WHITE_E"Marijuana Stock: "LG_E"%d\n\n"WHITE_E"Marijuana Price: "LG_E"%s /item\n"LB_E"/buy /sellmarijuana", Marijuana, FormatMoney(MarijuanaPrice));
 	DrugText = CreateDynamic3DTextLabel(strings, COLOR_GREY, 874.52, -15.98, 63.19, 5.0); // product
 
 	ObatPickup = CreateDynamicPickup(1241, 23, -1772.3304, -2013.1531, 1500.7853, -1, -1, -1, 50.0);
-	format(strings, sizeof(strings), "[Obat Myricous]\n"WHITE_E"Myricous Stock: "LG_E"%d\n\n"WHITE_E"Myricous Price: "LG_E"$%s /item\n"LB_E"/buy", ObatMyr, FormatMoney(ObatPrice));
+	format(strings, sizeof(strings), "[Obat Myricous]\n"WHITE_E"Myricous Stock: "LG_E"%d\n\n"WHITE_E"Myricous Price: "LG_E"%s /item\n"LB_E"/buy", ObatMyr, FormatMoney(ObatPrice));
 	ObatText = CreateDynamic3DTextLabel(strings, COLOR_GREY, -1772.3304, -2013.1531, 1500.7853, 5.0); // product
 
 	//Vending Restock
 	new box = ProductPrice*15;
 	CargoPickup = CreateDynamicPickup(1271, 23, -50.61, -233.28, 6.76, -1, -1, -1, 50);
-	format(strings, sizeof(strings), "[Cargo Warehouse]\n"WHITE_E"Box Stock: "LG_E"%d\n\n"WHITE_E"Product Price: "LG_E"$%s /item\n"LB_E"/cargo buy", Product, FormatMoney(box));
+	format(strings, sizeof(strings), "[Cargo Warehouse]\n"WHITE_E"Box Stock: "LG_E"%d\n\n"WHITE_E"Product Price: "LG_E"%s /item\n"LB_E"/cargo buy", Product, FormatMoney(box));
 	CargoText = CreateDynamic3DTextLabel(strings, COLOR_LBLUE, -50.61, -233.28, 6.76, 5.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 1); // Vending Product
 }
 

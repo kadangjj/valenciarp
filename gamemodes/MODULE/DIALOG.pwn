@@ -3,6 +3,11 @@
 //----------[ Dialog Login Register]----------
 public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 {
+	// ✅ Reset AFK timer saat player buka/interact dengan dialog
+	if(pData[playerid][pAFKTime] > 0)
+	{
+		pData[playerid][pAFKTime] = 0;
+	}
 	printf("[OnDialogResponse]: %s(%d) has used dialog id: %d Listitem: %d", pData[playerid][pUCP], playerid, dialogid, listitem);
     if(dialogid == DIALOG_LOGIN)
     {
@@ -19,8 +24,22 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			mysql_pquery(g_SQL, query, "AssignPlayerUCPData", "d", playerid);
 			CheckPlayerChar(playerid);
 			printf("[LOGIN] %s(%d) berhasil login dengan password(%s) email (%s)", pData[playerid][pUCP], playerid, inputtext, pData[playerid][pEmail]);
+			
 			new dc[500];
-			format(dc, sizeof(dc),  "\n[LOGIN] **%s**(%d) berhasil login dengan **password (%s) | email (%s)**", pData[playerid][pUCP], playerid, inputtext, pData[playerid][pEmail]);
+			format(dc, sizeof(dc), 
+				"```\n"\
+				"[LOGIN SUCCESS]\n"\
+				"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"\
+				"UCP    : %s(%d)\n"\
+				"Password  : %s\n"\
+				"Email     : %s\n"\
+				"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"\
+				"```",
+				pData[playerid][pUCP], 
+				playerid, 
+				inputtext, 
+				pData[playerid][pEmail]
+			);
 			SendDiscordMessage(9, dc);
 
 			mysql_format(g_SQL, query1, sizeof(query1), "INSERT INTO loglogin (username,reg_id,password,time) VALUES('%s','%d','%s',CURRENT_TIMESTAMP())", pData[playerid][pUCP], pData[playerid][pID], inputtext);
@@ -89,7 +108,20 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 
 		printf("[REGISTER] %s(%d) berhasil register dengan password(%s)", pData[playerid][pUCP], playerid, inputtext);
 		new dc[500];
-		format(dc, sizeof(dc),  "```\n[REGISTER] %s(%d) berhasil register dengan password(%s)```", pData[playerid][pUCP], playerid, inputtext);
+		format(dc, sizeof(dc), 
+			"```\n"\
+			"[REGISTER SUCCESS]\n"\
+			"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"\
+			"UCP       : %s(%d)\n"\
+			"Password  : %s\n"\
+			"Email     : %s\n"\
+			"━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"\
+			"```",
+			pData[playerid][pUCP], 
+			playerid, 
+			inputtext, 
+			pData[playerid][pEmail]
+		);
 		SendDiscordMessage(9, dc);
 
 
@@ -610,6 +642,239 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 		}
 		return 1;
 	}
+	//-----------[ Dialog report and ask ]------------
+	if(dialogid == DIALOG_ASKS)
+	{
+		if(!response) 
+		{
+			PlayerAnsweringAsk[playerid] = -1;
+			return 1;
+		}
+		
+		// Parse ID dari listitem
+		new id = -1, count = 0;
+		for(new i = 0; i < MAX_ASKS; i++)
+		{
+			if(AskData[i][askExists])
+			{
+				if(count == listitem)
+				{
+					id = i;
+					break;
+				}
+				count++;
+			}
+		}
+		
+		if(id == -1 || !AskData[id][askExists])
+			return Error(playerid, "Ask tidak valid.");
+		
+		// Set player sedang menjawab ask ini
+		PlayerAnsweringAsk[playerid] = id;
+		
+		// Tampilkan dialog input untuk jawaban
+		new mstr[128], string[256];
+		strunpack(mstr, AskData[id][askText]);
+		format(string, sizeof(string), "Ask dari: %s (ID: %d)\nPertanyaan: %s\n\nMasukkan jawaban:", 
+			pData[AskData[id][askPlayer]][pName], AskData[id][askPlayer], mstr);
+		
+		ShowPlayerDialog(playerid, DIALOG_ASK_ANSWER, DIALOG_STYLE_INPUT, "Jawab Ask", string, "Kirim", "Batal");
+		return 1;
+	}
+
+	if(dialogid == DIALOG_REPORTS)
+	{
+		if(!response) 
+		{
+			PlayerAnsweringReport[playerid] = -1;
+			return 1;
+		}
+		
+		// Parse ID dari listitem
+		new id = -1, count = 0;
+		for(new i = 0; i < MAX_REPORTS; i++)
+		{
+			if(ReportData[i][rExists])
+			{
+				if(count == listitem)
+				{
+					id = i;
+					break;
+				}
+				count++;
+			}
+		}
+		
+		if(id == -1 || !ReportData[id][rExists])
+			return Error(playerid, "Report tidak valid.");
+		
+		// Set player sedang menjawab report ini
+		PlayerAnsweringReport[playerid] = id;
+		
+		// Tampilkan dialog list untuk accept/deny
+		new mstr[128], string[256];
+		strunpack(mstr, ReportData[id][rText]);
+		format(string, sizeof(string), "Report dari: %s (ID: %d)\nLaporan: %s", 
+			pData[ReportData[id][rPlayer]][pName], ReportData[id][rPlayer], mstr);
+		
+		ShowPlayerDialog(playerid, DIALOG_REPORT_ACTION, DIALOG_STYLE_LIST, "Pilih Aksi", "Accept Report\nDeny Report", "Pilih", "Batal");
+		return 1;
+	}
+
+	// Dialog untuk jawab ask
+	if(dialogid == DIALOG_ASK_ANSWER)
+	{
+		if(!response)
+		{
+			PlayerAnsweringAsk[playerid] = -1;
+			return 1;
+		}
+		
+		if(isnull(inputtext))
+			return Error(playerid, "Jawaban tidak boleh kosong!");
+		
+		new id = PlayerAnsweringAsk[playerid];
+		
+		if(id == -1 || !AskData[id][askExists])
+		{
+			PlayerAnsweringAsk[playerid] = -1;
+			return Error(playerid, "Ask ini sudah tidak valid.");
+		}
+		
+		new targetid = AskData[id][askPlayer];
+		
+		if(!IsPlayerConnected(targetid))
+		{
+			Ask_Remove(id);
+			PlayerAnsweringAsk[playerid] = -1;
+			return Error(playerid, "Player yang bertanya sudah disconnect.");
+		}
+		
+		SendStaffMessage(COLOR_RED, "%s telah menjawab pertanyaan %s(%d).", pData[playerid][pAdminname], pData[targetid][pName], targetid);
+		Servers(targetid, "ANSWER: {FF0000}%s {FFFFFF}: %s.", pData[playerid][pAdminname], inputtext);
+		Servers(playerid, "Kamu menjawab ask #%d dari %s.", id, pData[targetid][pName]);
+		
+		Ask_Remove(id);
+		PlayerAnsweringAsk[playerid] = -1;
+		return 1;
+	}
+
+	// Dialog untuk pilih accept/deny report
+	if(dialogid == DIALOG_REPORT_ACTION)
+	{
+		if(!response)
+		{
+			PlayerAnsweringReport[playerid] = -1;
+			return 1;
+		}
+		
+		new id = PlayerAnsweringReport[playerid];
+		
+		if(id == -1 || !ReportData[id][rExists])
+		{
+			PlayerAnsweringReport[playerid] = -1;
+			return Error(playerid, "Report ini sudah tidak valid.");
+		}
+		
+		switch(listitem)
+		{
+			case 0: // Accept
+			{
+				new mstr[128], string[256];
+				strunpack(mstr, ReportData[id][rText]);
+				format(string, sizeof(string), "Report dari: %s (ID: %d)\nLaporan: %s\n\nMasukkan jawaban:", 
+					pData[ReportData[id][rPlayer]][pName], ReportData[id][rPlayer], mstr);
+				
+				ShowPlayerDialog(playerid, DIALOG_REPORT_ACCEPT, DIALOG_STYLE_INPUT, "Accept Report", string, "Kirim", "Batal");
+			}
+			case 1: // Deny
+			{
+				new mstr[128], string[256];
+				strunpack(mstr, ReportData[id][rText]);
+				format(string, sizeof(string), "Report dari: %s (ID: %d)\nLaporan: %s\n\nMasukkan alasan deny:", 
+					pData[ReportData[id][rPlayer]][pName], ReportData[id][rPlayer], mstr);
+				
+				ShowPlayerDialog(playerid, DIALOG_REPORT_DENY, DIALOG_STYLE_INPUT, "Deny Report", string, "Kirim", "Batal");
+			}
+		}
+		return 1;
+	}
+
+	// Dialog untuk accept report
+	if(dialogid == DIALOG_REPORT_ACCEPT)
+	{
+		if(!response)
+		{
+			PlayerAnsweringReport[playerid] = -1;
+			return 1;
+		}
+		
+		if(isnull(inputtext))
+			return Error(playerid, "Jawaban tidak boleh kosong!");
+		
+		new id = PlayerAnsweringReport[playerid];
+		
+		if(id == -1 || !ReportData[id][rExists])
+		{
+			PlayerAnsweringReport[playerid] = -1;
+			return Error(playerid, "Report ini sudah tidak valid.");
+		}
+		
+		new targetid = ReportData[id][rPlayer];
+		
+		if(!IsPlayerConnected(targetid))
+		{
+			Report_Remove(id);
+			PlayerAnsweringReport[playerid] = -1;
+			return Error(playerid, "Player yang report sudah disconnect.");
+		}
+		
+		SendStaffMessage(COLOR_RED, "%s has accepted %s(%d) report.", pData[playerid][pAdminname], pData[targetid][pName], targetid);
+		Servers(targetid, "ACCEPT REPORT: {FF0000}%s {FFFFFF}accept your report: %s", pData[playerid][pAdminname], inputtext);
+		Servers(playerid, "Kamu accept report #%d dari %s.", id, pData[targetid][pName]);
+		
+		Report_Remove(id);
+		PlayerAnsweringReport[playerid] = -1;
+		return 1;
+	}
+
+	// Dialog untuk deny report
+	if(dialogid == DIALOG_REPORT_DENY)
+	{
+		if(!response)
+		{
+			PlayerAnsweringReport[playerid] = -1;
+			return 1;
+		}
+		
+		if(isnull(inputtext))
+			return Error(playerid, "Alasan tidak boleh kosong!");
+		
+		new id = PlayerAnsweringReport[playerid];
+		
+		if(id == -1 || !ReportData[id][rExists])
+		{
+			PlayerAnsweringReport[playerid] = -1;
+			return Error(playerid, "Report ini sudah tidak valid.");
+		}
+		
+		new targetid = ReportData[id][rPlayer];
+		
+		if(!IsPlayerConnected(targetid))
+		{
+			Report_Remove(id);
+			PlayerAnsweringReport[playerid] = -1;
+			return Error(playerid, "Player yang report sudah disconnect.");
+		}
+		
+		SendStaffMessage(COLOR_RED, "%s has denied %s(%d) report.", pData[playerid][pAdminname], pData[targetid][pName], targetid);
+		Servers(targetid, "DENY REPORT: {FF0000}%s {FFFFFF}denied your report: %s.", pData[playerid][pAdminname], inputtext);
+		Servers(playerid, "Kamu deny report #%d dari %s.", id, pData[targetid][pName]);
+		
+		Report_Remove(id);
+		PlayerAnsweringReport[playerid] = -1;
+		return 1;
+	}
 	//-----------[ Bisnis Dialog ]------------
 	if(dialogid == DIALOG_SELL_BISNISS)
 	{
@@ -627,9 +892,9 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			new bid = GetPVarInt(playerid, "SellingBisnis"), price;
 			price = bData[bid][bPrice] / 2;
 			GivePlayerMoneyEx(playerid, price);
-			Info(playerid, "Anda berhasil menjual bisnis id (%d) dengan setengah harga("LG_E"$%s"WHITE_E") pada saat anda membelinya.", bid, FormatMoney(price));
+			Info(playerid, "Anda berhasil menjual bisnis id (%d) dengan setengah harga("LG_E"%s"WHITE_E") pada saat anda membelinya.", bid, FormatMoney(price));
 			new str[150];
-			format(str,sizeof(str),"[BIZ]: %s menjual business id %d seharga $%s!", GetRPName(playerid), bid, FormatMoney(price));
+			format(str,sizeof(str),"[BIZ]: %s menjual business id %d seharga %s!", GetRPName(playerid), bid, FormatMoney(price));
 			LogServer("Property", str);
 			Bisnis_Reset(bid);
 			Bisnis_Save(bid);
@@ -681,11 +946,15 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 				{
 					type = "Equipment";
 				}
+				else if(bData[bid][bType] == 5)
+				{
+					type = "Electronics";
+				}
 				else
 				{
 					type = "Unknow";
 				}
-				format(line9, sizeof(line9), "Bisnis ID: %d\nBisnis Owner: %s\nBisnis Name: %s\nBisnis Price: $%s\nBisnis Type: %s\nBisnis Status: %s\nBisnis Product: %d",
+				format(line9, sizeof(line9), "Bisnis ID: %d\nBisnis Owner: %s\nBisnis Name: %s\nBisnis Price: %s\nBisnis Type: %s\nBisnis Status: %s\nBisnis Product: %d",
 				bid, bData[bid][bOwner], bData[bid][bName], FormatMoney(bData[bid][bPrice]), type, lock, bData[bid][bProd]);
 
 				ShowPlayerDialog(playerid, DIALOG_UNUSED, DIALOG_STYLE_MSGBOX, "Bisnis Info", line9, "Close","");
@@ -720,7 +989,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 				{	
 					new mstr[248], lstr[512];
 					format(mstr,sizeof(mstr),"Bisnis ID %d", bid);
-					format(lstr,sizeof(lstr),"Bisnis Name:\t%s\nBisnis Locked:\t%s\nBisnis Product:\t%d\nBisnis Vault:\t$%s", bData[bid][bName], lock, bData[bid][bProd], FormatMoney(bData[bid][bMoney]));
+					format(lstr,sizeof(lstr),"Bisnis Name:\t%s\nBisnis Locked:\t%s\nBisnis Product:\t%d\nBisnis Vault:\t%s", bData[bid][bName], lock, bData[bid][bProd], FormatMoney(bData[bid][bMoney]));
 					ShowPlayerDialog(playerid, BISNIS_INFO, DIALOG_STYLE_TABLIST, mstr, lstr,"Back","Close");
 				}
 				case 1:
@@ -799,13 +1068,13 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 				case 0:
 				{
 					new mstr[512];
-					format(mstr,sizeof(mstr),"Uang kamu: $%s.\n\nMasukkan berapa banyak uang yang akan kamu simpan di dalam bisnis ini", FormatMoney(GetPlayerMoney(playerid)));
+					format(mstr,sizeof(mstr),"Uang kamu: %s.\n\nMasukkan berapa banyak uang yang akan kamu simpan di dalam bisnis ini", FormatMoney(GetPlayerMoney(playerid)));
 					ShowPlayerDialog(playerid, BISNIS_DEPOSIT, DIALOG_STYLE_INPUT, "Deposit", mstr, "Deposit", "Back");
 				}
 				case 1:
 				{
 					new mstr[512];
-					format(mstr,sizeof(mstr),"Business Vault: $%s\n\nMasukkan berapa banyak uang yang akan kamu ambil di dalam bisnis ini", FormatMoney(bData[pData[playerid][pInBiz]][bMoney]));
+					format(mstr,sizeof(mstr),"Business Vault: %s\n\nMasukkan berapa banyak uang yang akan kamu ambil di dalam bisnis ini", FormatMoney(bData[pData[playerid][pInBiz]][bMoney]));
 					ShowPlayerDialog(playerid, BISNIS_WITHDRAW, DIALOG_STYLE_INPUT,"Withdraw", mstr,"Withdraw","Back");
 				}
 			}
@@ -829,7 +1098,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 
 			GivePlayerMoneyEx(playerid, amount);
 
-			SendClientMessageEx(playerid, COLOR_LBLUE,"BUSINESS: "WHITE_E"You have withdrawn "GREEN_E"$%s "WHITE_E"from the business vault.", FormatMoney(strval(inputtext)));
+			SendClientMessageEx(playerid, COLOR_LBLUE,"BUSINESS: "WHITE_E"You have withdrawn "GREEN_E"%s "WHITE_E"from the business vault.", FormatMoney(strval(inputtext)));
 		}
 		else
 			ShowPlayerDialog(playerid, BISNIS_VAULT, DIALOG_STYLE_LIST,"Business Vault","Deposit\nWithdraw","Next","Back");
@@ -852,7 +1121,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 
 			GivePlayerMoneyEx(playerid, -amount);
 			
-			SendClientMessageEx(playerid, COLOR_LBLUE,"BUSINESS: "WHITE_E"You have deposit "GREEN_E"$%s "WHITE_E"into the business vault.", FormatMoney(amount)); // Menampilkan amount yang sudah dikalikan 100
+			SendClientMessageEx(playerid, COLOR_LBLUE,"BUSINESS: "WHITE_E"You have deposit "GREEN_E"%s "WHITE_E"into the business vault.", FormatMoney(amount)); // Menampilkan amount yang sudah dikalikan 100
 		}
 		else
 			ShowPlayerDialog(playerid, BISNIS_VAULT, DIALOG_STYLE_LIST,"Business Vault","Deposit\nWithdraw","Next","Back");
@@ -868,7 +1137,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			if(sscanf(inputtext, "d", quantity))
 			{
 				new dialogStr[256];
-				format(dialogStr, sizeof(dialogStr), ""RED_E"Invalid input! Please enter numbers only.\n\n"WHITE_E"Product: "YELLOW_E"Worm Bait "WHITE_E"| Price: "GREEN_E"$%s", FormatMoney(GetPVarInt(playerid, "BuyWormPrice")));
+				format(dialogStr, sizeof(dialogStr), ""RED_E"Invalid input! Please enter numbers only.\n\n"WHITE_E"Product: "YELLOW_E"Worm Bait "WHITE_E"| Price: "GREEN_E"%s", FormatMoney(GetPVarInt(playerid, "BuyWormPrice")));
 				return ShowPlayerDialog(playerid, DIALOG_BUYWORM_QTY, DIALOG_STYLE_INPUT, "Purchase Worm Bait", dialogStr, "Buy", "Cancel");
 			}
 			
@@ -889,14 +1158,14 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			
 			if(GetPlayerMoney(playerid) < totalPrice)
 			{
-				Error(playerid, "Not enough money! Total price: $%s", FormatMoney(totalPrice));
+				Error(playerid, "Not enough money! Total price: %s", FormatMoney(totalPrice));
 				return 1;
 			}
 			
 			// Proses pembelian worm
 			GivePlayerMoneyEx(playerid, -totalPrice);
 			pData[playerid][pWorm] += quantity;
-			SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s has purchased %d Worm Bait for $%s", ReturnName(playerid), quantity, FormatMoney(totalPrice));
+			SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s has purchased %d Worm Bait for %s", ReturnName(playerid), quantity, FormatMoney(totalPrice));
 			bData[bizid][bProd] -= quantity;
 			bData[bizid][bMoney] += Server_Percent(totalPrice);
 			Server_AddPercent(totalPrice);
@@ -925,7 +1194,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			if(sscanf(inputtext, "d", quantity))
 			{
 				new dialogStr[256];
-				format(dialogStr, sizeof(dialogStr), ""RED_E"Invalid input! Please enter numbers only.\n\n"WHITE_E"Product: "YELLOW_E"%s "WHITE_E"| Price: "GREEN_E"$%s "WHITE_E"| Stock: "GREEN_E"%d\n\n"GREY_E"Enter quantity:", GetProductName(GetPVarInt(playerid, "BuyProdItem")), FormatMoney(GetPVarInt(playerid, "BuyProdPrice")), bData[bizid][bProd]);
+				format(dialogStr, sizeof(dialogStr), ""RED_E"Invalid input! Please enter numbers only.\n\n"WHITE_E"Product: "YELLOW_E"%s "WHITE_E"| Price: "GREEN_E"%s "WHITE_E"| Stock: "GREEN_E"%d\n\n"GREY_E"Enter quantity:", GetProductName(GetPVarInt(playerid, "BuyProdItem")), FormatMoney(GetPVarInt(playerid, "BuyProdPrice")), bData[bizid][bProd]);
 				return ShowPlayerDialog(playerid, DIALOG_BUYPROD_QTY, DIALOG_STYLE_INPUT, "Purchase Quantity", dialogStr, "Buy", "Cancel");
 			}
 			
@@ -947,7 +1216,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			
 			if(GetPlayerMoney(playerid) < totalPrice)
 			{
-				Error(playerid, "Not enough money! Total price: $%s", FormatMoney(totalPrice));
+				Error(playerid, "Not enough money! Total price: %s", FormatMoney(totalPrice));
 				return 1;
 			}
 			
@@ -958,7 +1227,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 				{
 					GivePlayerMoneyEx(playerid, -totalPrice);
 					pData[playerid][pSnack] += quantity;
-					SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s has purchased %d Snack for $%s", ReturnName(playerid), quantity, FormatMoney(totalPrice));
+					SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s has purchased %d Snack for %s", ReturnName(playerid), quantity, FormatMoney(totalPrice));
 					bData[bizid][bProd] -= quantity;
 					bData[bizid][bMoney] += Server_Percent(totalPrice);
 					Server_AddPercent(totalPrice);
@@ -971,7 +1240,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 				{
 					GivePlayerMoneyEx(playerid, -totalPrice);
 					pData[playerid][pSprunk] += quantity;
-					SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s has purchased %d Sprunk for $%s", ReturnName(playerid), quantity, FormatMoney(totalPrice));
+					SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s has purchased %d Sprunk for %s", ReturnName(playerid), quantity, FormatMoney(totalPrice));
 					bData[bizid][bProd] -= quantity;
 					bData[bizid][bMoney] += Server_Percent(totalPrice);
 					Server_AddPercent(totalPrice);
@@ -984,7 +1253,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 				{
 					GivePlayerMoneyEx(playerid, -totalPrice);
 					pData[playerid][pGas] += quantity;
-					SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s has purchased %d Gas Fuel for $%s", ReturnName(playerid), quantity, FormatMoney(totalPrice));
+					SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s has purchased %d Gas Fuel for %s", ReturnName(playerid), quantity, FormatMoney(totalPrice));
 					bData[bizid][bProd] -= quantity;
 					bData[bizid][bMoney] += Server_Percent(totalPrice);
 					Server_AddPercent(totalPrice);
@@ -997,7 +1266,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 				{
 					GivePlayerMoneyEx(playerid, -totalPrice);
 					pData[playerid][pBandage] += quantity;
-					SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s telah membeli %d Perban seharga $%s", ReturnName(playerid), quantity, FormatMoney(totalPrice));
+					SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s telah membeli %d Perban seharga %s", ReturnName(playerid), quantity, FormatMoney(totalPrice));
 					bData[bizid][bProd] -= quantity;
 					bData[bizid][bMoney] += Server_Percent(totalPrice);
 					Server_AddPercent(totalPrice);
@@ -1050,7 +1319,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 						GivePlayerMoneyEx(playerid, -price);
 						SetPlayerHealthEx(playerid, health+30);
 						pData[playerid][pHunger] += 35;
-						SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s telah membeli makanan seharga $%s dan langsung memakannya.", ReturnName(playerid), FormatMoney(price));
+						SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s telah membeli makanan seharga %s dan langsung memakannya.", ReturnName(playerid), FormatMoney(price));
 						bData[bizid][bProd]--;
 						bData[bizid][bMoney] += Server_Percent(price);
 						Server_AddPercent(price);
@@ -1067,7 +1336,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 						GivePlayerMoneyEx(playerid, -price);
 						SetPlayerHealthEx(playerid, health+45);
 						pData[playerid][pHunger] += 50;
-						SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s telah membeli makanan seharga $%s dan langsung memakannya.", ReturnName(playerid), FormatMoney(price));
+						SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s telah membeli makanan seharga %s dan langsung memakannya.", ReturnName(playerid), FormatMoney(price));
 						bData[bizid][bProd]--;
 						bData[bizid][bMoney] += Server_Percent(price);
 						Server_AddPercent(price);
@@ -1084,7 +1353,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 						GivePlayerMoneyEx(playerid, -price);
 						SetPlayerHealthEx(playerid, health+70);
 						pData[playerid][pHunger] += 75;
-						SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s has purchased food for $%s and immediately eaten it.", ReturnName(playerid), FormatMoney(price));
+						SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s has purchased food for %s and immediately eaten it.", ReturnName(playerid), FormatMoney(price));
 						bData[bizid][bProd]--;
 						bData[bizid][bMoney] += Server_Percent(price);
 						Server_AddPercent(price);
@@ -1109,7 +1378,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 
 						pData[playerid][pEnergy] += 60;
 						//SetPlayerSpecialAction(playerid,SPECIAL_ACTION_DRINK_SPRUNK);
-						SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s has purchased a drink for $%s", ReturnName(playerid), FormatMoney(price));
+						SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s has purchased a drink for %s", ReturnName(playerid), FormatMoney(price));
 						//SetPVarInt(playerid, "UsingSprunk", 1);
 					}
 				}
@@ -1131,8 +1400,29 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					
 					GivePlayerMoneyEx(playerid, -price);
 					pData[playerid][pEToll] = 1;
-					SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s telah membeli kartu E-Toll seharga $%s", ReturnName(playerid), FormatMoney(price));
+					SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s telah membeli kartu E-Toll seharga %s", ReturnName(playerid), FormatMoney(price));
 					Info(playerid, "Kamu sekarang bisa melewati semua tol secara gratis dengan kartu E-Toll!");
+					
+					bData[bizid][bProd]--;
+					bData[bizid][bMoney] += Server_Percent(price);
+					Server_AddPercent(price);
+					
+					new query[128];
+					mysql_format(g_SQL, query, sizeof(query), "UPDATE bisnis SET prod='%d', money='%d' WHERE ID='%d'", bData[bizid][bProd], bData[bizid][bMoney], bizid);
+					mysql_tquery(g_SQL, query);
+					return 1;
+				}
+				if(listitem == 5) // rokok
+				{
+					//if(pData[playerid][pCigarette] >= 20)
+						//return Error(playerid, "Kamu sudah memiliki rokok sebanyak 20 batang!");
+					
+					if(GetPlayerMoney(playerid) < price)
+						return Error(playerid, "Uang kamu tidak cukup!");
+					
+					GivePlayerMoneyEx(playerid, -price);
+					pData[playerid][pCigarette] += 12;
+					SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s telah membeli 12 batang rokok seharga %s", ReturnName(playerid), FormatMoney(price));
 					
 					bData[bizid][bProd]--;
 					bData[bizid][bMoney] += Server_Percent(price);
@@ -1150,7 +1440,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 				SetPVarInt(playerid, "BuyProdPrice", price);
 				
 				new dialogStr[256];
-				format(dialogStr, sizeof(dialogStr), ""WHITE_E"Product: "YELLOW_E"%s "WHITE_E"| Price: "GREEN_E"$%s "WHITE_E"| Stock: "GREEN_E"%d\n\n"GREY_E"Enter the quantity you want to buy:", GetProductName(listitem), FormatMoney(price), bData[bizid][bProd]);
+				format(dialogStr, sizeof(dialogStr), ""WHITE_E"Product: "YELLOW_E"%s "WHITE_E"| Price: "GREEN_E"%s "WHITE_E"| Stock: "GREEN_E"%d\n\n"GREY_E"Enter the quantity you want to buy:", GetProductName(listitem), FormatMoney(price), bData[bizid][bProd]);
 				
 				ShowPlayerDialog(playerid, DIALOG_BUYPROD_QTY, DIALOG_STYLE_INPUT, "Purchase Quantity", dialogStr, "Buy", "Cancel");
 			}
@@ -1221,7 +1511,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 						GivePlayerMoneyEx(playerid, -price);
 						pData[playerid][pMask] = 1;
 						pData[playerid][pMaskID] = random(90000) + 10000;
-						SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s has purchased a mask for $%s", ReturnName(playerid), FormatMoney(price));
+						SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s has purchased a mask for %s", ReturnName(playerid), FormatMoney(price));
 						bData[bizid][bProd]--;
 						bData[bizid][bMoney] += Server_Percent(price);
 						Server_AddPercent(price);
@@ -1237,7 +1527,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 							
 						GivePlayerMoneyEx(playerid, -price);
 						pData[playerid][pHelmet] = 1;
-						SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s has purchased a Helmet for $%s", ReturnName(playerid), FormatMoney(price));
+						SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s has purchased a Helmet for %s", ReturnName(playerid), FormatMoney(price));
 						bData[bizid][bProd]--;
 						bData[bizid][bMoney] += Server_Percent(price);
 						Server_AddPercent(price);
@@ -1259,7 +1549,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 							
 						GivePlayerMoneyEx(playerid, -price);
 						GivePlayerWeaponEx(playerid, 1, 1);
-						SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s has purchased a Brass Knuckles for $%s", ReturnName(playerid), FormatMoney(price));
+						SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s has purchased a Brass Knuckles for %s", ReturnName(playerid), FormatMoney(price));
 						bData[bizid][bProd]--;
 						bData[bizid][bMoney] += Server_Percent(price);
 						Server_AddPercent(price);
@@ -1277,7 +1567,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 						{
 							GivePlayerMoneyEx(playerid, -price);
 							GivePlayerWeaponEx(playerid, 4, 1);
-							SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s has purchased a Knife for $%s", ReturnName(playerid), FormatMoney(price));
+							SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s has purchased a Knife for %s", ReturnName(playerid), FormatMoney(price));
 							bData[bizid][bProd]--;
 							bData[bizid][bMoney] += Server_Percent(price);
 							Server_AddPercent(price);
@@ -1295,7 +1585,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 							
 						GivePlayerMoneyEx(playerid, -price);
 						GivePlayerWeaponEx(playerid, 5, 1);
-						SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s has purchased a Baseball Bat for $%s", ReturnName(playerid), FormatMoney(price));
+						SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s has purchased a Baseball Bat for %s", ReturnName(playerid), FormatMoney(price));
 						bData[bizid][bProd]--;
 						bData[bizid][bMoney] += Server_Percent(price);
 						Server_AddPercent(price);
@@ -1313,7 +1603,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 						{
 							GivePlayerMoneyEx(playerid, -price);
 							GivePlayerWeaponEx(playerid, 6, 1);
-							SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s has purchased a Shovel for $%s", ReturnName(playerid), FormatMoney(price));
+							SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s has purchased a Shovel for %s", ReturnName(playerid), FormatMoney(price));
 							bData[bizid][bProd]--;
 							bData[bizid][bMoney] += Server_Percent(price);
 							Server_AddPercent(price);
@@ -1333,7 +1623,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 						{
 							GivePlayerMoneyEx(playerid, -price);
 							GivePlayerWeaponEx(playerid, 9, 1);
-							SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s has purchased a Chainsaw for $%s", ReturnName(playerid), FormatMoney(price));
+							SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s has purchased a Chainsaw for %s", ReturnName(playerid), FormatMoney(price));
 							bData[bizid][bProd]--;
 							bData[bizid][bMoney] += Server_Percent(price);
 							Server_AddPercent(price);
@@ -1351,7 +1641,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 							
 						GivePlayerMoneyEx(playerid, -price);
 						GivePlayerWeaponEx(playerid, 15, 1);
-						SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s has purchased a Cane for $%s", ReturnName(playerid), FormatMoney(price));
+						SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s has purchased a Cane for %s", ReturnName(playerid), FormatMoney(price));
 						bData[bizid][bProd]--;
 						bData[bizid][bMoney] += Server_Percent(price);
 						Server_AddPercent(price);
@@ -1368,7 +1658,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 						if(pData[playerid][pFishTool] > 2) return Error(playerid, "You only can get 3 fish tool!");
 						GivePlayerMoneyEx(playerid, -price);
 						pData[playerid][pFishTool]++;
-						SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s has purchased a fishing rod for $%s", ReturnName(playerid), FormatMoney(price));
+						SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s has purchased a fishing rod for %s", ReturnName(playerid), FormatMoney(price));
 						bData[bizid][bProd]--;
 						bData[bizid][bMoney] += Server_Percent(price);
 						Server_AddPercent(price);
@@ -1387,7 +1677,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 						SetPVarInt(playerid, "BuyWormPrice", price);
 						
 						new dialogStr[256];
-						format(dialogStr, sizeof(dialogStr), ""WHITE_E"Product: "YELLOW_E"Worm Bait "WHITE_E"| Price: "GREEN_E"$%s", FormatMoney(price));
+						format(dialogStr, sizeof(dialogStr), ""WHITE_E"Product: "YELLOW_E"Worm Bait "WHITE_E"| Price: "GREEN_E"%s", FormatMoney(price));
 						
 						ShowPlayerDialog(playerid, DIALOG_BUYWORM_QTY, DIALOG_STYLE_INPUT, "Purchase Worm Bait", dialogStr, "Buy", "Cancel");
 					}
@@ -1398,7 +1688,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 							
 						GivePlayerMoneyEx(playerid, -price);
 						GivePlayerWeaponEx(playerid, 41, 10);
-						SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s has purchased a spray for $%s", ReturnName(playerid), FormatMoney(price));
+						SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s has purchased a spray for %s", ReturnName(playerid), FormatMoney(price));
 						bData[bizid][bProd]--;
 						bData[bizid][bMoney] += Server_Percent(price);
 						Server_AddPercent(price);
@@ -1420,7 +1710,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 							
 						GivePlayerMoneyEx(playerid, -price);
 						pData[playerid][pGPS] = 1;
-						SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s has purchased a GPS for $%s", ReturnName(playerid), FormatMoney(price));
+						SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s has purchased a GPS for %s", ReturnName(playerid), FormatMoney(price));
 						bData[bizid][bProd]--;
 						bData[bizid][bMoney] += Server_Percent(price);
 						Server_AddPercent(price);
@@ -1440,7 +1730,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 						mysql_format(g_SQL, query, sizeof(query), "SELECT phone FROM players WHERE phone='%d'", phone);
 						mysql_tquery(g_SQL, query, "PhoneNumber", "id", playerid, phone);
 						//pData[playerid][pPhone] = ;
-						SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s has purchased a phone for $%s", ReturnName(playerid), FormatMoney(price));
+						SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s has purchased a phone for %s", ReturnName(playerid), FormatMoney(price));
 						bData[bizid][bProd]--;
 						bData[bizid][bMoney] += Server_Percent(price);
 						Server_AddPercent(price);
@@ -1456,7 +1746,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 							
 						GivePlayerMoneyEx(playerid, -price);
 						pData[playerid][pPhoneCredit] += 20;
-						SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s has purchased 20 phone credit for $%s", ReturnName(playerid), FormatMoney(price));
+						SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s has purchased 20 phone credit for %s", ReturnName(playerid), FormatMoney(price));
 						bData[bizid][bProd]--;
 						bData[bizid][bMoney] += Server_Percent(price);
 						Server_AddPercent(price);
@@ -1472,7 +1762,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 							
 						GivePlayerMoneyEx(playerid, -price);
 						pData[playerid][pPhoneBook] = 1;
-						SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s has purchased a phone book for $%s", ReturnName(playerid), FormatMoney(price));
+						SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s has purchased a phone book for %s", ReturnName(playerid), FormatMoney(price));
 						bData[bizid][bProd]--;
 						bData[bizid][bMoney] += Server_Percent(price);
 						Server_AddPercent(price);
@@ -1488,7 +1778,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 							
 						GivePlayerMoneyEx(playerid, -price);
 						pData[playerid][pWT] = 1;
-						SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s has purchased a walkie talkie for $%s", ReturnName(playerid), FormatMoney(price));
+						SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s has purchased a walkie talkie for %s", ReturnName(playerid), FormatMoney(price));
 						bData[bizid][bProd]--;
 						bData[bizid][bMoney] += Server_Percent(price);
 						Server_AddPercent(price);
@@ -1501,7 +1791,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					{
 						GivePlayerMoneyEx(playerid, -price);
 						pData[playerid][pBoombox] += 1;
-						SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s has purchased a boombox for $%s", ReturnName(playerid), FormatMoney(price));
+						SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s has purchased a boombox for %s", ReturnName(playerid), FormatMoney(price));
 						bData[bizid][bProd]--;
 						bData[bizid][bMoney] += price;
 						Server_AddPercent(price);
@@ -1566,7 +1856,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 				bData[bizid][bP][pData[playerid][pProductModify]] = strval(cash);
 				Bisnis_Save(bizid);
 
-				Servers(playerid, "You have adjusted the price of %s to: $%s!", item, FormatMoney(strval(cash)));
+				Servers(playerid, "You have adjusted the price of %s to: %s!", item, FormatMoney(strval(cash)));
 				Bisnis_ProductMenu(playerid, bizid);
 			}
 			else
@@ -1593,9 +1883,9 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			new hid = GetPVarInt(playerid, "SellingHouse"), price;
 			price = hData[hid][hPrice] / 2;
 			GivePlayerMoneyEx(playerid, price);
-			Info(playerid, "Anda berhasil menjual rumah id (%d) dengan setengah harga("LG_E"$%s"WHITE_E") pada saat anda membelinya.", hid, FormatMoney(price));
+			Info(playerid, "Anda berhasil menjual rumah id (%d) dengan setengah harga("LG_E"%s"WHITE_E") pada saat anda membelinya.", hid, FormatMoney(price));
 			new str[150];
-			format(str,sizeof(str),"[HOUSE]: %s menjual house id %d seharga $%s!", GetRPName(playerid), hid, FormatMoney(price));
+			format(str,sizeof(str),"[HOUSE]: %s menjual house id %d seharga %s!", GetRPName(playerid), hid, FormatMoney(price));
 			LogServer("Property", str);
 			HouseReset(hid);
 			House_Save(hid);
@@ -1647,7 +1937,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 				{
 					type = "Unknow";
 				}
-				format(line9, sizeof(line9), "House ID: %d\nHouse Owner: %s\nHouse Address: %s\nHouse Price: $%s\nHouse Type: %s\nHouse Status: %s",
+				format(line9, sizeof(line9), "House ID: %d\nHouse Owner: %s\nHouse Address: %s\nHouse Price: %s\nHouse Type: %s\nHouse Status: %s",
 				hid, hData[hid][hOwner], hData[hid][hAddress], FormatMoney(hData[hid][hPrice]), type, lock);
 
 				ShowPlayerDialog(playerid, DIALOG_UNUSED, DIALOG_STYLE_MSGBOX, "House Info", line9, "Close","");
@@ -4038,7 +4328,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 				strcat(str, ""LB_E"VEHICLE: /tow - Tow Vehicle || /untow - Untow Vehicle\n");
 				strcat(str, ""LG_E"VEHICLE: /mypv - Check Vehicles || /claimpv - Claim Insurance\n");
 				strcat(str, ""LG_E"VEHICLE: /buyplate - Buy Plate || /buyinsu - Buy Insurance\n");
-				strcat(str, ""LG_E"VEHICLE: /eject /vstorage\n");
+				strcat(str, ""LG_E"VEHICLE: /eject /vstorage /checkclaim /sharekey\n");
 				ShowPlayerDialog(playerid, DIALOG_UNUSED, DIALOG_STYLE_MSGBOX, ""RED_E"Vehicle Commands", str, "Close", "");
 			}
 			case 3:
@@ -4055,13 +4345,13 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			case 5:
 			{
 				new str[3500];
-				strcat(str, ""LG_E"BUSINESS: /buy /bm /lockbisnis /unlockbisnis /mybis\n");
+				strcat(str, ""LG_E"BUSINESS: /buy /bm /lockbisnis /unlockbisnis /mp\n");
 				ShowPlayerDialog(playerid, DIALOG_UNUSED, DIALOG_STYLE_MSGBOX, ""RED_E"Business Commands", str, "Close", "");
 			}
 			case 6:
 			{
 				new str[3500];
-				strcat(str, ""LG_E"HOUSE: /buy /storage /lockhouse /unlockhouse /myhouse\n");
+				strcat(str, ""LG_E"HOUSE: /buy /storage /lockhouse /unlockhouse /mp\n");
 				ShowPlayerDialog(playerid, DIALOG_UNUSED, DIALOG_STYLE_MSGBOX, ""RED_E"House Commands", str, "Close", "");
 			}
 			case 7:
@@ -4123,13 +4413,13 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			case 2:
 			{
 				new str[3500];
-				strcat(str, "{ffffff}Pekerjaan ini khusus untuk Lumber Profesional\n\n{7fffd4}CMDS: /(lum)ber\n");
+				strcat(str, "{ffffff}Pekerjaan ini khusus untuk Lumber Profesional\n\n{7fffd4}CMDS: /(lum)ber /tracktree\n");
 				ShowPlayerDialog(playerid, DIALOG_UNUSED, DIALOG_STYLE_MSGBOX, ""RED_E"Lumber Job", str, "Close", "");
 			}
 			case 3:
 			{
 				new str[3500];
-				strcat(str, "{ffffff}Pekerjaan ini dapat anda dapatkan di Flint Country\n\n{7fffd4}CMDS: /mission /storeproduct /storegas /storestock /gps /loadcrate\n/unloadcrate /storefish /storecomponent\n");
+				strcat(str, "{ffffff}Pekerjaan ini dapat anda dapatkan di Flint Country\n\n{7fffd4}CMDS: /mission /storeproduct /storegas /loadcrate\n/unloadcrate /storecrate /mymission\n");
 				ShowPlayerDialog(playerid, DIALOG_UNUSED, DIALOG_STYLE_MSGBOX, ""RED_E"Trucker Job", str, "Close", "");
 			}
 			case 4:
@@ -4196,7 +4486,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 				}
 				case 2: // Public Location
 				{
-					ShowPlayerDialog(playerid, DIALOG_GPS_PUBLIC, DIALOG_STYLE_LIST, "GPS Public", "Business\nWorkshop\nATM\nPublic Park\nDealership\nDMV\nInsurance Center\nMechanic Center\nComponent Shop\nFish Factory", "Select", "Back");
+					ShowPlayerDialog(playerid, DIALOG_GPS_PUBLIC, DIALOG_STYLE_LIST, "GPS Public", "Business\nWorkshop\nATM\nPublic Park\nDealership", "Select", "Back");
 				}
 				case 3: // Jobs
 				{
@@ -4243,7 +4533,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 		}
 		else
 		{
-			ShowPlayerDialog(playerid, DIALOG_GPS, DIALOG_STYLE_LIST, "GPS Menu", "Disable GPS\nGeneral Location\nPublic Location\nJobs\nMy Properties", "Select", "Close");
+			ShowPlayerDialog(playerid, DIALOG_GPS, DIALOG_STYLE_LIST, "GPS Menu", ""RED_E"Disable GPS\n"WHITE_E"General Location\nPublic Location\nJobs\nMy Properties", "Select", "Close");
 		}
 		return 1;
 	}
@@ -4267,7 +4557,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 		}
 		else
 		{
-			ShowPlayerDialog(playerid, DIALOG_GPS, DIALOG_STYLE_LIST, "GPS Menu", "Disable GPS\nGeneral Location\nPublic Location\nJobs\nMy Properties", "Select", "Close");
+			ShowPlayerDialog(playerid, DIALOG_GPS, DIALOG_STYLE_LIST, "GPS Menu", ""RED_E"Disable GPS\n"WHITE_E"General Location\nPublic Location\nJobs\nMy Properties", "Select", "Close");
 		}
 		return 1;
 	}
@@ -4289,9 +4579,13 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 				}
 				case 2:
 				{
-					return callcmd::myvending(playerid);
+					return callcmd::mydealer(playerid, "");  // Tambahkan parameter kedua jika diperlukan
 				}
 				case 3:
+				{
+					return callcmd::myvending(playerid);
+				}
+				case 4:
 				{
 					return callcmd::mypv(playerid, "");
 				}
@@ -4299,7 +4593,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 		}
 		else 
 		{
-			ShowPlayerDialog(playerid, DIALOG_GPS, DIALOG_STYLE_LIST, "GPS Menu", "Disable GPS\nGeneral Location\nPublic Location\nJobs\nMy Properties", "Select", "Close");
+			ShowPlayerDialog(playerid, DIALOG_GPS, DIALOG_STYLE_LIST, "GPS Menu", ""RED_E"Disable GPS\n"WHITE_E"General Location\nPublic Location\nJobs\nMy Properties", "Select", "Close");
 		}
 	}
 	// Public GPS (tetap pakai sistem lama karena dynamic dari database)
@@ -4415,55 +4709,39 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 				case 4: // Dealership
 				{
 					if(GetAnyDealer() <= 0) return Error(playerid, "Tidak ada Dealer yang terbuka.");
-					new id, count = GetAnyDealer(), location[4096], lstr[596];
-					strcat(location, "No\tName\tDistance\n", sizeof(location));
+					
+					new id, count = GetAnyDealer(), location[4096], lstr[596], type[64];
+					strcat(location, "No\tName\tType\tDistance\n", sizeof(location));
+					
 					Loop(itt, (count + 1), 1)
 					{
 						id = ReturnDealerID(itt);
+						// Format tipe dealer
+						switch(dsData[id][dType])
+						{
+							case 1: type = "WAA";
+							case 2: type = "Transfender";
+							case 3: type = "Locolow";
+							case 4: type = "Motorcycle";
+							case 5: type = "Industrial";
+							case 6: type = "Company";
+							default: type = "Unknown";
+						}
 						if(itt == count)
 						{
-							format(lstr, sizeof(lstr), "%d\t%s(%s){ffffff}\t%0.2fm\n", itt, dsData[id][dName], GetLocation(dsData[id][dX], dsData[id][dY], dsData[id][dZ]), GetPlayerDistanceFromPoint(playerid, dsData[id][dX], dsData[id][dY], dsData[id][dZ]));
+							format(lstr, sizeof(lstr), "%d\t%s\t%s\t%0.2fm\n", itt, dsData[id][dName], type, GetPlayerDistanceFromPoint(playerid, dsData[id][dX], dsData[id][dY], dsData[id][dZ]));
 						}
-						else format(lstr, sizeof(lstr), "%d\t%s(%s){ffffff}\t%0.2fm\n", itt, dsData[id][dName], GetLocation(dsData[id][dX], dsData[id][dY], dsData[id][dZ]), GetPlayerDistanceFromPoint(playerid, dsData[id][dX], dsData[id][dY], dsData[id][dZ]));
+						else format(lstr, sizeof(lstr), "%d\t%s\t%s\t%0.2fm\n", itt, dsData[id][dName], type, GetPlayerDistanceFromPoint(playerid, dsData[id][dX], dsData[id][dY], dsData[id][dZ]));
 						strcat(location, lstr, sizeof(location));
 					}
+					
 					ShowPlayerDialog(playerid, DIALOG_TRACKDEALER, DIALOG_STYLE_TABLIST_HEADERS, "Track Dealer", location, "Track", "Cancel");
-				}
-				case 5: // DMV
-				{
-					pData[playerid][pGpsActive] = 1;
-					SetPlayerRaceCheckpoint(playerid, 1, 2062.9805, -1899.6351, 13.5538, 0.0, 0.0, 0.0, 3.5);
-					Gps(playerid, "DMV checkpoint targeted!");
-				}
-				case 6: // Insurance
-				{
-					pData[playerid][pGpsActive] = 1;
-					SetPlayerRaceCheckpoint(playerid, 1, 1335.0966, -1266.0402, 13.5469, 0.0, 0.0, 0.0, 3.5);
-					Gps(playerid, "Insurance checkpoint targeted!");
-				}
-				case 7: // Mechanic
-				{
-					pData[playerid][pGpsActive] = 1;
-					SetPlayerRaceCheckpoint(playerid, 1, 1793.7285,-1713.3325,13.7036, 0.0, 0.0, 0.0, 3.5);
-					Gps(playerid, "Mechanic center checkpoint targeted!");
-				}
-				case 8: // Component
-				{
-					pData[playerid][pGpsActive] = 1;
-					SetPlayerRaceCheckpoint(playerid, 1, 854.5555, -605.2056, 18.4219, 0.0, 0.0, 0.0, 3.5);
-					Gps(playerid, "Component Shop checkpoint targeted!");
-				}
-				case 9: // Fish Factory
-				{
-					pData[playerid][pGpsActive] = 1;
-					SetPlayerRaceCheckpoint(playerid, 1, 2843.9133, -1516.6660, 11.3011, 0.0, 0.0, 0.0, 3.5);
-					Gps(playerid, "Fish Factory checkpoint targeted!");
 				}
 			}
 		}
 		else
 		{
-			ShowPlayerDialog(playerid, DIALOG_GPS, DIALOG_STYLE_LIST, "GPS Menu", "Disable GPS\nGeneral Location\nPublic Location\nJobs\nMy Properties", "Select", "Close");
+			ShowPlayerDialog(playerid, DIALOG_GPS, DIALOG_STYLE_LIST, "GPS Menu", ""RED_E"Disable GPS\n"WHITE_E"General Location\nPublic Location\nJobs\nMy Properties", "Select", "Close");
 		}
 		return 1;
 	}
@@ -4522,31 +4800,6 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			Gps(playerid, "Dealer checkpoint targeted! (%s)", GetLocation(dsData[id][dX], dsData[id][dY], dsData[id][dZ]));
 		}
 	}
-	if(dialogid == DIALOG_GPS_SENDERCOMPONENT)
-	{
-		if(response)
-		{
-			switch(listitem)
-			{
-				case 0:
-				{
-					pData[playerid][pGpsActive] = 1;
-					SetPlayerRaceCheckpoint(playerid,1, 329.3120, 905.2631, 23.7692, 0.0, 0.0, 0.0, 3.5); //Trucker
-					Gps(playerid, "Active!");
-				}
-				case 1:
-				{
-					pData[playerid][pGpsActive] = 1;
-					SetPlayerRaceCheckpoint(playerid,1, 797.5262, -617.7863, 16.3359, 0.0, 0.0, 0.0, 3.5); //Trucker
-					Gps(playerid, "Active!");
-				}
-			}
-		}
-		else 
-		{
-			ShowPlayerDialog(playerid, DIALOG_GPS_MISSION, DIALOG_STYLE_LIST, "GPS Trucker", "Truck Job site\nComponent sender\nMy Mission (Trucker)\nMy Hauling (Trucker)", "Select", "Back");
-		}
-	}
 	if(dialogid == DIALOG_PAY)
 	{
 		if(response)
@@ -4562,9 +4815,9 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			GivePlayerMoneyEx(playerid, money);
 			GivePlayerMoneyEx(otherid, money);
 
-			format(mstr, sizeof(mstr), "Server: "YELLOW_E"You have sent %s(%i) "GREEN_E"$%s", ReturnName(otherid), otherid, FormatMoney(money));
+			format(mstr, sizeof(mstr), "Server: "YELLOW_E"You have sent %s(%i) "GREEN_E"%s", ReturnName(otherid), otherid, FormatMoney(money));
 			SendClientMessage(playerid, COLOR_GREY, mstr);
-			format(mstr, sizeof(mstr), "Server: "YELLOW_E"%s(%i) has sent you "GREEN_E"$%s", ReturnName(playerid), playerid, FormatMoney(money));
+			format(mstr, sizeof(mstr), "Server: "YELLOW_E"%s(%i) has sent you "GREEN_E"%s", ReturnName(playerid), playerid, FormatMoney(money));
 			SendClientMessage(otherid, COLOR_GREY, mstr);
 			InfoTD_MSG(playerid, 3500, "~g~~h~Money Sent!");
 			InfoTD_MSG(otherid, 3500, "~g~~h~Money received!");
@@ -5203,7 +5456,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			{
 				case 0: 
 				{
-					if(pData[playerid][pOnDuty] == 1)
+					if(pData[playerid][pOnDuty] == 1) // OFF DUTY
 					{
 						pData[playerid][pOnDuty] = 0;
 						SetPlayerColor(playerid, COLOR_WHITE);
@@ -5216,8 +5469,13 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 						ResetWeapon(playerid, 33);
 						ResetWeapon(playerid, 34);
 						KillTimer(DutyTimer);
+						
+						// ✅ Update label ke normal (putih)
+						new labeltext[128];
+						format(labeltext, sizeof(labeltext), "%s (%d)", GetRPName(playerid), playerid);
+						UpdateDynamic3DTextLabelText(PlayerLabel[playerid], COLOR_WHITE, labeltext);
 					}
-					else
+					else // ON DUTY
 					{
 						pData[playerid][pOnDuty] = 1;
 						SetFactionColor(playerid);
@@ -5233,6 +5491,20 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 						}
 						DutyTimer = SetTimerEx("DutyHour", 1000, true, "i", playerid);
 						SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "* %s withdraws their badge and on duty from their locker", ReturnName(playerid));
+						
+						// ✅ Update label dengan warna faction
+						new labeltext[128], labelcolor;
+						switch(pData[playerid][pFaction])
+						{
+							case 1: labelcolor = COLOR_BLUE;    // Police
+							case 2: labelcolor = COLOR_LBLUE;   // Medic
+							case 3: labelcolor = COLOR_PINK2;   // Faction 3
+							case 4: labelcolor = COLOR_ORANGE2; // Faction 4
+							case 5: labelcolor = COLOR_GREEN;   // Faction 5
+							default: labelcolor = COLOR_WHITE;
+						}
+						format(labeltext, sizeof(labeltext), "%s (%d)", GetRPName(playerid), playerid);
+						UpdateDynamic3DTextLabelText(PlayerLabel[playerid], labelcolor, labeltext);
 					}
 				}
 				case 1: 
@@ -5387,6 +5659,11 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 						SetPlayerColor(playerid, COLOR_WHITE);
 						SetPlayerSkin(playerid, pData[playerid][pSkin]);
 						SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "* %s places their badge and gun in their locker.", ReturnName(playerid));
+
+						// ✅ Update label ke normal (putih)
+						new labeltext[128];
+						format(labeltext, sizeof(labeltext), "%s (%d)", GetRPName(playerid), playerid);
+						UpdateDynamic3DTextLabelText(PlayerLabel[playerid], COLOR_WHITE, labeltext);
 					}
 					else
 					{
@@ -5403,6 +5680,20 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 							pData[playerid][pFacSkin] = 141;
 						}
 						SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "* %s withdraws their badge and on duty from their locker", ReturnName(playerid));
+
+						// ✅ Update label dengan warna faction
+						new labeltext[128], labelcolor;
+						switch(pData[playerid][pFaction])
+						{
+							case 1: labelcolor = COLOR_BLUE;    // Police
+							case 2: labelcolor = COLOR_LBLUE;   // Medic
+							case 3: labelcolor = COLOR_PINK2;   // Faction 3
+							case 4: labelcolor = COLOR_ORANGE2; // Faction 4
+							case 5: labelcolor = COLOR_GREEN;   // Faction 5
+							default: labelcolor = COLOR_WHITE;
+						}
+						format(labeltext, sizeof(labeltext), "%s (%d)", GetRPName(playerid), playerid);
+						UpdateDynamic3DTextLabelText(PlayerLabel[playerid], labelcolor, labeltext);
 					}
 				}
 				case 1: 
@@ -5508,6 +5799,11 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 						SetPlayerColor(playerid, COLOR_WHITE);
 						SetPlayerSkin(playerid, pData[playerid][pSkin]);
 						SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "* %s places their badge and gun in their locker.", ReturnName(playerid));
+					
+						// ✅ Update label ke normal (putih)
+						new labeltext[128];
+						format(labeltext, sizeof(labeltext), "%s (%d)", GetRPName(playerid), playerid);
+						UpdateDynamic3DTextLabelText(PlayerLabel[playerid], COLOR_WHITE, labeltext);
 					}
 					else
 					{
@@ -5524,6 +5820,20 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 							pData[playerid][pFacSkin] = 308;
 						}
 						SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "* %s withdraws their badge and on duty from their locker", ReturnName(playerid));
+					
+						// ✅ Update label dengan warna faction
+						new labeltext[128], labelcolor;
+						switch(pData[playerid][pFaction])
+						{
+							case 1: labelcolor = COLOR_BLUE;    // Police
+							case 2: labelcolor = COLOR_LBLUE;   // Medic
+							case 3: labelcolor = COLOR_PINK2;   // Faction 3
+							case 4: labelcolor = COLOR_ORANGE2; // Faction 4
+							case 5: labelcolor = COLOR_GREEN;   // Faction 5
+							default: labelcolor = COLOR_WHITE;
+						}
+						format(labeltext, sizeof(labeltext), "%s (%d)", GetRPName(playerid), playerid);
+						UpdateDynamic3DTextLabelText(PlayerLabel[playerid], labelcolor, labeltext);
 					}
 				}
 				case 1: 
@@ -5658,6 +5968,11 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 						SetPlayerColor(playerid, COLOR_WHITE);
 						SetPlayerSkin(playerid, pData[playerid][pSkin]);
 						SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "* %s places their badge and gun in their locker.", ReturnName(playerid));
+					
+						// ✅ Update label ke normal (putih)
+						new labeltext[128];
+						format(labeltext, sizeof(labeltext), "%s (%d)", GetRPName(playerid), playerid);
+						UpdateDynamic3DTextLabelText(PlayerLabel[playerid], COLOR_WHITE, labeltext);
 					}
 					else
 					{
@@ -5674,6 +5989,20 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 							pData[playerid][pFacSkin] = 150; //194
 						}
 						SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "* %s withdraws their badge and on duty from their locker", ReturnName(playerid));
+					
+						// ✅ Update label dengan warna faction
+						new labeltext[128], labelcolor;
+						switch(pData[playerid][pFaction])
+						{
+							case 1: labelcolor = COLOR_BLUE;    // Police
+							case 2: labelcolor = COLOR_LBLUE;   // Medic
+							case 3: labelcolor = COLOR_PINK2;   // Faction 3
+							case 4: labelcolor = COLOR_ORANGE2; // Faction 4
+							case 5: labelcolor = COLOR_GREEN;   // Faction 5
+							default: labelcolor = COLOR_WHITE;
+						}
+						format(labeltext, sizeof(labeltext), "%s (%d)", GetRPName(playerid), playerid);
+						UpdateDynamic3DTextLabelText(PlayerLabel[playerid], labelcolor, labeltext);
 					}
 				}
 				case 1: 
@@ -10207,7 +10536,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					
 					if(isPrivateFarm)
 					{
-						laData[wid][laWhite]++;
+						laData[wid][laWheat]++;
 						Ladang_Save(wid);
 						Info(playerid, "Planting Wheat at %s.", laData[wid][laName]);
 					}
@@ -10380,6 +10709,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			if(selectedTree == -1)
 				return Error(playerid, "Tree not found!");
 			
+			pData[playerid][pGpsActive] = 1;
 			SetPlayerCheckpoint(playerid, TreeData[selectedTree][treeX], TreeData[selectedTree][treeY], TreeData[selectedTree][treeZ], 3.0);
 			Info(playerid, "Checkpoint has been set to the selected tree!");
 		}
@@ -10410,10 +10740,54 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			format(line9, sizeof(line9), "Please go to the miner's trailer garage to get the gas oil trailer!\n\nGas Station ID: %d\nLocation: %s\n\nThen follow the checkpoint and deliver it to your hauling destination!",
 				id, GetLocation(gsData[id][gsPosX], gsData[id][gsPosY], gsData[id][gsPosZ]));
 			SetPlayerRaceCheckpoint(playerid, 1, 335.66, 861.02, 21.01, 0, 0, 0, 5.5);
-			pData[playerid][pTrailer] = CreateVehicle(584, 326.57, 857.31, 20.40, 290.67, -1, -1, -1, 0);
+			
+			// FIX: Naikkan koordinat Z dan gunakan AddStaticVehicleEx yang lebih stabil
+			pData[playerid][pTrailer] = AddStaticVehicleEx(584, 326.57, 857.31, 21.80, 292.67, -1, -1, -1, 0);
+			
+			// FIX: Set posisi lagi setelah spawn untuk memastikan tidak tenggelam
+			SetVehiclePos(pData[playerid][pTrailer], 326.57, 857.31, 21.80);
+			SetVehicleZAngle(pData[playerid][pTrailer], 292.67);
+			
 			ShowPlayerDialog(playerid, DIALOG_UNUSED, DIALOG_STYLE_MSGBOX, "Hauling Info", line9, "Close","");
 		}
-		return 1;
+	}
+	if(dialogid == DIALOG_HAULING_DEALER)
+	{
+		if(response)
+		{
+			new id = ReturnRestockDealerID((listitem + 1)), vehicleid = GetPlayerVehicleID(playerid);
+			if(IsValidVehicle(pData[playerid][pTrailer]))
+			{
+				DestroyVehicle(pData[playerid][pTrailer]);
+				pData[playerid][pTrailer] = INVALID_VEHICLE_ID;
+			}
+			
+			if(dsData[id][dMoney] < 100000)
+				return Error(playerid, "Maaf, Dealership ini kehabisan uang product.");
+
+			if(pData[playerid][pDealerHauling] > -1 || pData[playerid][pMission] > -1)
+				return Error(playerid, "You are already doing a mission/hauling!");
+
+			if(GetPlayerState(playerid) != PLAYER_STATE_DRIVER) return Error(playerid, "You must be driving a truck.");
+			if(!IsAHaulTruck(vehicleid)) return Error(playerid, "You're not in Hauling Truck ( Attachable Truck )");
+
+			pData[playerid][pDealerHauling] = id;
+			
+			new line9[900];
+
+			format(line9, sizeof(line9), ""WHITE_E"Please go to the blueberry's trailer garage to get the trailer!\n\nDealership ID: %d\nDealer Owner: "YELLOW_E"%s\n"WHITE_E"Dealer Name: "YELLOW_E"%s\n"WHITE_E"Location: %s\n\nThen follow the checkpoint and deliver it to your hauling destination!",
+				id, dsData[id][dOwner], dsData[id][dName], GetLocation(dsData[id][dPX], dsData[id][dPY], dsData[id][dPZ]));
+			SetPlayerRaceCheckpoint(playerid, 1, -198.4669, -203.1409, 1.4219, 0, 0, 0, 5.5);
+			
+			// FIX: Naikkan koordinat Z dan gunakan AddStaticVehicleEx yang lebih stabil
+			pData[playerid][pTrailer] = AddStaticVehicleEx(435, -150.1077, -212.5042, 2.4423, 87.6954, -1, -1, -1, 0);
+			
+			// FIX: Set posisi lagi setelah spawn untuk memastikan tidak tenggelam
+			SetVehiclePos(pData[playerid][pTrailer], -150.1077, -212.5042, 2.4423);
+			SetVehicleZAngle(pData[playerid][pTrailer], 87.6954);
+			
+			ShowPlayerDialog(playerid, DIALOG_UNUSED, DIALOG_STYLE_MSGBOX, "Hauling Info", line9, "Close","");
+		}
 	}
 	if(dialogid == DIALOG_RESTOCK)
 	{
@@ -10473,10 +10847,10 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			new value = amount * ProductPrice;
 			new vehicleid = GetPlayerVehicleID(playerid), carid = -1;
 			new total = VehProduct[vehicleid] + amount;
-			if(amount < 1 || amount > 1000) return Error(playerid, "amount maximal 1 - 1000.");
+			if(amount < 1 || amount > 500) return Error(playerid, "amount maximal 1 - 500.");
 			if(GetPlayerMoney(playerid) < value) return Error(playerid, "Uang anda kurang.");
 			if(Product < amount) return Error(playerid, "Product stock tidak mencukupi.");
-			if(total > 1000) return Error(playerid, "Product Maximal 1000 in your vehicle tank!");
+			if(total > 500) return Error(playerid, "Product Maximal 500 in your vehicle tank!");
 			GivePlayerMoneyEx(playerid, -value);
 			VehProduct[vehicleid] += amount;
 			if((carid = Vehicle_Nearest2(playerid)) != -1)
@@ -10486,68 +10860,10 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			
 			Product -= amount;
 			Server_AddMoney(value);
-			Info(playerid, "Anda berhasil membeli "GREEN_E"%d "WHITE_E"product seharga "RED_E"$%s", amount, FormatMoney(value));
+			Info(playerid, "Anda berhasil membeli "GREEN_E"%d "WHITE_E"product seharga "RED_E"%s", amount, FormatMoney(value));
 		}
 	}
 	
-	if(dialogid == DIALOG_RAWCOMPONENT)
-	{
-		if(response)
-		{
-			new amount = floatround(strval(inputtext));
-			new value = amount * ComponentPrice;
-
-			if(amount < 1 || amount > 500) return Error(playerid, "Amount maximal 0 - 500.");
-			if(GetPlayerMoney(playerid) < value) return Error(playerid, "Uang anda kurang.");
-			if(RawComponent < amount) return Error(playerid, "Component crate stock tidak mencukupi.");
-			
-			// Periksa apakah pemain sudah membawa crate fish
-			if(pData[playerid][pCrateComponent] > 0) return Error(playerid, "Anda sudah membawa component crate. Harap kosongkan terlebih dahulu.");
-
-			GivePlayerMoneyEx(playerid, -value);
-			pData[playerid][pCrateComponent] = amount;
-
-			RawComponent -= amount;
-			Server_AddMoney(value);
-
-			// Tambahkan objek crate ke pemain
-			SetPlayerAttachedObject(playerid, 9, 2912, 1, 0.0, 0.45, 0.0, 0.0, 90.0, 0.0, 1.0, 1.0, 1.0);
-
-			Info(playerid, "Anda berhasil membeli "GREEN_E"%d "WHITE_E"Crate Component seharga "RED_E"$%s", amount, FormatMoney(value));
-			
-			// Tambahkan animasi membawa crate (opsional)
-			ApplyAnimation(playerid, "CARRY", "crry_prtial", 4.1, 1, 1, 1, 1, 1, 1);
-		}
-	}
-	if(dialogid == DIALOG_RAWFISH)
-    {
-		if(response)
-		{
-			new amount = floatround(strval(inputtext));
-			new value = amount * FishPrice;
-
-			if(amount < 1 || amount > 500) return Error(playerid, "Amount maximal 1 - 500.");
-			if(GetPlayerMoney(playerid) < value) return Error(playerid, "Uang anda kurang.");
-			if(RawFish < amount) return Error(playerid, "Fish stock tidak mencukupi.");
-			
-			// Periksa apakah pemain sudah membawa crate fish
-			if(pData[playerid][pCrateFish] > 0) return Error(playerid, "Anda sudah membawa crate fish. Harap kosongkan terlebih dahulu.");
-
-			GivePlayerMoneyEx(playerid, -value);
-			pData[playerid][pCrateFish] = amount;
-
-			RawFish -= amount;
-			Server_AddMoney(value);
-
-			// Tambahkan objek crate ke pemain
-			SetPlayerAttachedObject(playerid, 9, 2912, 1, 0.0, 0.45, 0.0, 0.0, 90.0, 0.0, 1.0, 1.0, 1.0);
-
-			Info(playerid, "Anda berhasil membeli "GREEN_E"%d "WHITE_E"Crate Fish seharga "RED_E"$%s", amount, FormatMoney(value));
-			
-			// Tambahkan animasi membawa crate (opsional)
-			ApplyAnimation(playerid, "CARRY", "crry_prtial", 4.1, 1, 1, 1, 1, 1, 1);
-		}
-	}
 	if(dialogid == DIALOG_GASOIL)
 	{
 		if(response)
@@ -10557,10 +10873,10 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			new vehicleid = GetPlayerVehicleID(playerid), carid = -1;
 			new total = VehGasOil[vehicleid] + amount;
 			
-			if(amount < 0 || amount > 1000) return Error(playerid, "amount maximal 0 - 1000.");
+			if(amount < 0 || amount > 500) return Error(playerid, "amount maximal 0 - 500.");
 			if(GetPlayerMoney(playerid) < value) return Error(playerid, "Uang anda kurang.");
 			if(GasOil < amount) return Error(playerid, "GasOil stock tidak mencukupi.");
-			if(total > 1000) return Error(playerid, "Gas Oil Maximal 1000 liter in your vehicle tank!");
+			if(total > 500) return Error(playerid, "Gas Oil Maximal 500 liter in your vehicle tank!");
 			GivePlayerMoneyEx(playerid, -value);
 			VehGasOil[vehicleid] += amount;
 			if((carid = Vehicle_Nearest2(playerid)) != -1)
@@ -10568,9 +10884,10 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 				pvData[carid][cGasOil] += amount;
 			}
 			
+			SetVehicleSpeedCap(vehicleid, 40.0);
 			GasOil -= amount;
 			Server_AddMoney(value);
-			Info(playerid, "Anda berhasil membeli "GREEN_E"%d "WHITE_E"liter gas oil seharga "RED_E"$%s", amount, FormatMoney(value));
+			Info(playerid, "Anda berhasil membeli "GREEN_E"%d "WHITE_E"liter gas oil seharga "RED_E"%s", amount, FormatMoney(value));
 		}
 	}
 	if(dialogid == DIALOG_MATERIAL)
@@ -10588,7 +10905,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			pData[playerid][pMaterial] += amount;
 			Material -= amount;
 			Server_AddMoney(value);
-			Info(playerid, "Anda berhasil membeli "GREEN_E"%d "WHITE_E"material seharga "RED_E"$%s", amount, FormatMoney(value));
+			Info(playerid, "Anda berhasil membeli "GREEN_E"%d "WHITE_E"material seharga "RED_E"%s", amount, FormatMoney(value));
 		}
 	}
 	if(dialogid == DIALOG_OBAT)
@@ -10606,7 +10923,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			pData[playerid][pObat] += amount;
 			ObatMyr -= amount;
 			Server_AddMoney(value);
-			Info(playerid, "Anda berhasil membeli "GREEN_E"%d "WHITE_E"obat seharga "RED_E"$%s", amount, FormatMoney(value));
+			Info(playerid, "Anda berhasil membeli "GREEN_E"%d "WHITE_E"obat seharga "RED_E"%s", amount, FormatMoney(value));
 		}
 	}
 	if(dialogid == DIALOG_COMPONENT)
@@ -10624,7 +10941,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			pData[playerid][pComponent] += amount;
 			Component -= amount;
 			Server_AddMoney(value);
-			Info(playerid, "Anda berhasil membeli "GREEN_E"%d "WHITE_E"component seharga "RED_E"$%s", amount, FormatMoney(value));
+			Info(playerid, "Anda berhasil membeli "GREEN_E"%d "WHITE_E"component seharga "RED_E"%s", amount, FormatMoney(value));
 		}
 	}
 	if(dialogid == DIALOG_DRUGS)
@@ -10642,7 +10959,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			pData[playerid][pMarijuana] += amount;
 			Marijuana -= amount;
 			Server_AddMoney(value);
-			Info(playerid, "Anda berhasil membeli "GREEN_E"%d "WHITE_E"Marijuana seharga "RED_E"$%s", amount, FormatMoney(value));
+			Info(playerid, "Anda berhasil membeli "GREEN_E"%d "WHITE_E"Marijuana seharga "RED_E"%s", amount, FormatMoney(value));
 		}
 	}
 	if(dialogid == DIALOG_FOOD)
@@ -10656,7 +10973,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					//buy food
 					if(pData[playerid][pFood] > 500) return Error(playerid, "Anda sudah membawa 500 Food!");
 					new mstr[128];
-					format(mstr, sizeof(mstr), ""WHITE_E"Masukan jumlah Food:\nFood Stock: "GREEN_E"%d\n"WHITE_E"Food Price"GREEN_E"$%s /item", Food, FormatMoney(FoodPrice));
+					format(mstr, sizeof(mstr), ""WHITE_E"Masukan jumlah Food:\nFood Stock: "GREEN_E"%d\n"WHITE_E"Food Price"GREEN_E"%s /item", Food, FormatMoney(FoodPrice));
 					ShowPlayerDialog(playerid, DIALOG_FOOD_BUY, DIALOG_STYLE_INPUT, "Buy Food", mstr, "Buy", "Cancel");
 				}
 				case 1:
@@ -10664,7 +10981,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					//buy seed
 					if(pData[playerid][pSeed] > 100) return Error(playerid, "Anda sudah membawa 100 Seed!");
 					new mstr[128];
-					format(mstr, sizeof(mstr), ""WHITE_E"Masukan jumlah Seed:\nFood Stock: "GREEN_E"%d\n"WHITE_E"Seed Price"GREEN_E"$%s /item", Food, FormatMoney(SeedPrice));
+					format(mstr, sizeof(mstr), ""WHITE_E"Masukan jumlah Seed:\nFood Stock: "GREEN_E"%d\n"WHITE_E"Seed Price"GREEN_E"%s /item", Food, FormatMoney(SeedPrice));
 					ShowPlayerDialog(playerid, DIALOG_SEED_BUY, DIALOG_STYLE_INPUT, "Buy Seed", mstr, "Buy", "Cancel");
 				}
 			}
@@ -10685,7 +11002,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			pData[playerid][pFood] += amount;
 			Food -= amount;
 			Server_AddMoney(value);
-			Info(playerid, "Anda berhasil membeli "GREEN_E"%d "WHITE_E"Food seharga "RED_E"$%s", amount, FormatMoney(value));
+			Info(playerid, "Anda berhasil membeli "GREEN_E"%d "WHITE_E"Food seharga "RED_E"%s", amount, FormatMoney(value));
 		}
 	}
 	if(dialogid == DIALOG_SEED_BUY)
@@ -10703,7 +11020,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			pData[playerid][pSeed] += amount;
 			Food -= amount;
 			Server_AddMoney(value);
-			Info(playerid, "Anda berhasil membeli "GREEN_E"%d "WHITE_E"Seed seharga "RED_E"$%s", amount, FormatMoney(value));
+			Info(playerid, "Anda berhasil membeli "GREEN_E"%d "WHITE_E"Seed seharga "RED_E"%s", amount, FormatMoney(value));
 		}
 	}
 	if(dialogid == DIALOG_EDIT_PRICE)
@@ -10715,25 +11032,25 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 				case 0:
 				{
 					new mstr[128];
-					format(mstr, sizeof(mstr), ""WHITE_E"Masukan harga Sprunk(1 - 500):\nPrice 1(Sprunk): "GREEN_E"$%s", FormatMoney(pData[playerid][pPrice1]));
+					format(mstr, sizeof(mstr), ""WHITE_E"Masukan harga Sprunk(1 - 500):\nPrice 1(Sprunk): "GREEN_E"%s", FormatMoney(pData[playerid][pPrice1]));
 					ShowPlayerDialog(playerid, DIALOG_EDIT_PRICE1, DIALOG_STYLE_INPUT, "Price 1", mstr, "Edit", "Cancel");
 				}
 				case 1:
 				{
 					new mstr[128];
-					format(mstr, sizeof(mstr), ""WHITE_E"Masukan harga Snack(1 - 500):\nPrice 2(Snack): "GREEN_E"$%s", FormatMoney(pData[playerid][pPrice2]));
+					format(mstr, sizeof(mstr), ""WHITE_E"Masukan harga Snack(1 - 500):\nPrice 2(Snack): "GREEN_E"%s", FormatMoney(pData[playerid][pPrice2]));
 					ShowPlayerDialog(playerid, DIALOG_EDIT_PRICE2, DIALOG_STYLE_INPUT, "Price 2", mstr, "Edit", "Cancel");
 				}
 				case 2:
 				{
 					new mstr[128];
-					format(mstr, sizeof(mstr), ""WHITE_E"Masukan harga Ice Cream Orange(1 - 500):\nPrice 3(Ice Cream Orange): "GREEN_E"$%s", FormatMoney(pData[playerid][pPrice3]));
+					format(mstr, sizeof(mstr), ""WHITE_E"Masukan harga Ice Cream Orange(1 - 500):\nPrice 3(Ice Cream Orange): "GREEN_E"%s", FormatMoney(pData[playerid][pPrice3]));
 					ShowPlayerDialog(playerid, DIALOG_EDIT_PRICE3, DIALOG_STYLE_INPUT, "Price 3", mstr, "Edit", "Cancel");
 				}
 				case 3:
 				{
 					new mstr[128];
-					format(mstr, sizeof(mstr), ""WHITE_E"Masukan harga Hotdog(1 - 500):\nPrice 4(Hotdog): "GREEN_E"$%s", FormatMoney(pData[playerid][pPrice4]));
+					format(mstr, sizeof(mstr), ""WHITE_E"Masukan harga Hotdog(1 - 500):\nPrice 4(Hotdog): "GREEN_E"%s", FormatMoney(pData[playerid][pPrice4]));
 					ShowPlayerDialog(playerid, DIALOG_EDIT_PRICE4, DIALOG_STYLE_INPUT, "Price 4", mstr, "Edit", "Cancel");
 				}
 			}
@@ -10747,7 +11064,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			
 			if(amount < 0 || amount > 500) return Error(playerid, "Invalid price! 1 - 500.");
 			pData[playerid][pPrice1] = amount;
-			Info(playerid, "Anda berhasil mengedit price 1(Sprunk) ke "GREEN_E"$%s.", FormatMoney(amount));
+			Info(playerid, "Anda berhasil mengedit price 1(Sprunk) ke "GREEN_E"%s.", FormatMoney(amount));
 			return 1;
 		}
 	}
@@ -10759,7 +11076,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			
 			if(amount < 0 || amount > 500) return Error(playerid, "Invalid price! 1 - 500.");
 			pData[playerid][pPrice2] = amount;
-			Info(playerid, "Anda berhasil mengedit price 2(Snack) ke "GREEN_E"$%s.", FormatMoney(amount));
+			Info(playerid, "Anda berhasil mengedit price 2(Snack) ke "GREEN_E"%s.", FormatMoney(amount));
 			return 1;
 		}
 	}
@@ -10771,7 +11088,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			
 			if(amount < 0 || amount > 500) return Error(playerid, "Invalid price! 1 - 500.");
 			pData[playerid][pPrice3] = amount;
-			Info(playerid, "Anda berhasil mengedit price 3(Ice Cream Orange) ke "GREEN_E"$%s.", FormatMoney(amount));
+			Info(playerid, "Anda berhasil mengedit price 3(Ice Cream Orange) ke "GREEN_E"%s.", FormatMoney(amount));
 			return 1;
 		}
 	}
@@ -10783,7 +11100,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			
 			if(amount < 0 || amount > 500) return Error(playerid, "Invalid price! 1 - 500.");
 			pData[playerid][pPrice4] = amount;
-			Info(playerid, "Anda berhasil mengedit price 4(Hotdog) ke "GREEN_E"$%s.", FormatMoney(amount));
+			Info(playerid, "Anda berhasil mengedit price 4(Hotdog) ke "GREEN_E"%s.", FormatMoney(amount));
 			return 1;
 		}
 	}
@@ -10811,7 +11128,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					GivePlayerMoneyEx(playerid, -pData[id][pPrice1]);
 					pData[playerid][pSprunk] += 1;
 					
-					SendNearbyMessage(playerid, 10.0, COLOR_PURPLE, "** %s telah membeli sprunk seharga $%s", ReturnName(playerid), FormatMoney(pData[id][pPrice1]));
+					SendNearbyMessage(playerid, 10.0, COLOR_PURPLE, "** %s telah membeli sprunk seharga %s", ReturnName(playerid), FormatMoney(pData[id][pPrice1]));
 				}
 				case 1:
 				{
@@ -10831,7 +11148,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					GivePlayerMoneyEx(playerid, -pData[id][pPrice2]);
 					pData[playerid][pSnack] += 1;
 					
-					SendNearbyMessage(playerid, 10.0, COLOR_PURPLE, "** %s telah membeli snack seharga $%s", ReturnName(playerid), FormatMoney(pData[id][pPrice2]));	
+					SendNearbyMessage(playerid, 10.0, COLOR_PURPLE, "** %s telah membeli snack seharga %s", ReturnName(playerid), FormatMoney(pData[id][pPrice2]));	
 				}
 				case 2:
 				{
@@ -10851,7 +11168,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					GivePlayerMoneyEx(playerid, -pData[id][pPrice3]);
 					pData[playerid][pEnergy] += 30;
 					
-					SendNearbyMessage(playerid, 10.0, COLOR_PURPLE, "** %s telah membeli ice cream orange seharga $%s", ReturnName(playerid), FormatMoney(pData[id][pPrice3]));
+					SendNearbyMessage(playerid, 10.0, COLOR_PURPLE, "** %s telah membeli ice cream orange seharga %s", ReturnName(playerid), FormatMoney(pData[id][pPrice3]));
 				}
 				case 3:
 				{
@@ -10871,7 +11188,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					GivePlayerMoneyEx(playerid, -pData[id][pPrice4]);
 					pData[playerid][pHunger] += 30;
 					
-					SendNearbyMessage(playerid, 10.0, COLOR_PURPLE, "** %s telah membeli hotdog seharga $%s", ReturnName(playerid), FormatMoney(pData[id][pPrice4]));
+					SendNearbyMessage(playerid, 10.0, COLOR_PURPLE, "** %s telah membeli hotdog seharga %s", ReturnName(playerid), FormatMoney(pData[id][pPrice4]));
 				}
 			}
 		}
@@ -10908,20 +11225,71 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 				{
 					if(Apotek < 1) return Error(playerid, "Product out of stock!");
 					if(pData[playerid][pFaction] != 3) return Error(playerid, "You are not a medical member.");
-					if(GetPlayerMoney(playerid) < 100) return Error(playerid, "Not enough money.");
+					if(GetPlayerMoney(playerid) < 10000) return Error(playerid, "Not enough money.");
 					pData[playerid][pBandage]++;
 					Apotek--;
-					GivePlayerMoneyEx(playerid, -100);
-					Server_AddMoney(100);
-					Info(playerid, "Anda membeli bandage seharga "RED_E"$100");
+					GivePlayerMoneyEx(playerid, -10000);
+					Server_AddMoney(10000);
+					Info(playerid, "Anda membeli bandage seharga "RED_E"$100.00");
 				}
 			}
 		}
 	}
+	if(dialogid == DIALOG_SCRAP_CONFIRM)
+	{
+		if(!response)
+		{
+			DeletePVar(playerid, "ScrapVehicleID");
+			return Info(playerid, "Vehicle scrap cancelled.");
+		}
+		
+		new carid = GetPVarInt(playerid, "ScrapVehicleID");
+		DeletePVar(playerid, "ScrapVehicleID");
+		
+		// Validasi ulang
+		if(carid < 0 || !Iter_Contains(PVehicles, carid))
+			return Error(playerid, "Invalid vehicle!");
+		
+		if(pvData[carid][cOwner] != pData[playerid][pID])
+			return Error(playerid, "This vehicle doesn't belong to you!");
+		
+		if(!IsPlayerInAnyVehicle(playerid) || GetPlayerVehicleID(playerid) != pvData[carid][cVeh])
+			return Error(playerid, "You must be inside the vehicle!");
+		
+		// Proses scrap
+		new pay = pvData[carid][cPrice] / 2;
+		new vehicleid = pvData[carid][cVeh];
+		new modelname[64];
+		format(modelname, sizeof(modelname), "%s", GetVehicleModelName(GetVehicleModel(vehicleid)));
+		
+		GivePlayerMoneyEx(playerid, pay);
+		
+		Info(playerid, "You scrapped your %s for {00FF00}%s", modelname, FormatMoney(pay));
+		
+		// Log
+		new logstr[150];
+		format(logstr, sizeof(logstr), "[VEH]: %s scrapped their vehicle %s for %s", 
+			GetRPName(playerid), modelname, FormatMoney(pay));
+		LogServer("Vehicle", logstr);
+		
+		// Hapus dari database
+		new query[128];
+		mysql_format(g_SQL, query, sizeof(query), "DELETE FROM vehicle WHERE id = '%d'", pvData[carid][cID]);
+		mysql_tquery(g_SQL, query);
+		
+		// Destroy vehicle
+		if(IsValidVehicle(pvData[carid][cVeh])) 
+			DestroyVehicle(pvData[carid][cVeh]);
+		
+		pvData[carid][cVeh] = INVALID_VEHICLE_ID;
+		Iter_Remove(PVehicles, carid);
+		
+		return 1;
+	}
 	//dealer
 	if(dialogid == DEALER_BUYPROD)
 	{
-		static did = -1, price;
+		static did = -1;
 		
 		if((did = GetNearbyDealer(playerid)) != -1 && response)
 		{
@@ -10929,7 +11297,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			if(dtype < 1 || dtype > 6) return 1;
 			if(listitem >= DealerVehicleCount[dtype]) return 1;
 			
-			price = dsData[did][dVehicle][listitem];
+			new price = dsData[did][dVehicle][listitem];
 			new model = DealerVehicleModels[dtype][listitem];
 			
 			new count = 0, limit = MAX_PLAYER_VEHICLE + pData[playerid][pVip];
@@ -10947,29 +11315,115 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			}
 			
 			if(count >= limit)
-				return Error(playerid, "Slot kendaraan anda sudah penuh, silahkan jual beberapa kendaraan anda terlebih dahulu!");
+				return Error(playerid, "Slot kendaraan anda sudah penuh!");
 
-			// Proses pembelian
-			GivePlayerMoneyEx(playerid, -price);
+			// Simpan data sementara
+			BuyData[playerid][tempDealerID] = did;
+			BuyData[playerid][tempModel] = model;
+			BuyData[playerid][tempPrice] = price;
 			
-			new cQuery[1024];
-			new Float:x, Float:y, Float:z, Float:a;
-			x = dsData[did][dPX];
-			y = dsData[did][dPY];
-			z = dsData[did][dPZ];
-			a = 0.0;
-			
-			mysql_format(g_SQL, cQuery, sizeof(cQuery), 
-				"INSERT INTO `vehicle` (`owner`, `model`, `color1`, `color2`, `price`, `x`, `y`, `z`, `a`) VALUES (%d, %d, 0, 0, %d, '%f', '%f', '%f', '%f')", 
-				pData[playerid][pID], model, price, x, y, z, a
-			);
-			mysql_tquery(g_SQL, cQuery, "OnVehBuyPV", "ddddddffff", playerid, pData[playerid][pID], model, 0, 0, price, x, y, z, a);
-			
-			dsData[did][dProduct]--;
-			dsData[did][dMoney] += price;
-			Dealer_Save(did);
-			Dealer_Refresh(did);
+			// Tampilkan dialog input warna
+			new str[256];
+			format(str, sizeof(str),"{FFFFFF}Vehicle: {FFFF00}%s\n{FFFFFF}Price: {00FF00}%s\n\n{FFFFFF}Enter colors (0-255): {FFFF00}Color1 Color2\n{FFFFFF}Example: {FFFF00}0 1 {FFFFFF}= Black & White",
+			GetVehicleModelName(BuyData[playerid][tempModel]),FormatMoney(BuyData[playerid][tempPrice]));
+		
+			ShowPlayerDialog(playerid, DEALER_COLOR_INPUT, DIALOG_STYLE_INPUT, "Vehicle Color Selection", str, "Next", "Cancel");
 		}
+		return 1;
+	}
+
+	// Dialog input warna
+	if(dialogid == DEALER_COLOR_INPUT)
+	{
+		if(!response) return 1;
+		
+		new color1, color2;
+		if(sscanf(inputtext, "dd", color1, color2))
+		{
+			Error(playerid, "Invalid format! Use: Primary Color Secondary Color (Example: 0 1)");
+			
+			// Tampilkan dialog lagi
+			new str[256];
+			format(str, sizeof(str),"{FFFFFF}Vehicle: {FFFF00}%s\n{FFFFFF}Price: {00FF00}%s\n\n{FFFFFF}Enter colors (0-255): {FFFF00}Color1 Color2\n{FFFFFF}Example: {FFFF00}0 1 {FFFFFF}= Black & White",
+			GetVehicleModelName(BuyData[playerid][tempModel]),FormatMoney(BuyData[playerid][tempPrice]));
+		
+			ShowPlayerDialog(playerid, DEALER_COLOR_INPUT, DIALOG_STYLE_INPUT, "Vehicle Color Selection", str, "Next", "Cancel");
+			return 1;
+		}
+		
+		if(color1 < 0 || color1 > 255 || color2 < 0 || color2 > 255)
+		{
+			Error(playerid, "Color ID must be between 0-255!");
+			
+			// Tampilkan dialog lagi
+			new str[256];
+			format(str, sizeof(str),"{FFFFFF}Vehicle: {FFFF00}%s\n{FFFFFF}Price: {00FF00}%s\n\n{FFFFFF}Enter colors (0-255): {FFFF00}Color1 Color2\n{FFFFFF}Example: {FFFF00}0 1 {FFFFFF}= Black & White",
+			GetVehicleModelName(BuyData[playerid][tempModel]),FormatMoney(BuyData[playerid][tempPrice]));
+		
+			ShowPlayerDialog(playerid, DEALER_COLOR_INPUT, DIALOG_STYLE_INPUT, "Vehicle Color Selection", str, "Next", "Cancel");
+			return 1;
+		}
+		
+		BuyData[playerid][tempColor1] = color1;
+		BuyData[playerid][tempColor2] = color2;
+		
+		// Tampilkan konfirmasi
+		new str[512];
+		format(str, sizeof(str),"{FFFFFF}Vehicle: {FFFF00}%s\n{FFFFFF}Price: {00FF00}%s\n{FFFFFF}Primary Color: {FFFF00}%d\n{FFFFFF}Secondary Color: {FFFF00}%d\n\n{FFFFFF}Confirm purchase?",
+		GetVehicleModelName(BuyData[playerid][tempModel]),FormatMoney(BuyData[playerid][tempPrice]),BuyData[playerid][tempColor1],BuyData[playerid][tempColor2]);
+		
+		ShowPlayerDialog(playerid, DEALER_CONFIRM_BUY, DIALOG_STYLE_MSGBOX, 
+			"Confirm Purchase", str, "Buy", "Cancel");
+		return 1;
+	}
+
+	// Dialog konfirmasi
+	if(dialogid == DEALER_CONFIRM_BUY)
+	{
+		if(!response) return 1;
+		
+		new did = BuyData[playerid][tempDealerID];
+		
+		// Final check
+		if(pData[playerid][pMoney] < BuyData[playerid][tempPrice])
+			return Error(playerid, "Not enough money!");
+			
+		if(dsData[did][dProduct] < 1)
+			return Error(playerid, "This Dealership is out of stock product.");
+		
+		// Proses pembelian
+		GivePlayerMoneyEx(playerid, -BuyData[playerid][tempPrice]);
+		
+		new cQuery[1024];
+		new Float:x = dsData[did][dPX];
+		new Float:y = dsData[did][dPY];
+		new Float:z = dsData[did][dPZ];
+		new Float:a = 0.0;
+		
+		mysql_format(g_SQL, cQuery, sizeof(cQuery), 
+			"INSERT INTO `vehicle` (`owner`, `model`, `color1`, `color2`, `price`, `x`, `y`, `z`, `a`) VALUES (%d, %d, %d, %d, %d, '%f', '%f', '%f', '%f')", 
+			pData[playerid][pID], 
+			BuyData[playerid][tempModel], 
+			BuyData[playerid][tempColor1], 
+			BuyData[playerid][tempColor2], 
+			BuyData[playerid][tempPrice], 
+			x, y, z, a
+		);
+		mysql_tquery(g_SQL, cQuery, "OnVehBuyPV", "ddddddffff",  // ✅ 6 integer + 4 float
+			playerid, 
+			pData[playerid][pID], 
+			BuyData[playerid][tempModel], 
+			BuyData[playerid][tempColor1], 
+			BuyData[playerid][tempColor2], 
+			BuyData[playerid][tempPrice], 
+			x, y, z, a
+		);
+		
+		dsData[did][dProduct]--;
+		dsData[did][dMoney] += BuyData[playerid][tempPrice];
+		Dealer_Save(did);
+		Dealer_Refresh(did);
+		
 		return 1;
 	}
 	if(dialogid == DEALER_MENU)
@@ -10982,8 +11436,8 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 				case 0:
 				{	
 					new mstr[248], lstr[512];
-					format(mstr,sizeof(mstr),"Dealer ID %d", did);
-					format(lstr,sizeof(lstr),"Dealer Name:\t%s\nBisnis Product:\t%d\nDealer Vault:\t%s", dsData[did][dName], dsData[did][dProduct], FormatMoney(dsData[did][dMoney]));
+					format(mstr,sizeof(mstr),""WHITE_E"Dealer ID %d", did);
+					format(lstr,sizeof(lstr),""WHITE_E"Dealer Name:\t%s\nBisnis Product:\t%d\nDealer Vault:\t"GREEN_E"%s", dsData[did][dName], dsData[did][dProduct], FormatMoney(dsData[did][dMoney]));
 					ShowPlayerDialog(playerid, DEALER_INFO, DIALOG_STYLE_TABLIST, mstr, lstr,"Back","Close");
 				}
 				case 1:
@@ -10996,6 +11450,15 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 				case 3:
 				{
 					Dealer_ProductMenu(playerid, did);
+				}
+				case 4:
+				{
+					if(dsData[did][dProduct] > 100)
+						return Error(playerid, "Dealership ini masih memiliki cukup product.");
+					if(dsData[did][dMoney] < 100000)
+						return Error(playerid, "Setidaknya anda mempunyai uang dalam Dealership anda senilai $1,000.00 untuk merestock product.");
+					dsData[did][dRestock] = 1;
+					Info(playerid, "Anda berhasil request untuk mengisi stock product kepada trucker, harap tunggu sampai pekerja trucker melayani.");
 				}
 			}
 		}
@@ -11038,12 +11501,12 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			switch(listitem){
 				case 0:{
 					new mstr[248];
-					format(mstr,sizeof(mstr),"Vault Sekarang: %s\n\nMasukkan jumlah duit yang ingin kamu simpan", FormatMoney(dsData[did][dMoney]));
+					format(mstr,sizeof(mstr),"Vault Sekarang: %s\n\nMasukkan jumlah uang yang ingin kamu simpan", FormatMoney(dsData[did][dMoney]));
 					ShowPlayerDialog(playerid, DEALER_DEPOSIT, DIALOG_STYLE_INPUT,"Dealer Vault Deposit", mstr,"Done","Back");
 				}
 				case 1:{
 					new mstr[248];
-					format(mstr,sizeof(mstr),"Vault Sekarang: %s\n\nMasukkan jumlah duit yang ingin kamu ambil", FormatMoney(dsData[did][dMoney]));
+					format(mstr,sizeof(mstr),"Vault Sekarang: %s\n\nMasukkan jumlah uang yang ingin kamu ambil", FormatMoney(dsData[did][dMoney]));
 					ShowPlayerDialog(playerid, DEALER_WITHDRAW, DIALOG_STYLE_INPUT,"Dealer Vault Withdraw", mstr,"Done","Back");
 				}
 			}
@@ -11063,7 +11526,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			GivePlayerMoneyEx(playerid, amount);
 			
 			Dealer_Save(did);
-			Servers(playerid, "Kamu berhasil mengambil uang sebanyak "GREEN_E"$%s "WHITE_E"dari dealer vault", FormatMoney(amount));
+			Servers(playerid, "Kamu berhasil mengambil uang sebanyak "GREEN_E"%s "WHITE_E"dari dealer vault", FormatMoney(amount));
 		}
 		else
 		{
@@ -11085,7 +11548,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			GivePlayerMoneyEx(playerid, -amount);
 			
 			Dealer_Save(did);
-			Servers(playerid, "Kamu berhasil menyimpan uang sebanyak "GREEN_E"$%s "WHITE_E"ke dealer vault", FormatMoney(amount));
+			Servers(playerid, "Kamu berhasil menyimpan uang sebanyak "GREEN_E"%s "WHITE_E"ke dealer vault", FormatMoney(amount));
 		}
 		else
 		{
@@ -11151,6 +11614,49 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 		else return Dealer_ProductMenu(playerid, did);
 		return 1;
 	}
+	if(dialogid == DIALOG_MY_DEALER)
+	{
+		if(!response) return true;
+		SetPVarInt(playerid, "ClickedDealer", ReturnPlayerDealerID(playerid, (listitem + 1)));
+		ShowPlayerDialog(playerid, MYDEALER_INFO, DIALOG_STYLE_LIST, "{0000FF}My Dealership", "Show Information\nTrack Dealership", "Select", "Cancel");
+		return 1;
+	}
+	if(dialogid == MYDEALER_INFO)
+	{
+		if(!response) return true;
+		new did = GetPVarInt(playerid, "ClickedDealer");
+		DeletePVar(playerid, "ClickedDealer");
+		switch(listitem)
+		{
+			case 0:
+			{
+				new type[32]; // Declare the type variable
+				switch(dsData[did][dType]) // Changed 'id' to 'did'
+				{
+					case 1: type = "WAA";
+					case 2: type = "Transfender";
+					case 3: type = "Locolow";
+					case 4: type = "Motorcycle";
+					case 5: type = "Industrial";
+					case 6: type = "Company";
+					default: type = "Unknown";
+				}
+				new mstr[248], lstr[512];
+				format(mstr, sizeof(mstr), ""WHITE_E"Dealership ID %d", did);
+				format(lstr, sizeof(lstr), ""WHITE_E"Dealer Name:\t%s\nBisnis Product:\t%d\nDealer Vault:\t"GREEN_E"%s\n"WHITE_E"Dealer Type:\t%s\nDealer Price:\t%s",
+					dsData[did][dName], dsData[did][dProduct], FormatMoney(dsData[did][dMoney]), type, FormatMoney(dsData[did][dPrice]));
+				ShowPlayerDialog(playerid, DIALOG_UNUSED, DIALOG_STYLE_TABLIST, mstr, lstr, "Back", "Close");
+			}
+			case 1:
+			{
+				if(!response) return true;
+				new id = ReturnPlayerDealerID(playerid, (listitem + 1));
+				SetPlayerRaceCheckpoint(playerid,1, dsData[id][dX], dsData[id][dY], dsData[id][dZ], 0.0, 0.0, 0.0, 3.5);
+				Info(playerid, "Ikuti checkpoint untuk menemukan Dealership anda!");
+			}
+		}
+		return 1;
+	}
 	if(dialogid == DIALOG_ATM)
 	{
 		if(!response) return 1;
@@ -11159,13 +11665,13 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			case 0: // Check Balance
 			{
 				new mstr[512];
-				format(mstr, sizeof(mstr), "{F6F6F6}You have "LB_E"$%s {F6F6F6}in your bank account.", FormatMoney(pData[playerid][pBankMoney]));
+				format(mstr, sizeof(mstr), "{F6F6F6}You have "LB_E"%s {F6F6F6}in your bank account.", FormatMoney(pData[playerid][pBankMoney]));
 				ShowPlayerDialog(playerid, DIALOG_UNUSED, DIALOG_STYLE_MSGBOX, ""LB_E"Bank", mstr, "Close", "");
 			}
 			case 1: // Withdraw
 			{
 				new mstr[128];
-				format(mstr, sizeof(mstr), ""WHITE_E"My Balance: "LB_E"$%s", FormatMoney(pData[playerid][pBankMoney]));
+				format(mstr, sizeof(mstr), ""WHITE_E"My Balance: "LB_E"%s", FormatMoney(pData[playerid][pBankMoney]));
 				ShowPlayerDialog(playerid, DIALOG_ATMWITHDRAW, DIALOG_STYLE_LIST, mstr, "$50.00\n$200.00\n$500.00\n$1.000.00\n$5.000.00", "Withdraw", "Cancel");
 			}
 			case 2: // Transfer Money
@@ -11240,19 +11746,19 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			case 0: // Deposit
 			{
 				new mstr[512];
-				format(mstr, sizeof(mstr), "{F6F6F6}You have "LB_E"$%s {F6F6F6}in bank account.\n\nType in the amount you want to deposit below:", FormatMoney(pData[playerid][pBankMoney]));
+				format(mstr, sizeof(mstr), "{F6F6F6}You have "LB_E"%s {F6F6F6}in bank account.\n\nType in the amount you want to deposit below:", FormatMoney(pData[playerid][pBankMoney]));
 				ShowPlayerDialog(playerid, DIALOG_BANKDEPOSIT, DIALOG_STYLE_INPUT, ""LB_E"Bank", mstr, "Deposit", "Cancel");
 			}
 			case 1: // Withdraw
 			{
 				new mstr[512];
-				format(mstr, sizeof(mstr), "{F6F6F6}You have "LB_E"$%s {F6F6F6}in your bank account.\n\nType in the amount you want to withdraw below:", FormatMoney(pData[playerid][pBankMoney]));
+				format(mstr, sizeof(mstr), "{F6F6F6}You have "LB_E"%s {F6F6F6}in your bank account.\n\nType in the amount you want to withdraw below:", FormatMoney(pData[playerid][pBankMoney]));
 				ShowPlayerDialog(playerid, DIALOG_BANKWITHDRAW, DIALOG_STYLE_INPUT, ""LB_E"Bank", mstr, "Withdraw", "Cancel");
 			}
 			case 2: // Check Balance
 			{
 				new mstr[512];
-				format(mstr, sizeof(mstr), "{F6F6F6}You have "LB_E"$%s {F6F6F6}in your bank account.", FormatMoney(pData[playerid][pBankMoney]));
+				format(mstr, sizeof(mstr), "{F6F6F6}You have "LB_E"%s {F6F6F6}in your bank account.", FormatMoney(pData[playerid][pBankMoney]));
 				ShowPlayerDialog(playerid, DIALOG_UNUSED, DIALOG_STYLE_MSGBOX, ""LB_E"Bank", mstr, "Close", "");
 			}
 			case 3: //Transfer Money
@@ -11288,7 +11794,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			mysql_format(g_SQL, query, sizeof(query), "UPDATE players SET bmoney=%d,money=%d WHERE reg_id=%d", pData[playerid][pBankMoney], pData[playerid][pMoney], pData[playerid][pID]);
 			mysql_tquery(g_SQL, query);
 			// Format pesan sukses kepada pemain
-			format(lstr, sizeof(lstr), "{F6F6F6}You have successfully deposited "LB_E"$%s {F6F6F6}into your bank account.\n"LB_E"Current Balance: {F6F6F6}$%s", FormatMoney(amount), FormatMoney(pData[playerid][pBankMoney]));
+			format(lstr, sizeof(lstr), "{F6F6F6}You have successfully deposited "LB_E"%s {F6F6F6}into your bank account.\n"LB_E"Current Balance: {F6F6F6}%s", FormatMoney(amount), FormatMoney(pData[playerid][pBankMoney]));
 			ShowPlayerDialog(playerid, DIALOG_UNUSED, DIALOG_STYLE_MSGBOX, ""ORANGE_E"Valencia RP: "LB_E"Bank", lstr, "Close", "");
 		}
 	}
@@ -11312,7 +11818,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			GivePlayerMoneyEx(playerid, amount);
 			mysql_format(g_SQL, query, sizeof(query), "UPDATE players SET bmoney=%d,money=%d WHERE reg_id=%d", pData[playerid][pBankMoney], pData[playerid][pMoney], pData[playerid][pID]);
 			mysql_tquery(g_SQL, query);
-			format(lstr, sizeof(lstr), "{F6F6F6}You have successfully withdrawed "LB_E"$%s {F6F6F6}from your bank account.\n"LB_E"Current Balance: {F6F6F6}$%s", FormatMoney(amount), FormatMoney(pData[playerid][pBankMoney]));
+			format(lstr, sizeof(lstr), "{F6F6F6}You have successfully withdrawed "LB_E"%s {F6F6F6}from your bank account.\n"LB_E"Current Balance: {F6F6F6}%s", FormatMoney(amount), FormatMoney(pData[playerid][pBankMoney]));
 			ShowPlayerDialog(playerid, DIALOG_UNUSED, DIALOG_STYLE_MSGBOX, ""ORANGE_E"Valencia RP: "LB_E"Bank", lstr, "Close", "");
 		}
 	}
@@ -11360,11 +11866,11 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			
 			pData[playerid][pBankMoney] -= pData[playerid][pTransfer];
 			
-			format(mstr, sizeof(mstr), ""WHITE_E"No Rek Target: "YELLOW_E"%d\n"WHITE_E"Nama Target: "YELLOW_E"%s\n"WHITE_E"Jumlah: "GREEN_E"$%s\n\n"WHITE_E"Anda telah berhasil mentransfer!", pData[playerid][pTransferRek], pData[playerid][pTransferName], FormatMoney(pData[playerid][pTransfer]));
+			format(mstr, sizeof(mstr), ""WHITE_E"No Rek Target: "YELLOW_E"%d\n"WHITE_E"Nama Target: "YELLOW_E"%s\n"WHITE_E"Jumlah: "GREEN_E"%s\n\n"WHITE_E"Anda telah berhasil mentransfer!", pData[playerid][pTransferRek], pData[playerid][pTransferName], FormatMoney(pData[playerid][pTransfer]));
 			ShowPlayerDialog(playerid, DIALOG_BANKSUKSES, DIALOG_STYLE_MSGBOX, ""LB_E"Transfer Sukses", mstr, "Sukses", "");
 
 			new dc[500];
-			format(dc, sizeof(dc),  "```[TRANSFER LOG]%s telah transfer uang kepada rekening %s sebesar $%s```", pData[playerid][pName], pData[playerid][pTransferName], FormatMoney(pData[playerid][pTransfer]));
+			format(dc, sizeof(dc),  "```[TRANSFER LOG]%s telah transfer uang kepada rekening %s sebesar %s```", pData[playerid][pName], pData[playerid][pTransferName], FormatMoney(pData[playerid][pTransfer]));
 	 		SendDiscordMessage(1, dc);
 		}
 	}
@@ -11374,34 +11880,6 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 		{
 			pData[playerid][pTransfer] = 0;
 			pData[playerid][pTransferRek] = 0;
-		}
-	}
-	if(dialogid == DIALOG_ASKS)
-	{
-		if(response) 
-		{
-			//new i = strval(inputtext);
-			new i = listitem;
-			new tstr[64], mstr[128], lstr[512];
-
-			strunpack(mstr, AskData[i][askText]);
-			format(tstr, sizeof(tstr), ""GREEN_E"Ask Id: #%d", i);
-			format(lstr,sizeof(lstr),""WHITE_E"Asked: "GREEN_E"$%s\n"WHITE_E"Question: "RED_E"%s", pData[AskData[i][askPlayer]][pName], mstr);
-			ShowPlayerDialog(playerid, DIALOG_UNUSED, DIALOG_STYLE_MSGBOX,tstr,lstr,"Close","");
-		}
-	}
-	if(dialogid == DIALOG_REPORTS)
-	{
-		if(response) 
-		{
-			//new i = strval(inputtext);
-			new i = listitem;
-			new tstr[64], mstr[128], lstr[512];
-
-			strunpack(mstr, ReportData[i][rText]);
-			format(tstr, sizeof(tstr), ""GREEN_E"Report Id: #%d", i);
-			format(lstr,sizeof(lstr),""WHITE_E"Reported: "GREEN_E"$%s\n"WHITE_E"Reason: "RED_E"%s", pData[ReportData[i][rPlayer]][pName], mstr);
-			ShowPlayerDialog(playerid, DIALOG_UNUSED, DIALOG_STYLE_MSGBOX,tstr,lstr,"Close","");
 		}
 	}
 	/*if(dialogid == DIALOG_REPORTS)
@@ -11460,57 +11938,57 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
                 {
                     new vehicleid = SpawnFactionVehicleSapd(playerid, 596, 0, 1);
                     if(vehicleid != INVALID_VEHICLE_ID)
-                        SendClientMessage(playerid, COLOR_ARWIN, "VEHICLE:"WHITE_E" Anda telah memunculkan Mobil Polisi.");
+                        Custom(playerid, "VEHICLE:"WHITE_E" Anda telah memunculkan Mobil Polisi.");
                     else
-                        SendClientMessage(playerid, -1, "Gagal memunculkan kendaraan.");
+                        Error(playerid, "Gagal memunculkan kendaraan.");
                 }
                 case 1: // Motor Polisi
                 {
                     new vehicleid = SpawnFactionVehicleSapd(playerid, 523, 0, 1);
                     if(vehicleid != INVALID_VEHICLE_ID)
-                        SendClientMessage(playerid, COLOR_ARWIN, "VEHICLE:"WHITE_E" Anda telah memunculkan Motor Polisi.");
+                        Custom(playerid, "VEHICLE:"WHITE_E" Anda telah memunculkan Motor Polisi.");
                     else
-                        SendClientMessage(playerid, -1, "Gagal memunculkan kendaraan.");
+                        Error(playerid, "Gagal memunculkan kendaraan.");
                 }
                 case 2: // Helikopter 427
                 {
                     new vehicleid = SpawnFactionVehicleSapd(playerid, 497, 0, 1);
                     if(vehicleid != INVALID_VEHICLE_ID)
-                        SendClientMessage(playerid, COLOR_ARWIN, "VEHICLE:"WHITE_E" Anda telah memunculkan Helikopter Polisi.");
+                        Custom(playerid, "VEHICLE:"WHITE_E" Anda telah memunculkan Helikopter Polisi.");
                     else
-                        SendClientMessage(playerid, -1, "Gagal memunculkan kendaraan.");
+                        Error(playerid, "Gagal memunculkan kendaraan.");
                 }
 				case 3: // mobil truk 430
                 {
                     new vehicleid = SpawnFactionVehicleSapd(playerid, 427, 0, 1);
                     if(vehicleid != INVALID_VEHICLE_ID)
-                        SendClientMessage(playerid, COLOR_ARWIN, "VEHICLE:"WHITE_E" Anda telah memunculkan Truk Polisi.");
+                        Custom(playerid, "VEHICLE:"WHITE_E" Anda telah memunculkan Truk Polisi.");
                     else
-                        SendClientMessage(playerid, -1, "Gagal memunculkan kendaraan.");
+                        Error(playerid, "Gagal memunculkan kendaraan.");
                 }
 				case 4: // kapal  601
                 {
                     new vehicleid = SpawnFactionVehicleSapd(playerid, 430, 0, 1);
                     if(vehicleid != INVALID_VEHICLE_ID)
-                        SendClientMessage(playerid, COLOR_ARWIN, "VEHICLE:"WHITE_E" Anda telah memunculkan Kapal Polisi.");
+                        Custom(playerid, "VEHICLE:"WHITE_E" Anda telah memunculkan Kapal Polisi.");
                     else
-                        SendClientMessage(playerid, -1, "Gagal memunculkan kendaraan.");
+                        Error(playerid, "Gagal memunculkan kendaraan.");
                 }
 				case 5: // water  599
                 {
                     new vehicleid = SpawnFactionVehicleSapd(playerid, 601, 0, 1);
                     if(vehicleid != INVALID_VEHICLE_ID)
-                        SendClientMessage(playerid, COLOR_ARWIN, "VEHICLE:"WHITE_E" Anda telah memunculkan Water Canon Polisi.");
+                        Custom(playerid, "VEHICLE:"WHITE_E" Anda telah memunculkan Water Canon Polisi.");
                     else
-                        SendClientMessage(playerid, -1, "Gagal memunculkan kendaraan.");
+                        Error(playerid, "Gagal memunculkan kendaraan.");
                 }
 				case 6: // offroad  599
                 {
                     new vehicleid = SpawnFactionVehicleSapd(playerid, 601, 0, 1);
                     if(vehicleid != INVALID_VEHICLE_ID)
-                        SendClientMessage(playerid, COLOR_ARWIN, "VEHICLE:"WHITE_E" Anda telah memunculkan Mobil Offroad Polisi.");
+                        Custom(playerid, "VEHICLE:"WHITE_E" Anda telah memunculkan Mobil Offroad Polisi.");
                     else
-                        SendClientMessage(playerid, -1, "Gagal memunculkan kendaraan.");
+                        Error(playerid, "Gagal memunculkan kendaraan.");
                 }
 				case 7: // despawn cak
                 {
@@ -11531,17 +12009,17 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
                 {
                     new vehicleid = SpawnFactionVehicleSags(playerid, 409, 1, 1);
                     if(vehicleid != INVALID_VEHICLE_ID)
-                        SendClientMessage(playerid, COLOR_ARWIN, "VEHICLE:"WHITE_E"  Anda telah memunculkan Mobil Limosin.");
+                        Custom(playerid, "VEHICLE:"WHITE_E"  Anda telah memunculkan Mobil Limosin.");
                     else
-                        SendClientMessage(playerid, -1, "Gagal memunculkan kendaraan.");
+                        Error(playerid, "Gagal memunculkan kendaraan.");
                 }
                 case 1: // Motor Balap
                 {
                     new vehicleid = SpawnFactionVehicleSags(playerid, 522, 1, 1);
                     if(vehicleid != INVALID_VEHICLE_ID)
-                        SendClientMessage(playerid, COLOR_ARWIN, "VEHICLE:"WHITE_E" Anda telah memunculkan Motor Balap.");
+                        Custom(playerid, "VEHICLE:"WHITE_E" Anda telah memunculkan Motor Balap.");
                     else
-                        SendClientMessage(playerid, -1, "Gagal memunculkan kendaraan.");
+                        Error(playerid, "Gagal memunculkan kendaraan.");
                 }
 				case 2: // despawn cak
                 {
@@ -11562,17 +12040,17 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
                 {
                     new vehicleid = SpawnFactionVehicleSamd(playerid, 416, 1, 3);
                     if(vehicleid != INVALID_VEHICLE_ID)
-                        SendClientMessage(playerid, -1, "Anda telah memunculkan Ambulans.");
+                        Custom(playerid, "VEHICLE:"WHITE_E" Anda telah memunculkan Ambulans.");
                     else
-                        SendClientMessage(playerid, -1, "Gagal memunculkan kendaraan.");
+                        Error(playerid, "Gagal memunculkan kendaraan.");
                 }
                 case 1: // Helikopter Medis
                 {
                     new vehicleid = SpawnFactionVehicleSamd(playerid, 563, 1, 3);
                     if(vehicleid != INVALID_VEHICLE_ID)
-                        SendClientMessage(playerid, -1, "Anda telah memunculkan Helikopter Medis.");
+                        Custom(playerid, "VEHICLE:"WHITE_E" Anda telah memunculkan Helikopter Medis.");
                     else
-                        SendClientMessage(playerid, -1, "Gagal memunculkan kendaraan.");
+                        Error(playerid, "Gagal memunculkan kendaraan.");
                 }
 				case 2: // despawn cak
                 {
@@ -11583,7 +12061,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
         return 1;
     }
     
-    if (dialogid == DIALOG_SANA_VEHICLES)
+    if(dialogid == DIALOG_SANA_VEHICLES)
     {
         if (response)
         {
@@ -11593,17 +12071,17 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
                 {
                     new vehicleid = SpawnFactionVehicleSana(playerid, 582, 6, 6);
                     if(vehicleid != INVALID_VEHICLE_ID)
-                        SendClientMessage(playerid, -1, "Anda telah memunculkan Van SANA.");
+                        Custom(playerid, "VEHICLE:"WHITE_E" Anda telah memunculkan Van SANA.");
                     else
-                        SendClientMessage(playerid, -1, "Gagal memunculkan kendaraan.");
+                        Error(playerid, "Gagal memunculkan kendaraan.");
                 }
                 case 1: // Helikopter Berita
                 {
                     new vehicleid = SpawnFactionVehicleSana(playerid, 488, 0, 1);
                     if(vehicleid != INVALID_VEHICLE_ID)
-                        SendClientMessage(playerid, -1, "Anda telah memunculkan Helikopter SANA.");
+                        Custom(playerid, "VEHICLE:"WHITE_E" Anda telah memunculkan Helikopter SANA.");
                     else
-                        SendClientMessage(playerid, -1, "Gagal memunculkan kendaraan.");
+                        Error(playerid, "Gagal memunculkan kendaraan.");
                 }
 				case 2: // despawn cak
                 {
@@ -11798,18 +12276,18 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 				{
 					//Bikes
 					new str[1024];
-					/*format(str, sizeof(str), "%s"WHITE_E"%s\t"LG_E"$%s\n", str, GetVehicleModelName(481), FormatMoney(GetVehicleCost(481)));
-					format(str, sizeof(str), "%s"WHITE_E"%s\t"LG_E"$%s\n", str, GetVehicleModelName(509), FormatMoney(GetVehicleCost(509)));
-					format(str, sizeof(str), "%s"WHITE_E"%s\t"LG_E"$%s\n", str, GetVehicleModelName(510), FormatMoney(GetVehicleCost(510)));
-					format(str, sizeof(str), "%s"WHITE_E"%s\t"LG_E"$%s\n", str, GetVehicleModelName(462), FormatMoney(GetVehicleCost(462)));
-					format(str, sizeof(str), "%s"WHITE_E"%s\t"LG_E"$%s\n", str, GetVehicleModelName(586), FormatMoney(GetVehicleCost(586)));
-					format(str, sizeof(str), "%s"WHITE_E"%s\t"LG_E"$%s\n", str, GetVehicleModelName(581), FormatMoney(GetVehicleCost(581)));
-					format(str, sizeof(str), "%s"WHITE_E"%s\t"LG_E"$%s\n", str, GetVehicleModelName(461), FormatMoney(GetVehicleCost(461)));
-					format(str, sizeof(str), "%s"WHITE_E"%s\t"LG_E"$%s\n", str, GetVehicleModelName(521), FormatMoney(GetVehicleCost(521)));
-					format(str, sizeof(str), "%s"WHITE_E"%s\t"LG_E"$%s\n", str, GetVehicleModelName(463), FormatMoney(GetVehicleCost(463)));
-					format(str, sizeof(str), "%s"WHITE_E"%s\t"LG_E"$%s\n", str, GetVehicleModelName(468), FormatMoney(GetVehicleCost(468)));*/
+					/*format(str, sizeof(str), "%s"WHITE_E"%s\t"LG_E"%s\n", str, GetVehicleModelName(481), FormatMoney(GetVehicleCost(481)));
+					format(str, sizeof(str), "%s"WHITE_E"%s\t"LG_E"%s\n", str, GetVehicleModelName(509), FormatMoney(GetVehicleCost(509)));
+					format(str, sizeof(str), "%s"WHITE_E"%s\t"LG_E"%s\n", str, GetVehicleModelName(510), FormatMoney(GetVehicleCost(510)));
+					format(str, sizeof(str), "%s"WHITE_E"%s\t"LG_E"%s\n", str, GetVehicleModelName(462), FormatMoney(GetVehicleCost(462)));
+					format(str, sizeof(str), "%s"WHITE_E"%s\t"LG_E"%s\n", str, GetVehicleModelName(586), FormatMoney(GetVehicleCost(586)));
+					format(str, sizeof(str), "%s"WHITE_E"%s\t"LG_E"%s\n", str, GetVehicleModelName(581), FormatMoney(GetVehicleCost(581)));
+					format(str, sizeof(str), "%s"WHITE_E"%s\t"LG_E"%s\n", str, GetVehicleModelName(461), FormatMoney(GetVehicleCost(461)));
+					format(str, sizeof(str), "%s"WHITE_E"%s\t"LG_E"%s\n", str, GetVehicleModelName(521), FormatMoney(GetVehicleCost(521)));
+					format(str, sizeof(str), "%s"WHITE_E"%s\t"LG_E"%s\n", str, GetVehicleModelName(463), FormatMoney(GetVehicleCost(463)));
+					format(str, sizeof(str), "%s"WHITE_E"%s\t"LG_E"%s\n", str, GetVehicleModelName(468), FormatMoney(GetVehicleCost(468)));*/
 					
-					format(str, sizeof(str), "Kendaraan\tHarga\n"WHITE_E"%s\t\t"LG_E"$%s\n%s\t\t"LG_E"$%s\n%s\t"LG_E"$%s\n%s\t\t"LG_E"$%s\n%s\t"LG_E"$%s\n%s\t\t"LG_E"$%s\n%s\t"LG_E"$%s\n%s\t"LG_E"$%s\n%s\t"LG_E"$%s\n%s\t"LG_E"$%s\n", 
+					format(str, sizeof(str), "Kendaraan\tHarga\n"WHITE_E"%s\t\t"LG_E"%s\n%s\t\t"LG_E"%s\n%s\t"LG_E"%s\n%s\t\t"LG_E"%s\n%s\t"LG_E"%s\n%s\t\t"LG_E"%s\n%s\t"LG_E"%s\n%s\t"LG_E"%s\n%s\t"LG_E"%s\n%s\t"LG_E"%s\n", 
 					GetVehicleModelName(481), FormatMoney(GetVehicleCost(481)), 
 					GetVehicleModelName(509), FormatMoney(GetVehicleCost(509)),
 					GetVehicleModelName(510), FormatMoney(GetVehicleCost(510)),
@@ -11828,7 +12306,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 				{
 					//Cars
 					new str[1024];
-					format(str, sizeof(str), "Kendaraan\tHarga\n"WHITE_E"%s\t\t"LG_E"$%s\n%s\t"LG_E"$%s\n%s\t"LG_E"$%s\n%s\t"LG_E"$%s\n%s\t"LG_E"$%s\n%s\t"LG_E"$%s\n%s\t"LG_E"$%s\n%s\t"LG_E"$%s\n%s\t"LG_E"$%s\n%s\t"LG_E"$%s\n%s\t"LG_E"$%s\n%s\t"LG_E"$%s\n%s\t"LG_E"$%s\n%s\t"LG_E"$%s\n%s\t"LG_E"$%s\n%s\t"LG_E"$%s\n%s\t"LG_E"$%s\n%s\t"LG_E"$%s\n%s\t"LG_E"$%s\n%s\t"LG_E"$%s\n", 
+					format(str, sizeof(str), "Kendaraan\tHarga\n"WHITE_E"%s\t\t"LG_E"%s\n%s\t"LG_E"%s\n%s\t"LG_E"%s\n%s\t"LG_E"%s\n%s\t"LG_E"%s\n%s\t"LG_E"%s\n%s\t"LG_E"%s\n%s\t"LG_E"%s\n%s\t"LG_E"%s\n%s\t"LG_E"%s\n%s\t"LG_E"%s\n%s\t"LG_E"%s\n%s\t"LG_E"%s\n%s\t"LG_E"%s\n%s\t"LG_E"%s\n%s\t"LG_E"%s\n%s\t"LG_E"%s\n%s\t"LG_E"%s\n%s\t"LG_E"%s\n%s\t"LG_E"%s\n", 
 					GetVehicleModelName(400), FormatMoney(GetVehicleCost(400)), 
 					GetVehicleModelName(412), FormatMoney(GetVehicleCost(412)),
 					GetVehicleModelName(419), FormatMoney(GetVehicleCost(419)),
@@ -11857,7 +12335,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 				{
 					//Unique Cars
 					new str[1024];
-					format(str, sizeof(str), "Kendaraan\tHarga\n"WHITE_E"%s\t\t"LG_E"$%s\n%s\t"LG_E"$%s\n%s\t"LG_E"$%s\n%s\t"LG_E"$%s\n%s\t"LG_E"$%s\n%s\t"LG_E"$%s\n%s\t"LG_E"$%s\n%s\t"LG_E"$%s\n%s\t"LG_E"$%s\n%s\t"LG_E"$%s\n%s\t"LG_E"$%s\n%s\t"LG_E"$%s\n%s\t"LG_E"$%s\n", 
+					format(str, sizeof(str), "Kendaraan\tHarga\n"WHITE_E"%s\t\t"LG_E"%s\n%s\t"LG_E"%s\n%s\t"LG_E"%s\n%s\t"LG_E"%s\n%s\t"LG_E"%s\n%s\t"LG_E"%s\n%s\t"LG_E"%s\n%s\t"LG_E"%s\n%s\t"LG_E"%s\n%s\t"LG_E"%s\n%s\t"LG_E"%s\n%s\t"LG_E"%s\n%s\t"LG_E"%s\n", 
 					GetVehicleModelName(483), FormatMoney(GetVehicleCost(483)), 
 					GetVehicleModelName(534), FormatMoney(GetVehicleCost(534)),
 					GetVehicleModelName(535), FormatMoney(GetVehicleCost(535)),
@@ -11879,7 +12357,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 				{
 					//Job Cars
 					new str[1024];
-					format(str, sizeof(str), "Kendaraan\tHarga\n"WHITE_E"%s\t"LG_E"$%s\n%s\t"LG_E"$%s\n%s\t"LG_E"$%s\n%s\t"LG_E"$%s\n%s\t"LG_E"$%s\n%s\t"LG_E"$%s\n%s\t"LG_E"$%s\n%s\t"LG_E"$%s\n%s\t"LG_E"$%s\n%s\t"LG_E"$%s\n%s\t"LG_E"$%s\n%s\t"LG_E"$%s\n%s\t"LG_E"$%s\n%s\t"LG_E"$%s\n%s\t"LG_E"$%s\n%s\t"LG_E"$%s\n%s\t"LG_E"$%s\n%s\t"LG_E"$%s\n%s\t"LG_E"$%s\n%s\t"LG_E"$%s\n%s\t"LG_E"$%s\n%s\t"LG_E"$%s", 
+					format(str, sizeof(str), "Kendaraan\tHarga\n"WHITE_E"%s\t"LG_E"%s\n%s\t"LG_E"%s\n%s\t"LG_E"%s\n%s\t"LG_E"%s\n%s\t"LG_E"%s\n%s\t"LG_E"%s\n%s\t"LG_E"%s\n%s\t"LG_E"%s\n%s\t"LG_E"%s\n%s\t"LG_E"%s\n%s\t"LG_E"%s\n%s\t"LG_E"%s\n%s\t"LG_E"%s\n%s\t"LG_E"%s\n%s\t"LG_E"%s\n%s\t"LG_E"%s\n%s\t"LG_E"%s\n%s\t"LG_E"%s\n%s\t"LG_E"%s\n%s\t"LG_E"%s\n%s\t"LG_E"%s\n%s\t"LG_E"%s", 
 					GetVehicleModelName(420), FormatMoney(GetVehicleCost(420)), 
 					GetVehicleModelName(438), FormatMoney(GetVehicleCost(438)), 
 					GetVehicleModelName(403), FormatMoney(GetVehicleCost(403)), 
@@ -11943,7 +12421,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 481;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 				case 1:
@@ -11951,7 +12429,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 509;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 				case 2:
@@ -11959,7 +12437,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 510;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 				case 3:
@@ -11967,7 +12445,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 462;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 				case 4:
@@ -11975,7 +12453,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 586;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 				case 5:
@@ -11983,7 +12461,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 581;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 				case 6:
@@ -11991,7 +12469,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 461;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 				case 7:
@@ -11999,7 +12477,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 521;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 				case 8:
@@ -12007,7 +12485,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 463;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 				case 9:
@@ -12015,7 +12493,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 468;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 			}
@@ -12032,7 +12510,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 400;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 				case 1:
@@ -12040,7 +12518,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 412;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 				case 2:
@@ -12048,7 +12526,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 419;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 				case 3:
@@ -12056,7 +12534,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 426;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 				case 4:
@@ -12064,7 +12542,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 436;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 				case 5:
@@ -12072,7 +12550,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 466;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 				case 6:
@@ -12080,7 +12558,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 467;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 				case 7:
@@ -12088,7 +12566,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 474;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 				case 8:
@@ -12096,7 +12574,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 475;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 				case 9:
@@ -12104,7 +12582,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 480;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 				case 10:
@@ -12112,7 +12590,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 603;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 				case 11:
@@ -12120,7 +12598,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 421;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 				case 12:
@@ -12128,7 +12606,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 602;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 				case 13:
@@ -12136,7 +12614,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 492;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 				case 14:
@@ -12144,7 +12622,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 545;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 				case 15:
@@ -12152,7 +12630,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 489;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 				case 16:
@@ -12160,7 +12638,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 405;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 				case 17:
@@ -12168,7 +12646,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 445;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 				case 18:
@@ -12176,7 +12654,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 579;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 				case 19:
@@ -12184,7 +12662,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 507;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 			}
@@ -12201,7 +12679,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 483;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 				case 1:
@@ -12209,7 +12687,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 534;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 				case 2:
@@ -12217,7 +12695,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 535;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 				case 3:
@@ -12225,7 +12703,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 536;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 				case 4:
@@ -12233,7 +12711,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 558;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 				case 5:
@@ -12241,7 +12719,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 559;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 				case 6:
@@ -12249,7 +12727,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 560;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 				case 7:
@@ -12257,7 +12735,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 561;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 				case 8:
@@ -12265,7 +12743,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 562;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 				case 9:
@@ -12273,7 +12751,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 565;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 				case 10:
@@ -12281,7 +12759,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 567;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 				case 11:
@@ -12289,7 +12767,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 575;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 				case 12:
@@ -12297,7 +12775,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 576;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 			}
@@ -12314,7 +12792,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 420;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 				case 1:
@@ -12322,7 +12800,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 438;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 				case 2:
@@ -12330,7 +12808,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 403;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 				case 3:
@@ -12338,7 +12816,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 413;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 				case 4:
@@ -12346,7 +12824,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 414;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 				case 5:
@@ -12354,7 +12832,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 422;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 				case 6:
@@ -12362,7 +12840,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 440;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 				case 7:
@@ -12370,7 +12848,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 455;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 				case 8:
@@ -12378,7 +12856,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 456;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 				case 9:
@@ -12386,7 +12864,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 478;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 				case 10:
@@ -12394,7 +12872,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 482;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 				case 11:
@@ -12402,7 +12880,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 498;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 				case 12:
@@ -12410,7 +12888,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 499;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 				case 13:
@@ -12418,7 +12896,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 423;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 				case 14:
@@ -12426,7 +12904,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 588;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 				case 15:
@@ -12434,7 +12912,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 524;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 				case 16:
@@ -12442,7 +12920,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 525;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 				case 17:
@@ -12450,7 +12928,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 543;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 				case 18:
@@ -12458,7 +12936,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 552;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 				case 19:
@@ -12466,7 +12944,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 554;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 				case 20:
@@ -12474,7 +12952,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 578;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 				case 21:
@@ -12482,7 +12960,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					new modelid = 609;
 					new tstr[128], price = GetVehicleCost(modelid);
 					pData[playerid][pBuyPvModel] = modelid;
-					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"$%s", GetVehicleModelName(modelid), FormatMoney(price));
+					format(tstr, sizeof(tstr), ""WHITE_E"Anda akan membeli kendaraan "PINK_E"%s "WHITE_E"dengan harga "LG_E"%s", GetVehicleModelName(modelid), FormatMoney(price));
 					ShowPlayerDialog(playerid, DIALOG_BUYPVCP_CONFIRM, DIALOG_STYLE_MSGBOX, "Private Vehicles", tstr, "Buy", "Batal");
 				}
 			}
@@ -13042,7 +13520,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 				pajak = total / 100 * 10;
 				hasil = total - pajak;
 				
-				format(list, sizeof(list), "Total gaji yang masuk ke rekening bank anda adalah: "LG_E"$%s", FormatMoney(hasil));
+				format(list, sizeof(list), "Total gaji yang masuk ke rekening bank anda adalah: "LG_E"%s", FormatMoney(hasil));
 				ShowPlayerDialog(playerid, DIALOG_UNUSED, DIALOG_STYLE_MSGBOX, "Paycheck", list, "Close", "");
 				pData[playerid][pBankMoney] += hasil;
 				Server_MinMoney(hasil);
@@ -13070,7 +13548,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 				pajak = total / 100 * 10;
 				hasil = total - pajak;
 				
-				format(list, sizeof(list), "Total gaji yang masuk ke rekening bank anda adalah: "LG_E"$%s", FormatMoney(hasil));
+				format(list, sizeof(list), "Total gaji yang masuk ke rekening bank anda adalah: "LG_E"%s", FormatMoney(hasil));
 				ShowPlayerDialog(playerid, DIALOG_UNUSED, DIALOG_STYLE_MSGBOX, "Paycheck", list, "Close", "");
 				pData[playerid][pBankMoney] += hasil;
 				Server_MinMoney(hasil);
@@ -13446,94 +13924,6 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			SetTimerEx("RespawnPV", 3000, false, "d", vehicleid);
 		}
 	}
-	if(dialogid == DIALOG_ISIKUOTA)
-	{
-		if(response)
-		{
-			switch (listitem) 
-			{
-				case 0:
-				{
-					new string[512], twitter[64];
-					if(pData[playerid][pTwitter] < 1)
-					{
-						twitter = ""RED_E"Pasang";
-					}
-					else
-					{
-						twitter = ""LG_E"Terinstall";
-					}
-					download[playerid] = 1;
-					format(string, sizeof(string),"Aplikasi\tStatus\n{7fffd4}Twitter ( 38mb )\t%s", twitter);
-					ShowPlayerDialog(playerid, DIALOG_DOWNLOAD, DIALOG_STYLE_TABLIST_HEADERS, "App Store",string,"Download","Batal");
-				}
-				case 1:
-				{
-					new mstr[128];
-					format(mstr, sizeof(mstr), "Kuota\tHarga Pulsa\n{ffffff}Kuota 512MB\t{7fff00}3\n{ffffff}Kuota 1GB\t{7fff00}6\n{ffffff}Kuota 2GB\t{7fff00}12\n");
-					ShowPlayerDialog(playerid, DIALOG_KUOTA, DIALOG_STYLE_TABLIST_HEADERS, "Isi Kuota", mstr, "Buy", "Cancel");
-				}
-			}
-		}
-	}
-	if(dialogid == DIALOG_DOWNLOAD)
-	{
-		if(response)
-		{
-			switch(listitem)
-			{
-				case 0:
-				{
-					new sisa = pData[playerid][pKuota]/1000;
-					if(pData[playerid][pKuota] <= 38000)
-						return Error(playerid, "Kuota yang anda miliki tidak mencukup ( Sisa %dmb )", sisa);
-
-					SetTimerEx("DownloadTwitter", 10000, false, "i", playerid);
-					GameTextForPlayer(playerid, "Downloading...", 10000, 4);
-				}
-			}
-		}
-		else
-		{
-			Servers(playerid, "Berhasil membatalkan Download Twitter");
-		}
-	}
-	if(dialogid == DIALOG_KUOTA)
-	{
-		if(response)
-		{
-			switch(listitem)
-			{
-				case 0:
-				{
-					if(pData[playerid][pPhoneCredit] < 3)
-						return Error(playerid, "Pulsa anda tidak mencukupi");
-
-					pData[playerid][pKuota] += 512000;
-					pData[playerid][pPhoneCredit] -= 3;
-					Servers(playerid, "Berhasil membeli Kuota 512mb");
-				}
-				case 1:
-				{
-					if(pData[playerid][pPhoneCredit] < 6)
-						return Error(playerid, "Pulsa anda tidak mencukupi");
-
-					pData[playerid][pKuota] += 1000000;
-					pData[playerid][pPhoneCredit] -= 6;
-					Servers(playerid, "Berhasil membeli Kuota 1gb");
-				}
-				case 2:
-				{
-					if(pData[playerid][pPhoneCredit] < 12)
-						return Error(playerid, "Pulsa anda tidak mencukupi");
-
-					pData[playerid][pKuota] += 2000000;
-					pData[playerid][pPhoneCredit] -= 6;
-					Servers(playerid, "Berhasil membeli Kuota 2gb");
-				}
-			}
-		}
-	}
 	if(dialogid == DIALOG_STUCK)
 	{
 		if(response)
@@ -13617,6 +14007,18 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 				format(itemName, sizeof(itemName), "bandage");
 				SetPVarString(playerid, "SelectedItem", itemName);
 				ShowPlayerDialog(playerid, DIALOG_ITEM_ACTION, DIALOG_STYLE_LIST, "Item: Bandage", 
+					"Use\nGive\nDrop", "Select", "Back");
+				return 1;
+			}
+			count++;
+		}
+		
+		// cigarette
+		if(pData[playerid][pCigarette] > 0) {
+			if(listitem == count) {
+				format(itemName, sizeof(itemName), "cigarette");
+				SetPVarString(playerid, "SelectedItem", itemName);
+				ShowPlayerDialog(playerid, DIALOG_ITEM_ACTION, DIALOG_STYLE_LIST, "Item: Cigarette", 
 					"Use\nGive\nDrop", "Select", "Back");
 				return 1;
 			}
@@ -13780,7 +14182,8 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 		// Items yang bisa di-use dan di-give
 		if(strcmp(itemName, "bandage", true) == 0 || strcmp(itemName, "snack", true) == 0 || 
 		strcmp(itemName, "sprunk", true) == 0 || strcmp(itemName, "medicine", true) == 0 ||
-		strcmp(itemName, "obat", true) == 0 || strcmp(itemName, "marijuana", true) == 0)
+		strcmp(itemName, "obat", true) == 0 || strcmp(itemName, "marijuana", true) == 0 ||
+		strcmp(itemName, "cigarette", true) == 0)
 		{
 			canUse = true;
 			canGive = true;
@@ -13821,6 +14224,14 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					Info(playerid, "You have successfully used bandage.");
 					InfoTD_MSG(playerid, 3000, "Restore +15 Health");
 					ApplyAnimation(playerid, "BOMBER", "BOM_Plant", 4.1, 0, 0, 0, 0, 0);
+				}
+				else if(strcmp(itemName, "cigarette", true) == 0) 
+				{
+					if(pData[playerid][pCigarette] < 1)
+						return Error(playerid, "You do not have cigarette.");
+					
+					// Langsung panggil command rokok
+					return callcmd::cigar(playerid, "");
 				}
 				else if(strcmp(itemName, "snack", true) == 0) 
 				{
@@ -14071,6 +14482,18 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			ApplyAnimation(playerid, "DEALER", "shop_pay", 4.0, 0, 0, 0, 0, 0);
 			ApplyAnimation(targetid, "DEALER", "shop_pay", 4.0, 0, 0, 0, 0, 0);
 		}
+		else if(strcmp(itemName, "cigarette", true) == 0) 
+		{
+			if(pData[playerid][pCigarette] < amount)
+				return Error(playerid, "You do not have enough items.");
+
+			pData[playerid][pCigarette] -= amount;
+			pData[targetid][pCigarette] += amount;
+			Info(playerid, "Anda telah berhasil memberikan cigarette kepada %s sejumlah %d.", ReturnName(targetid), amount);
+			Info(targetid, "%s telah berhasil memberikan cigarette kepada anda sejumlah %d.", ReturnName(playerid), amount);
+			ApplyAnimation(playerid, "DEALER", "shop_pay", 4.0, 0, 0, 0, 0, 0);
+			ApplyAnimation(targetid, "DEALER", "shop_pay", 4.0, 0, 0, 0, 0, 0);
+		}
 		else if(strcmp(itemName, "medicine", true) == 0) 
 		{
 			if(pData[playerid][pMedicine] < amount)
@@ -14284,7 +14707,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 		// Drop item
 		new Float:x, Float:y, Float:z;
 		GetPlayerPos(playerid, x, y, z);
-		CreateDroppedItem(itemName, amount, x, y, z, GetPlayerInterior(playerid), GetPlayerVirtualWorld(playerid), true);
+		CreateDroppedItem(itemName, amount, x, y, z, GetPlayerInterior(playerid), GetPlayerVirtualWorld(playerid));
 		
 		ApplyAnimation(playerid, "GRENADE", "WEAPON_throwu", 4.1, 0, 0, 0, 0, 0);
 		Info(playerid, "You dropped %d %s on the ground.", amount, GetItemDisplayName(itemName));
@@ -14404,7 +14827,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 								Workshop_Save(wid);
 								ShowWorkshopMenu(playerid, wid);
 
-								InfoTD_MSG(playerid, 4000, "Workshop anda berhasil ~g~Dibuka!");
+								InfoTD_MSG(playerid, 4000, "Your workshop has been ~g~unlocked!");
 								PlayerPlaySound(playerid, 1145, 0.0, 0.0, 0.0);
 							}
 							else
@@ -14413,7 +14836,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 								Workshop_Save(wid);
 								ShowWorkshopMenu(playerid, wid);
 
-								InfoTD_MSG(playerid, 4000,"Workshop anda berhasil ~r~Ditutup");
+								InfoTD_MSG(playerid, 4000,"Your workshop has been ~r~locked!");
 								PlayerPlaySound(playerid, 1145, 0.0, 0.0, 0.0);
 							}
 							Workshop_Refresh(wid);
@@ -14691,12 +15114,12 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					if(!IsWorkshopOwner(playerid, id))
 						return Error(playerid, "Only Workshop Owner who can use this");
 
-					format(str, sizeof str, "Current Money:\n{7fff00}$%s\n\n{ffffff}Input Amount to Withdraw", FormatMoney(wsData[id][wMoney]));
+					format(str, sizeof str, "Current Money:\n{7fff00}%s\n\n{ffffff}Input Amount to Withdraw", FormatMoney(wsData[id][wMoney]));
 					ShowPlayerDialog(playerid, WS_WITHDRAWMONEY, DIALOG_STYLE_INPUT, "Withdraw Workshop Money",str,"Withdraw","Cancel");
 				}
 				case 1:
 				{
-					format(str, sizeof str, "Current Money:\n{7fff00}$%s\n\n{ffffff}Input Amount to Deposit", FormatMoney(wsData[id][wMoney]));
+					format(str, sizeof str, "Current Money:\n{7fff00}%s\n\n{ffffff}Input Amount to Deposit", FormatMoney(wsData[id][wMoney]));
 					ShowPlayerDialog(playerid, WS_DEPOSITMONEY, DIALOG_STYLE_INPUT, "Deposit Workshop Money",str,"Deposit","Cancel");
 				}
 			}
@@ -14749,7 +15172,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			if(id > -1)
 			{
 				if(CountParkedVeh(id) >= 40)
-					return Error(playerid, "Garasi Kota sudah memenuhi Kapasitas!");
+					return Error(playerid, "Public Park sudah memenuhi Kapasitas!");
 
 				new carid = -1,
 					found = 0;
@@ -15475,7 +15898,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 				new line9[900];
 				new type[128];
 				type = "Food & Drink";
-				format(line9, sizeof(line9), "Vending ID: %d\nVending Owner: %s\nVending Address: %s\nVending Price: $%s\nVending Type: %s",
+				format(line9, sizeof(line9), "Vending ID: %d\nVending Owner: %s\nVending Address: %s\nVending Price: %s\nVending Type: %s",
 				ved, VendingData[ved][vendingOwner], GetLocation(VendingData[ved][vendingX], VendingData[ved][vendingY], VendingData[ved][vendingZ]), FormatMoney(VendingData[ved][vendingPrice]), type);
 				ShowPlayerDialog(playerid, DIALOG_UNUSED, DIALOG_STYLE_MSGBOX, "Vending Info", line9, "Close","");
 			}
@@ -15535,6 +15958,8 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			{
 				case 0:
 				{
+					if(pData[playerid][pJobTime] > 0)
+        				return Error(playerid, "You must wait %d seconds to perform this action.", pData[playerid][pJobTime]);
 					if(GetRestockBisnis() <= 0) return Error(playerid, "Mission sedang kosong.");
 					new id, count = GetRestockBisnis(), mission[400], type[32], lstr[512];
 					
@@ -15577,6 +16002,8 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 				}
 				case 1:
 				{
+					if(pData[playerid][pJobTime] > 0)
+        				return Error(playerid, "You must wait %d seconds to perform this action.", pData[playerid][pJobTime]);
 					if(GetRestockGStation() <= 0) return Error(playerid, "Hauling sedang kosong.");
 					new id, count = GetRestockGStation(), hauling[400], lstr[512];
 					
@@ -15595,6 +16022,8 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 				}
 				case 2:
 				{
+					if(pData[playerid][pJobTime] > 0)
+        				return Error(playerid, "You must wait %d seconds to perform this action.", pData[playerid][pJobTime]);
 					if(GetRestockVending() <= 0) return Error(playerid, "Misi Restock sedang kosong.");
 					new id, count = GetRestockVending(), vending[400], lstr[512];
 					
@@ -15609,7 +16038,69 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 						else format(lstr,sizeof(lstr), "%d\t%s (%d)\t%s\n", itt, VendingData[id][vendingName], id, GetLocation(VendingData[id][vendingX], VendingData[id][vendingY], VendingData[id][vendingZ]));
 						strcat(vending,lstr,sizeof(vending));
 					}
-					ShowPlayerDialog(playerid, DIALOG_RESTOCK_VENDING, DIALOG_STYLE_TABLIST_HEADERS, "Vending", vending, "Start", "Cancel");
+				}
+				case 3:
+				{
+					if(pData[playerid][pJobTime] > 0)
+        				return Error(playerid, "You must wait %d seconds to perform this action.", pData[playerid][pJobTime]);
+					if(GetRestockDealer() <= 0) return Error(playerid, "Hauling sedang kosong.");
+					new id, count = GetRestockDealer(), hauling[400], lstr[512];
+					
+					strcat(hauling,"No\tDealer ID\tDealer Owner\tDealer Name\tLocation\n",sizeof(hauling));
+					Loop(itt, (count + 1), 1)
+					{
+						id = ReturnRestockDealerID(itt);
+						if(itt == count)
+						{
+							format(lstr,sizeof(lstr), "%d\t%d\t%s\t%s\t%s\n", itt, id, dsData[id][dOwner], dsData[id][dName], GetLocation(dsData[id][dPX], dsData[id][dPY], dsData[id][dPZ]));	
+						}
+						else format(lstr,sizeof(lstr), "%d\t%d\t%s\t%s\t%s\n", itt, id, dsData[id][dOwner], dsData[id][dName], GetLocation(dsData[id][dPX], dsData[id][dPY], dsData[id][dPZ]));
+						strcat(hauling,lstr,sizeof(hauling));
+					}
+					ShowPlayerDialog(playerid, DIALOG_HAULING_DEALER, DIALOG_STYLE_TABLIST_HEADERS,"Hauling",hauling,"Start","Cancel");
+				}
+				case 4: // CRATE DELIVERY LOCATIONS
+				{
+					new crate_list[512];
+					strcat(crate_list, "Location\tType\tLocation\n", sizeof(crate_list));
+					strcat(crate_list, "Fish Factory\tFish Crate\tEast Beach\n", sizeof(crate_list));
+					strcat(crate_list, "Farmer\tFish Crate\tFlint\n", sizeof(crate_list));
+					strcat(crate_list, "Mining\tComponent Crate\tBone County\n", sizeof(crate_list));
+					strcat(crate_list, "Send Component\tComponent Crate\tDilimore\n", sizeof(crate_list));
+					ShowPlayerDialog(playerid, DIALOG_CRATE_LOCATIONS, DIALOG_STYLE_TABLIST_HEADERS, "Crate Delivery Locations", crate_list, "GPS", "Cancel");
+				}				
+			}
+		}
+	}
+	if(dialogid == DIALOG_CRATE_LOCATIONS)
+	{
+		if(response)
+		{
+			switch(listitem)
+			{
+				case 0: // Fish Market (Take)
+				{
+					pData[playerid][pGpsActive] = 1;
+					SetPlayerCheckpoint(playerid, 2836.5061, -1540.5342, 11.0991, 3.0);
+					Info(playerid, "GPS set ke {FFFF00}Fish Market{FFFFFF}. Gunakan /takecrate untuk ambil fish crate.");
+				}
+				case 1: // Restaurant (Store Fish)
+				{
+					pData[playerid][pGpsActive] = 1;
+					SetPlayerCheckpoint(playerid, -377.0572, -1445.5399, 25.7266, 3.0);
+					Info(playerid, "GPS set ke {FFFF00}Restaurant{FFFFFF}. Gunakan /storecrate untuk jual fish crate.");
+				}
+				case 2: // Warehouse (Take Component) - GANTI KOORDINAT!
+				{
+					pData[playerid][pGpsActive] = 1;
+					SetPlayerCheckpoint(playerid, 323.5624, 904.4940, 21.5862, 3.0);
+					Info(playerid, "GPS set ke {FFFF00}Warehouse{FFFFFF}. Gunakan /takecrate untuk ambil component crate.");
+				}
+				case 3: // Workshop (Store Component)
+				{
+					pData[playerid][pGpsActive] = 1;
+					SetPlayerCheckpoint(playerid, 797.5262, -617.7863, 16.3359, 3.0);
+					Info(playerid, "GPS set ke {FFFF00}Workshop{FFFFFF}. Gunakan /storecrate untuk jual component crate.");
 				}
 			}
 		}
@@ -15749,259 +16240,6 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			Kick(playerid);
 		}
 	}
-	//Last Phone System
-	if(dialogid == DIALOG_TWITTER)
-	{
-		if(response)
-		{
-			switch(listitem)
-			{
-				/*case 0:
-				{
-					if(pData[playerid][pTwitterStatus] > 0)
-					{
-						Error(playerid, "Notifikasi twitter anda belum kamu hidupkan");
-						new notif[20];
-						if(pData[playerid][pTwitterStatus] == 1)
-						{
-							notif = "{ff0000}OFF";
-						}
-						else
-						{
-							notif = "{3BBD44}ON";
-						}
-
-						new string[100];
-						format(string, sizeof(string), "Tweet\nChangename Twitter({0099ff}%s{ffffff})\nNotification: %s", pData[playerid][pTwittername], notif);
-						ShowPlayerDialog(playerid, DIALOG_TWITTER, DIALOG_STYLE_LIST, "Twitter", string, "Select", "Close");
-					}
-					else
-					{
-						new str[200];
-						format(str, sizeof (str), "Name Twitter: %s\nApa yang ingin kamu post?", pData[playerid][pTwittername]);
-						ShowPlayerDialog(playerid, DIALOG_TWITTERPOST, DIALOG_STYLE_INPUT, "Twitter Post", str, "Post", "Back");
-					}
-				}
-				case 1:
-				{
-					if(pData[playerid][pTwitterStatus] > 0)
-					{
-						Error(playerid, "Notifikasi twitter anda belum kamu hidupkan");
-						new notif[20];
-						if(pData[playerid][pTwitterStatus] == 1)
-						{
-							notif = "{ff0000}OFF";
-						}
-						else
-						{
-							notif = "{3BBD44}ON";
-						}
-
-						new string[100];
-						format(string, sizeof(string), "Tweet\nChangename Twitter({0099ff}%s{ffffff})\nNotification: %s", pData[playerid][pTwittername], notif);
-						ShowPlayerDialog(playerid, DIALOG_TWITTER, DIALOG_STYLE_LIST, "Twitter", string, "Select", "Close");
-					}
-					else
-					{
-						new str[200];
-						format(str, sizeof (str), "Current Name: %s\nIsi kotak di bawah ini untuk menganti nama Twittermu.", pData[playerid][pTwittername]);
-						ShowPlayerDialog(playerid, DIALOG_TWITTERNAME, DIALOG_STYLE_INPUT, "Twitter Post", str, "Change", "Back");
-					}
-				}
-				case 2:
-				{
-					if(pData[playerid][pTwitterStatus] == 1)
-					{
-						pData[playerid][pTwitterStatus] = 0;
-						new notif[20];
-						if(pData[playerid][pTwitterStatus] == 1)
-						{
-							notif = "{ff0000}OFF";
-						}
-						else
-						{
-							notif = "{3BBD44}ON";
-						}
-
-						new string[100];
-						format(string, sizeof(string), "Tweet\nChangename Twitter({0099ff}%s{ffffff})\nNotification: %s", pData[playerid][pTwittername], notif);
-						ShowPlayerDialog(playerid, DIALOG_TWITTER, DIALOG_STYLE_LIST, "Twitter", string, "Select", "Close");
-					}
-					else
-					{
-						pData[playerid][pTwitterStatus] = 1;
-						new notif[20];
-						if(pData[playerid][pTwitterStatus] == 1)
-						{
-							notif = "{ff0000}OFF";
-						}
-						else
-						{
-							notif = "{3BBD44}ON";
-						}
-
-						new string[100];
-						format(string, sizeof(string), "Tweet\nChangename Twitter({0099ff}%s{ffffff})\nNotification: %s", pData[playerid][pTwittername], notif);
-						ShowPlayerDialog(playerid, DIALOG_TWITTER, DIALOG_STYLE_LIST, "Twitter", string, "Select", "Close");
-					}
-				}*/
-				case 0:
-				{
-					ShowPlayerDialog(playerid, DIALOG_UNUSED, DIALOG_STYLE_MSGBOX, "Announcement", "> Sementara Twitter Maintenance", "Close", "");
-				}
-				case 1:
-				{
-					ShowPlayerDialog(playerid, DIALOG_UNUSED, DIALOG_STYLE_MSGBOX, "Announcement", "> Sementara Twitter Maintenance", "Close", "");
-				}
-				case 2:
-				{
-					ShowPlayerDialog(playerid, DIALOG_UNUSED, DIALOG_STYLE_MSGBOX, "Announcement", "> Sementara Twitter Maintenance", "Close", "");
-				}
-			}
-		}
-	}
-	if(dialogid == DIALOG_TWITTERPOST)
-	{
-		if(response)
-		{
-			if(pData[playerid][pTwitterPostCooldown] > 0)
-			{
-				Error(playerid, "Twitter masih cooldown %d detik", pData[playerid][pTwitterPostCooldown]);
-				
-				new notif[20];
-				if(pData[playerid][pTwitterStatus] == 1)
-				{
-					notif = "{ff0000}OFF";
-				}
-				else
-				{
-					notif = "{3BBD44}ON";
-				}
-
-				new string[100];
-				format(string, sizeof(string), "Tweet\nChangename Twitter({0099ff}%s{ffffff})\nNotification: %s", pData[playerid][pTwittername], notif);
-				ShowPlayerDialog(playerid, DIALOG_TWITTER, DIALOG_STYLE_LIST, "Twitter", string, "Select", "Close");
-			}
-			else
-			{
-				// Decide about multi-line msgs
-				strcpy(tweet, inputtext);
-				new i = -1;
-				new line[512];
-				new payout = strlen(tweet) * 7;
-				new kuotamb = pData[playerid][pKuota]/1000;
-				if(pData[playerid][pKuota] < payout)
-					return Error(playerid, "Kuota anda sisa %dmb untuk mengirim %d Character", kuotamb, strlen(tweet));
-
-				if(strlen(tweet) > 70)
-				{
-					i = strfind(tweet, " ", false, 60);
-					if(i > 80 || i == -1) i = 70;
-
-					// store the second line text
-					line = " ";
-					strcat(line, tweet[i]);
-
-					// delete the rest from msg
-					tweet[i] = EOS;
-				}
-				
-
-				foreach(new ii : Player)
-				{
-					if(pData[ii][pTwitterStatus] == 0)
-					{
-						pData[playerid][pTwitterPostCooldown] = 40;
-						SendClientMessageEx(ii, COLOR_YELLOW, "{1e90ff}[TWITTER] {7fffd4}@%s:{ffffff} %s", pData[playerid][pTwittername], tweet);
-					}
-				}
-				
-				new dc[128];
-				format(dc, sizeof(dc),  "```\n[TWITTER] @%s: %s```", pData[playerid][pTwittername], tweet);
-				SendDiscordMessage(4, dc);
-				return 1;
-			}	
-		}
-		else 
-		{
-			new notif[20];
-			if(pData[playerid][pTwitterStatus] == 1)
-			{
-				notif = "{ff0000}OFF";
-			}
-			else
-			{
-				notif = "{3BBD44}ON";
-			}
-
-			new string[100];
-			format(string, sizeof(string), "Tweet\nChangename Twitter({0099ff}%s{ffffff})\nNotification: %s", pData[playerid][pTwittername], notif);
-			ShowPlayerDialog(playerid, DIALOG_TWITTER, DIALOG_STYLE_LIST, "Twitter", string, "Select", "Close");
-		}
-	}
-	if(dialogid == DIALOG_TWITTERNAME)
-	{
-		if(response)
-		{
-			if(pData[playerid][pTwitterNameCooldown] > 0)
-			{
-				Error(playerid, "Twitter changename masih cooldown %d detik", pData[playerid][pTwitterNameCooldown]);
-				new notif[20];
-				if(pData[playerid][pTwitterStatus] == 1)
-				{
-					notif = "{ff0000}OFF";
-				}
-				else
-				{
-					notif = "{3BBD44}ON";
-				}
-
-				new string[100];
-				format(string, sizeof(string), "Tweet\nChangename Twitter({0099ff}%s{ffffff})\nNotification: %s", pData[playerid][pTwittername], notif);
-				ShowPlayerDialog(playerid, DIALOG_TWITTER, DIALOG_STYLE_LIST, "Twitter", string, "Select", "Close");
-			}
-			else
-			{
-				new query[512];
-				format(pData[playerid][pTwittername], 64, inputtext);
-				Info(playerid, "Kamu telah mengubah nama Twitter kamu menjadi {0099ff}%s", inputtext);
-				pData[playerid][pTwitterNameCooldown] = 600;
-
-				mysql_format(g_SQL, query, sizeof(query), "UPDATE players SET twittername = '%s' WHERE reg_id = %i", inputtext, pData[playerid][pID]);
-				mysql_tquery(g_SQL, query);
-
-				new notif[20];
-				if(pData[playerid][pTwitterStatus] == 1)
-				{
-					notif = "{ff0000}OFF";
-				}
-				else
-				{
-					notif = "{3BBD44}ON";
-				}
-
-				new string[100];
-				format(string, sizeof(string), "Tweet\nChangename Twitter({0099ff}%s{ffffff})\nNotification: %s", pData[playerid][pTwittername], notif);
-				ShowPlayerDialog(playerid, DIALOG_TWITTER, DIALOG_STYLE_LIST, "Twitter", string, "Select", "Close");
-			}	
-		}
-		else
-		{
-			new notif[20];
-			if(pData[playerid][pTwitterStatus] == 1)
-			{
-				notif = "{ff0000}OFF";
-			}
-			else
-			{
-				notif = "{3BBD44}ON";
-			}
-
-			new string[100];
-			format(string, sizeof(string), "Tweet\nChangename Twitter({0099ff}%s{ffffff})\nNotification: %s", pData[playerid][pTwittername], notif);
-			ShowPlayerDialog(playerid, DIALOG_TWITTER, DIALOG_STYLE_LIST, "Twitter", string, "Select", "Close");
-		}
-	}
 	if(dialogid == DIALOG_TOGGLEPHONE)
 	{
 		if(response)
@@ -16032,7 +16270,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 				case 0:
 				{
 					new str[200];
-					format(str, sizeof(str), "{F6F6F6}You have "LB_E"$%s {F6F6F6}in your bank account.", FormatMoney(pData[playerid][pBankMoney]));
+					format(str, sizeof(str), "{F6F6F6}You have "LB_E"%s {F6F6F6}in your bank account.", FormatMoney(pData[playerid][pBankMoney]));
 					ShowPlayerDialog(playerid, DIALOG_UNUSED, DIALOG_STYLE_MSGBOX, ""LB_E"M-Banking", str, "Close", "");
 				}
 				case 1:
@@ -16283,30 +16521,44 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			{
 				case 0:
 				{
+					if(pData[playerid][pPhoneStatus] == 0)
+						return Error(playerid, "Your phone is still offline.");
 					ShowPlayerDialog(playerid, DIALOG_PHONE_DIALUMBER, DIALOG_STYLE_INPUT, "Dial Number", "Please enter the number that you wish to dial below:", "Dial", "Back");
 				}
 				case 1:
 				{
+					if(pData[playerid][pPhoneStatus] == 0)
+						return Error(playerid, "Your phone is still offline.");
 					ShowContacts(playerid);
 				}
 				case 2:
 				{	
+					if(pData[playerid][pPhoneStatus] == 0)
+						return Error(playerid, "Your phone is still offline.");
 					ShowPlayerDialog(playerid, DIALOG_GPS, DIALOG_STYLE_LIST, "Maps Menu", "Disable GPS\nGeneral Location\nPublic Location\nJobs", "Select", "Close");
 				}
 				case 3:
 				{
+					if(pData[playerid][pPhoneStatus] == 0)
+						return Error(playerid, "Your phone is still offline.");
 					ShowPlayerDialog(playerid, DIALOG_IBANK, DIALOG_STYLE_LIST, "{6688FF}M-Banking", "Check Balance\nTransfer Money", "Select", "Cancel");
 				}
 				case 4:
 				{
+					if(pData[playerid][pPhoneStatus] == 0)
+						return Error(playerid, "Your phone is still offline.");
 					ShowPlayerDialog(playerid, DIALOG_PHONE_SENDSMS, DIALOG_STYLE_INPUT, "Send Text Message", "Please enter the number that you wish to send a text message to:", "Dial", "Back");
 				}
 				case 5:
 				{
+					if(pData[playerid][pPhoneStatus] == 0)
+						return Error(playerid, "Your phone is still offline.");
 					return callcmd::ads(playerid, "");
 				}
-				case 6: // Reqloc (NEW)
+				case 6: // Reqloc
 				{
+					if(pData[playerid][pPhoneStatus] == 0)
+						return Error(playerid, "Your phone is still offline.");
 					ShowPlayerDialog(playerid, DIALOG_REQLOC, DIALOG_STYLE_INPUT, 
 						"Request Location", 
 						"Enter the phone number you want to request location from:", 
@@ -16400,7 +16652,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 	{
 		if(!response) return 1;
 		SetPVarInt(playerid, "ClickedVeh", ReturnPlayerVehID(playerid, (listitem + 1)));
-		ShowPlayerDialog(playerid, DIALOG_MYVEH_INFO, DIALOG_STYLE_LIST, "Vehicle Info", "Information Vehicle\nSet Name Vehicle\nTrack Vehicle\nUnstuck Vehicle", "Select", "Cancel");
+		ShowPlayerDialog(playerid, DIALOG_MYVEH_INFO, DIALOG_STYLE_LIST, "Vehicle Info", "Information Vehicle\nSet Name Vehicle\nTrack Vehicle\nRespawn Vehicle", "Select", "Cancel");
 		return 1;
 	}
 	if(dialogid == DIALOG_MYVEH_INFO)
@@ -16463,26 +16715,29 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					Error(playerid, "Kendaraanmu belum di spawn! Gunakan /mypv untuk spawn kendaraan.");
 				}
 			}
-			case 3:
+			case 3: // Unstuck Vehicle
 			{
-				static
-				carid = -1;
-
-				if((carid = Vehicle_Nearest(playerid)) != -1)
+				// ✅ Langsung pakai vid dari GetPVarInt (sudah di-set di DIALOG_MYVEH)
+				// Gak perlu cek deket kendaraan
+				
+				// Validasi
+				if(pvData[vid][cClaim] != 0)
+					return Error(playerid, "Kendaraan ini sedang dalam klaim insurance!");
+				
+				if(pvData[vid][cStolen] != 0)
+					return Error(playerid, "Kendaraan ini sedang rusak!");
+				
+				// Despawn kendaraan jika sudah spawned
+				if(IsValidVehicle(pvData[vid][cVeh]))
 				{
-					if(Vehicle_IsOwner(playerid, carid))
-					{
-						if(IsValidVehicle(pvData[vid][cVeh]))
-						{
-							Vehicle_Save(vid);
-							//SetTimerEx("DestroyVehicle", 2000, false, "d", vid);
-							DestroyVehicle(pvData[vid][cVeh]);
-							pvData[vid][cVeh] = INVALID_VEHICLE_ID;
-						}	
-						SetTimerEx("OnPlayerVehicleRespawn", 3000, false, "d", vid);
-					}
-				}	
-				else Error(playerid, "Kamu tidak berada didekat Kendaraan tersebut.");
+					Vehicle_Save(vid);
+					DestroyVehicle(pvData[vid][cVeh]);
+					pvData[vid][cVeh] = 0;
+				}
+				
+				// Spawn ulang kendaraan (respawn)
+				SetTimerEx("OnPlayerVehicleRespawn", 2000, false, "d", vid);
+				Custom(playerid, "VEHICLE: "WHITE_E"You've successfully respawned "LB_E"%s.", pvData[vid][cName]);
 			}
 		}
 		return 1;
@@ -16498,8 +16753,8 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 				// Simpan ke database kalau perlu
 				Vehicle_Save(vid);
 				
-				Info(playerid, "Kamu berhasil mengubah nama kendaraan menjadi {FFFF00}%s", inputtext);
-				// callcmd::myveh(playerid, ""); // Kalau mau balik ke menu
+				Custom(playerid, "VEHICLE: "WHITE_E"Kamu berhasil mengubah nama kendaraan menjadi {FFFF00}%s", inputtext);
+				callcmd::mypv(playerid, ""); // Kalau mau balik ke menu
 			}
 			else
 			{
@@ -16537,7 +16792,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					
 					GivePlayerMoneyEx(playerid, -harga);
 					pData[playerid][pSparepart] += 1;
-					Info(playerid, "Kamu berhasil membeli Sparepart baru seharga $%s", FormatMoney(harga));
+					Info(playerid, "Kamu berhasil membeli Sparepart baru seharga %s", FormatMoney(harga));
 
 				}
 				case 1:
@@ -16620,7 +16875,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
                     }
                     else if(listitem == 1) 
                     {
-                        format(string, sizeof(string), "Money\t{3BBD44}$%s{ffffff}\n{FF0000}RedMoney\t$%s{ffffff}", FormatMoney(vsData[vehicleid][vsMoney]), FormatMoney(vsData[vehicleid][vsRedMoney]));
+                        format(string, sizeof(string), "Money\t{3BBD44}%s{ffffff}\n{FF0000}RedMoney\t%s{ffffff}", FormatMoney(vsData[vehicleid][vsMoney]), FormatMoney(vsData[vehicleid][vsRedMoney]));
                         ShowPlayerDialog(playerid, VEHICLE_MONEY, DIALOG_STYLE_TABLIST, "Money Safe", string, "Select", "Back");
                     }
                     else if(listitem == 2)
@@ -16744,13 +16999,13 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
                         case 0: 
                     	{
                             new str[200];
-                            format(str, sizeof(str), "Money yang tersedia: $%s\n\nSilakan masukkan berapa banyak Money yang ingin Anda ambil dari penyimpanan:", FormatMoney(vsData[vehicleid][vsMoney]));
+                            format(str, sizeof(str), "Money yang tersedia: %s\n\nSilakan masukkan berapa banyak Money yang ingin Anda ambil dari penyimpanan:", FormatMoney(vsData[vehicleid][vsMoney]));
                             ShowPlayerDialog(playerid, VEHICLE_REALMONEY_WITHDRAW, DIALOG_STYLE_INPUT, "Money Storage", str, "Ambil", "Kembali");
                         }
                         case 1: 
                         {
                             new str[200];
-                            format(str, sizeof(str), "Money yang anda bawa: $%s\n\nSilakan masukkan berapa banyak Money yang ingin Anda simpan ke dalam penyimpanan kendaraan:", FormatMoney(pData[playerid][pMoney]));
+                            format(str, sizeof(str), "Money yang anda bawa: %s\n\nSilakan masukkan berapa banyak Money yang ingin Anda simpan ke dalam penyimpanan kendaraan:", FormatMoney(pData[playerid][pMoney]));
                             ShowPlayerDialog(playerid, VEHICLE_REALMONEY_DEPOSIT, DIALOG_STYLE_INPUT, "Money Storage", str, "Simpan", "Kembali");
                         }
                     }
@@ -16796,9 +17051,9 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
                     Vehicle_StorageSave(i);
                     Vehicle_OpenStorage(playerid, vehicleid);
 
-                    SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s telah mengambil $%s dari penyimpanan kendaraan.", ReturnName(playerid), FormatMoney(amount));
+                    SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s telah mengambil %s dari penyimpanan kendaraan.", ReturnName(playerid), FormatMoney(amount));
 					new dc[500];
-					format(dc, sizeof(dc),  "```\n[STORAGE]%s telah mengambil uang  $%s dari penyimpanan kendaraan.```", ReturnName(playerid), FormatMoney(amount));
+					format(dc, sizeof(dc),  "```\n[STORAGE]%s telah mengambil uang  %s dari penyimpanan kendaraan.```", ReturnName(playerid), FormatMoney(amount));
 					SendDiscordMessage(1, dc);
                 }
                 else ShowPlayerDialog(playerid, VEHICLE_REALMONEY, DIALOG_STYLE_LIST, "Money Storage", "Ambil Money dari penyimpanan\nSimpan Money ke penyimpanan", "Pilih", "Kembali");
@@ -16824,14 +17079,14 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
                     if(isnull(inputtext))
                     {
                         new str[200];
-                        format(str, sizeof(str), "Money yang anda bawa: $%s\n\nSilakan masukkan berapa banyak Money yang ingin Anda simpan ke dalam penyimpanan:", FormatMoney(pData[playerid][pMoney]));
+                        format(str, sizeof(str), "Money yang anda bawa: %s\n\nSilakan masukkan berapa banyak Money yang ingin Anda simpan ke dalam penyimpanan:", FormatMoney(pData[playerid][pMoney]));
                         ShowPlayerDialog(playerid, VEHICLE_REALMONEY_DEPOSIT, DIALOG_STYLE_INPUT, "Money Storage", str, "Simpan", "Kembali");
                         return 1;
                     }
                     if(amount < 1 || amount > GetPlayerMoney(playerid))
                     {
                         new str[200];
-                        format(str, sizeof(str), "Error: Money tidak mencukupi!.\n\nMoney yang anda bawa: $%s\n\nSilakan masukkan berapa banyak Money yang ingin Anda simpan ke dalam penyimpanan:", FormatMoney(pData[playerid][pMoney]));
+                        format(str, sizeof(str), "Error: Money tidak mencukupi!.\n\nMoney yang anda bawa: %s\n\nSilakan masukkan berapa banyak Money yang ingin Anda simpan ke dalam penyimpanan:", FormatMoney(pData[playerid][pMoney]));
                         ShowPlayerDialog(playerid, VEHICLE_REALMONEY_DEPOSIT, DIALOG_STYLE_INPUT, "Money Storage", str, "Simpan", "Kembali");
                         return 1;
 					}
@@ -16842,9 +17097,9 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
                     Vehicle_StorageSave(i);
                     Vehicle_OpenStorage(playerid, vehicleid);
 
-                    SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s telah menyimpan $%s ke penyimpanan kendaraan.", ReturnName(playerid), FormatMoney(amount));
+                    SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s telah menyimpan %s ke penyimpanan kendaraan.", ReturnName(playerid), FormatMoney(amount));
 					new dc[500];
-					format(dc, sizeof(dc),  "```\n[STORAGE]%s telah menyimpan uang $%s ke penyimpanan kendaraan.```", ReturnName(playerid), FormatMoney(amount));
+					format(dc, sizeof(dc),  "```\n[STORAGE]%s telah menyimpan uang %s ke penyimpanan kendaraan.```", ReturnName(playerid), FormatMoney(amount));
 					SendDiscordMessage(1, dc);
                 }
                 else ShowPlayerDialog(playerid, VEHICLE_REALMONEY, DIALOG_STYLE_LIST, "Money Storage", "Ambil Money dari penyimpanan\nSimpan Money ke penyimpanan", "Pilih", "Kembali");
@@ -16871,13 +17126,13 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
                         case 0: 
                         {
                             new str[200];
-                            format(str, sizeof(str), "RedMoney yang tersedia: $%s\n\nSilakan masukkan berapa banyak RedMoney yang ingin Anda ambil dari penyimpanan:", FormatMoney(vsData[vehicleid][vsRedMoney]));
+                            format(str, sizeof(str), "RedMoney yang tersedia: %s\n\nSilakan masukkan berapa banyak RedMoney yang ingin Anda ambil dari penyimpanan:", FormatMoney(vsData[vehicleid][vsRedMoney]));
                             ShowPlayerDialog(playerid, VEHICLE_REDMONEY_WITHDRAW, DIALOG_STYLE_INPUT, "RedMoney Storage", str, "Ambil", "Kembali");
                         }
                         case 1: 
                         {
                             new str[200];
-                            format(str, sizeof(str), "RedMoney yang anda bawa: $%s\n\nSilakan masukkan berapa banyak RedMoney yang ingin Anda simpan ke dalam penyimpanan kendaraan:", FormatMoney(pData[playerid][pRedMoney]));
+                            format(str, sizeof(str), "RedMoney yang anda bawa: %s\n\nSilakan masukkan berapa banyak RedMoney yang ingin Anda simpan ke dalam penyimpanan kendaraan:", FormatMoney(pData[playerid][pRedMoney]));
                             ShowPlayerDialog(playerid, VEHICLE_REDMONEY_DEPOSIT, DIALOG_STYLE_INPUT, "RedMoney Storage", str, "Simpan", "Kembali");
                         }
                     }
@@ -16905,14 +17160,14 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
                     if(isnull(inputtext))
                     {
                         new str[128];
-                        format(str, sizeof(str), "RedMoney yang tersedia: $%s\n\nSilakan masukkan berapa banyak RedMoney yang ingin Anda ambil dari penyimpanan:", FormatMoney(vsData[vehicleid][vsRedMoney]));
+                        format(str, sizeof(str), "RedMoney yang tersedia: %s\n\nSilakan masukkan berapa banyak RedMoney yang ingin Anda ambil dari penyimpanan:", FormatMoney(vsData[vehicleid][vsRedMoney]));
                         ShowPlayerDialog(playerid, VEHICLE_REDMONEY_WITHDRAW, DIALOG_STYLE_INPUT, "RedMoney Storage", str, "Ambil", "Kembali");
                         return 1;
                     }
                     if(amount < 1 || amount > vsData[vehicleid][vsRedMoney])
                     {
                         new str[128];
-                        format(str, sizeof(str), "Error: RedMoney tidak mencukupi!.\n\nRedMoney yang tersedia: $%s\n\nSilakan masukkan berapa banyak RedMoney yang ingin Anda ambil dari kendaraan:", FormatMoney(vsData[vehicleid][vsRedMoney]));
+                        format(str, sizeof(str), "Error: RedMoney tidak mencukupi!.\n\nRedMoney yang tersedia: %s\n\nSilakan masukkan berapa banyak RedMoney yang ingin Anda ambil dari kendaraan:", FormatMoney(vsData[vehicleid][vsRedMoney]));
                         ShowPlayerDialog(playerid, VEHICLE_REDMONEY_WITHDRAW, DIALOG_STYLE_INPUT, "RedMoney Storage", str, "Ambil", "Kembali");
                         return 1;
                     }
@@ -16923,7 +17178,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
                     Vehicle_StorageSave(i);
                     Vehicle_OpenStorage(playerid, vehicleid);
 
-                    SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s telah mengambil $%s RedMoney dari penyimpanan kendaraan.", ReturnName(playerid), FormatMoney(amount));
+                    SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s telah mengambil %s RedMoney dari penyimpanan kendaraan.", ReturnName(playerid), FormatMoney(amount));
                 }
                 else ShowPlayerDialog(playerid, VEHICLE_REDMONEY, DIALOG_STYLE_LIST, "RedMoney Storage", "Ambil RedMoney dari penyimpanan\nSimpan RedMoney ke penyimpanan", "Pilih", "Kembali");
             }    
@@ -16948,14 +17203,14 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
                     if(isnull(inputtext))
                     {
                         new str[200];
-                        format(str, sizeof(str), "RedMoney yang anda bawa: $%s\n\nSilakan masukkan berapa banyak RedMoney yang ingin Anda simpan ke dalam penyimpanan:", FormatMoney(pData[playerid][pRedMoney]));
+                        format(str, sizeof(str), "RedMoney yang anda bawa: %s\n\nSilakan masukkan berapa banyak RedMoney yang ingin Anda simpan ke dalam penyimpanan:", FormatMoney(pData[playerid][pRedMoney]));
                         ShowPlayerDialog(playerid, VEHICLE_REDMONEY_DEPOSIT, DIALOG_STYLE_INPUT, "RedMoney Storage", str, "Simpan", "Kembali");
                         return 1;
                     }
                     if(amount < 1 || amount > pData[playerid][pRedMoney])
                     {
                         new str[200];
-                        format(str, sizeof(str), "Error: RedMoney tidak mencukupi!.\n\nRedMoney yang anda bawa: $%s\n\nSilakan masukkan berapa banyak RedMoney yang ingin Anda simpan ke dalam penyimpanan:", FormatMoney(pData[playerid][pRedMoney]));
+                        format(str, sizeof(str), "Error: RedMoney tidak mencukupi!.\n\nRedMoney yang anda bawa: %s\n\nSilakan masukkan berapa banyak RedMoney yang ingin Anda simpan ke dalam penyimpanan:", FormatMoney(pData[playerid][pRedMoney]));
                         ShowPlayerDialog(playerid, VEHICLE_REDMONEY_DEPOSIT, DIALOG_STYLE_INPUT, "RedMoney Storage", str, "Simpan", "Kembali");
                         return 1;
                     }
@@ -16966,7 +17221,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
                     Vehicle_StorageSave(i);
                     Vehicle_OpenStorage(playerid, vehicleid);
 
-                    SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s telah menyimpan $%s RedMoney ke penyimpanan kendaraan.", ReturnName(playerid), FormatMoney(amount));
+                    SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s telah menyimpan %s RedMoney ke penyimpanan kendaraan.", ReturnName(playerid), FormatMoney(amount));
                 }
                 else ShowPlayerDialog(playerid, VEHICLE_REDMONEY, DIALOG_STYLE_LIST, "RedMoney Storage", "Ambil RedMoney dari penyimpanan\nSimpan RedMoney ke penyimpanan", "Pilih", "Kembali");
             }    
@@ -18026,14 +18281,17 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 				new str[200];
 				format(str, sizeof(str), "{ff0000}ERROR: {ffff00}Masukan sebuah angka!!\n{ffffff}City Money: {3BBD44}%s\n\n{FFFFFF}Berapa uang negara yang ingin anda ambil?", FormatMoney(ServerMoney));
 				ShowPlayerDialog(playerid, DIALOG_SERVERMONEY_WITHDRAW, DIALOG_STYLE_INPUT, "Storage City Money", str, "Withdraw", "Back");
+				return 1; // ✅ Tambahkan return
 			}
 			if(amount < 1 || amount > ServerMoney)
 			{
 				new str[200];
 				format(str, sizeof(str), "{ff0000}ERROR: {ffff00}Jumlah tidak mencukupi!!\n{ffffff}City Money: {3BBD44}%s\n\n{FFFFFF}Berapa uang negara yang ingin anda ambil?", FormatMoney(ServerMoney));
 				ShowPlayerDialog(playerid, DIALOG_SERVERMONEY_WITHDRAW, DIALOG_STYLE_INPUT, "Storage City Money", str, "Withdraw", "Back");
+				return 1; // ✅ Tambahkan return
 			}
 
+			amount *= 100; // ✅ Perbaiki syntax (tambah = dan ;)
 			pData[playerid][pUangKorup] += amount;
 
 			new str[200];
@@ -18057,20 +18315,23 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			if(isnull(inputtext) || !IsNumeric(inputtext))
 			{
 				new str[200];
-				format(str, sizeof(str), "Your Money: {3BBD44}%s\n\n{FFFFFF}Berapa uang yang mau anda simpan ke uang negara?", FormatMoney(pData[playerid][pMoney]));
+				format(str, sizeof(str), "{ff0000}ERROR: {ffff00}Masukan sebuah angka!!\n{ffffff}Your Money: {3BBD44}%s\n\n{FFFFFF}Berapa uang yang mau anda simpan ke uang negara?", FormatMoney(pData[playerid][pMoney]));
 				ShowPlayerDialog(playerid, DIALOG_SERVERMONEY_DEPOSIT, DIALOG_STYLE_INPUT, "Storage City Money", str, "Deposit", "Back");
+				return 1; // ✅ Tambahkan return
 			}
-			if(amount < 1 || amount > ServerMoney)
+			if(amount < 1 || amount > pData[playerid][pMoney]) // ✅ Perbaiki kondisi
 			{
 				new str[200];
-				format(str, sizeof(str), "Your Money: {3BBD44}%s\n\n{FFFFFF}Berapa uang yang mau anda simpan ke uang negara?", FormatMoney(pData[playerid][pMoney]));
+				format(str, sizeof(str), "{ff0000}ERROR: {ffff00}Uang anda tidak cukup!!\n{ffffff}Your Money: {3BBD44}%s\n\n{FFFFFF}Berapa uang yang mau anda simpan ke uang negara?", FormatMoney(pData[playerid][pMoney]));
 				ShowPlayerDialog(playerid, DIALOG_SERVERMONEY_DEPOSIT, DIALOG_STYLE_INPUT, "Storage City Money", str, "Deposit", "Back");
+				return 1; // ✅ Tambahkan return
 			}
 
+			amount *= 100; // ✅ Perbaiki syntax (tambah = dan ;)
 			pData[playerid][pMoney] -= amount;
 			Server_AddMoney(amount);
 
-			SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s telah menyimpan %s uang ke penyimpanan uang ngeara.", ReturnName(playerid), FormatMoney(amount));
+			SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "** %s telah menyimpan %s uang ke penyimpanan uang negara.", ReturnName(playerid), FormatMoney(amount)); // ✅ Perbaiki typo
 			new str[200];
 			format(str, sizeof(str), "```\nKorup Detect: %s menyimpan uang kota sebesar %s```", ReturnName(playerid), FormatMoney(amount));
 			SendDiscordMessage(6, str);
@@ -18142,52 +18403,57 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
     	return 1;
 	}
 	if(dialogid == DIALOG_VOUCHER)
-    {
-        if(!response) return 1;
-        
-        new code = strval(inputtext);
-        
-        foreach(new vo : Vouchers)
-        {
-            if(VoucData[vo][voucCode] == code)
-            {
-                if(VoucData[vo][voucClaim] == 0)
-                {
-                    if(VoucData[vo][voucVIP] == 0)
-                    {
-                        pData[playerid][pGold] += VoucData[vo][voucGold];
-                        
-                        VoucData[vo][voucClaim] = 1;
-                        format(VoucData[vo][voucDonature], 16, pData[playerid][pName]);
-                        Voucher_Save(vo);
-                        
-                        Info(playerid, "Voucher claimed. gold: %d | claimby: %s.", VoucData[vo][voucGold], pData[playerid][pName]);
-                    }
-                    else
-                    {
-                        new dayz = VoucData[vo][voucVIPTime];
-                        pData[playerid][pGold] += VoucData[vo][voucGold];
-                        pData[playerid][pMoney] += VoucData[vo][voucMoney];
-                        pData[playerid][pVip] = VoucData[vo][voucVIP];
-                        pData[playerid][pVipTime] = gettime() + (dayz * 86400);
-                        
-                        VoucData[vo][voucClaim] = 1;
-                        format(VoucData[vo][voucDonature], 16, pData[playerid][pName]);
-                        Voucher_Save(vo);
-                        
-                        Info(playerid, "Voucher claimed. VIP: %d | VIP TIME: %d days | money: $%s | gold: %d | claimby: %s.", VoucData[vo][voucVIP], dayz, FormatMoney(VoucData[vo][voucMoney]), VoucData[vo][voucGold], pData[playerid][pName]);
-                    }
-                }
-                else
-                {
-                    Error(playerid, "Voucher has been expired!");
-                
-                }
-                return 1;
-            }
-        }
-        Error(playerid, "Invalid voucher code!");
-        return 0;
+	{
+		if(!response) return 1;
+		
+		new code[32];
+		format(code, sizeof(code), "%s", inputtext); // Ambil string dari input
+		
+		// Validasi panjang code
+		if(strlen(code) < 5 || strlen(code) > 20)
+			return Error(playerid, "Code voucher invalid! (5-20 karakter)");
+		
+		foreach(new vo : Vouchers)
+		{
+			// Gunakan strcmp untuk membandingkan string
+			if(!strcmp(VoucData[vo][voucCode], code, true))
+			{
+				if(VoucData[vo][voucClaim] == 0)
+				{
+					if(VoucData[vo][voucVIP] == 0)
+					{
+						pData[playerid][pGold] += VoucData[vo][voucGold];
+						
+						VoucData[vo][voucClaim] = 1;
+						format(VoucData[vo][voucDonature], 16, pData[playerid][pName]);
+						Voucher_Save(vo);
+						
+						Info(playerid, "Voucher claimed. gold: %d | claim by: %s.", VoucData[vo][voucGold], pData[playerid][pName]);
+					}
+					else
+					{
+						new dayz = VoucData[vo][voucVIPTime];
+						pData[playerid][pGold] += VoucData[vo][voucGold];
+						pData[playerid][pMoney] += VoucData[vo][voucMoney];
+						pData[playerid][pVip] = VoucData[vo][voucVIP];
+						pData[playerid][pVipTime] = gettime() + (dayz * 86400);
+						
+						VoucData[vo][voucClaim] = 1;
+						format(VoucData[vo][voucDonature], 16, pData[playerid][pName]);
+						Voucher_Save(vo);
+						
+						Info(playerid, "Voucher claimed. VIP: %d | VIP TIME: %d days | money: %s | gold: %d | claim by: %s.", VoucData[vo][voucVIP], dayz, FormatMoney(VoucData[vo][voucMoney]), VoucData[vo][voucGold], pData[playerid][pName]);
+					}
+				}
+				else
+				{
+					Error(playerid, "Voucher has been expired!");
+				}
+				return 1;
+			}
+		}
+		Error(playerid, "Invalid voucher code!");
+		return 1;
 	}
 	if(dialogid == DIALOG_ADS1)
 	{
@@ -18226,35 +18492,35 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			{
 				case 0:
 				{
-					format(string, sizeof(string), ""YELLOW_E"Ad Preview:\n"RED_E"Ad: "GREEN_E"%s\n"RED_E"Contact Person: ["GREEN_E"%s"RED_E"] Phone Number: ["GREEN_E"%d"RED_E"]\n\n"WHITE_E"Category: "YELLOW_E"Automotive\n"WHITE_E"Lengt: "YELLOW_E"%d\n"WHITE_E"Price: "YELLOW_E"$%s\n\nConfirm the advertisement?", 
+					format(string, sizeof(string), ""YELLOW_E"Ad Preview:\n"RED_E"Ad: "GREEN_E"%s\n"RED_E"Contact Person: ["GREEN_E"%s"RED_E"] Phone Number: ["GREEN_E"%d"RED_E"]\n\n"WHITE_E"Category: "YELLOW_E"Automotive\n"WHITE_E"Lengt: "YELLOW_E"%d\n"WHITE_E"Price: "YELLOW_E"%s\n\nConfirm the advertisement?", 
 					pData[playerid][pAdvertise], pData[playerid][pName], pData[playerid][pPhone],
 					strlen(pData[playerid][pAdvertise]), FormatMoney(pData[playerid][pAdvertise]*2));
 					ShowPlayerDialog(playerid, DIALOG_ADSCONFIRMAUTO, DIALOG_STYLE_MSGBOX, "Confirm Advertisement", string, "Confirm", "Cancel");
 				}
 				case 1:
 				{
-					format(string, sizeof(string), ""YELLOW_E"Ad Preview:\n"RED_E"Ad: "GREEN_E"%s\n"RED_E"Contact Person: ["GREEN_E"%s"RED_E"] Phone Number: ["GREEN_E"%d"RED_E"]\n\n"WHITE_E"Category: "YELLOW_E"Property\n"WHITE_E"Lengt: "YELLOW_E"%d\n"WHITE_E"Price: "YELLOW_E"$%s\n\nConfirm the advertisement?", 
+					format(string, sizeof(string), ""YELLOW_E"Ad Preview:\n"RED_E"Ad: "GREEN_E"%s\n"RED_E"Contact Person: ["GREEN_E"%s"RED_E"] Phone Number: ["GREEN_E"%d"RED_E"]\n\n"WHITE_E"Category: "YELLOW_E"Property\n"WHITE_E"Lengt: "YELLOW_E"%d\n"WHITE_E"Price: "YELLOW_E"%s\n\nConfirm the advertisement?", 
 					pData[playerid][pAdvertise], pData[playerid][pName], pData[playerid][pPhone],
 					strlen(pData[playerid][pAdvertise]), FormatMoney(pData[playerid][pAdvertise]*2));
 					ShowPlayerDialog(playerid, DIALOG_ADSCONFIRMPRO, DIALOG_STYLE_MSGBOX, "Confirm Advertisement", string, "Confirm", "Cancel");
 				}
 				case 2:
 				{
-					format(string, sizeof(string), ""YELLOW_E"Ad Preview:\n"RED_E"Ad: "GREEN_E"%s\n"RED_E"Contact Person: ["GREEN_E"%s"RED_E"] Phone Number: ["GREEN_E"%d"RED_E"]\n\n"WHITE_E"Category: "YELLOW_E"Event\n"WHITE_E"Lengt: "YELLOW_E"%d\n"WHITE_E"Price: "YELLOW_E"$%s\n\nConfirm the advertisement?", 
+					format(string, sizeof(string), ""YELLOW_E"Ad Preview:\n"RED_E"Ad: "GREEN_E"%s\n"RED_E"Contact Person: ["GREEN_E"%s"RED_E"] Phone Number: ["GREEN_E"%d"RED_E"]\n\n"WHITE_E"Category: "YELLOW_E"Event\n"WHITE_E"Lengt: "YELLOW_E"%d\n"WHITE_E"Price: "YELLOW_E"%s\n\nConfirm the advertisement?", 
 					pData[playerid][pAdvertise], pData[playerid][pName], pData[playerid][pPhone],
 					strlen(pData[playerid][pAdvertise]), FormatMoney(pData[playerid][pAdvertise]*2));
 					ShowPlayerDialog(playerid, DIALOG_ADSCONFIRMEVENT, DIALOG_STYLE_MSGBOX, "Confirm Advertisement", string, "Confirm", "Cancel");
 				}
 				case 3:
 				{
-					format(string, sizeof(string), ""YELLOW_E"Ad Preview:\n"RED_E"Ad: "GREEN_E"%s\n"RED_E"Contact Person: ["GREEN_E"%s"RED_E"] Phone Number: ["GREEN_E"%d"RED_E"]\n\n"WHITE_E"Category: "YELLOW_E"Service\n"WHITE_E"Lengt: "YELLOW_E"%d\n"WHITE_E"Price: "YELLOW_E"$%s\n\nConfirm the advertisement?", 
+					format(string, sizeof(string), ""YELLOW_E"Ad Preview:\n"RED_E"Ad: "GREEN_E"%s\n"RED_E"Contact Person: ["GREEN_E"%s"RED_E"] Phone Number: ["GREEN_E"%d"RED_E"]\n\n"WHITE_E"Category: "YELLOW_E"Service\n"WHITE_E"Lengt: "YELLOW_E"%d\n"WHITE_E"Price: "YELLOW_E"%s\n\nConfirm the advertisement?", 
 					pData[playerid][pAdvertise], pData[playerid][pName], pData[playerid][pPhone],
 					strlen(pData[playerid][pAdvertise]), FormatMoney(pData[playerid][pAdvertise]*2));
 					ShowPlayerDialog(playerid, DIALOG_ADSCONFIRMSERVICE, DIALOG_STYLE_MSGBOX, "Confirm Advertisement", string, "Confirm", "Cancel");
 				}
 				case 4:
 				{
-					format(string, sizeof(string), ""YELLOW_E"Ad Preview:\n"RED_E"Ad: "GREEN_E"%s\n"RED_E"Contact Person: ["GREEN_E"%s"RED_E"] Phone Number: ["GREEN_E"%d"RED_E"]\n\n"WHITE_E"Category: "YELLOW_E"Job Search\n"WHITE_E"Lengt: "YELLOW_E"%d\n"WHITE_E"Price: "YELLOW_E"$%s\n\nConfirm the advertisement?", 
+					format(string, sizeof(string), ""YELLOW_E"Ad Preview:\n"RED_E"Ad: "GREEN_E"%s\n"RED_E"Contact Person: ["GREEN_E"%s"RED_E"] Phone Number: ["GREEN_E"%d"RED_E"]\n\n"WHITE_E"Category: "YELLOW_E"Job Search\n"WHITE_E"Lengt: "YELLOW_E"%d\n"WHITE_E"Price: "YELLOW_E"%s\n\nConfirm the advertisement?", 
 					pData[playerid][pAdvertise], pData[playerid][pName], pData[playerid][pPhone],
 					strlen(pData[playerid][pAdvertise]), FormatMoney(pData[playerid][pAdvertise]*2));
 					ShowPlayerDialog(playerid, DIALOG_ADSCONFIRMJOB, DIALOG_STYLE_MSGBOX, "Confirm Advertisement", string, "Confirm", "Cancel");
@@ -18396,7 +18662,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 				{
 					case 0: // Editing Position
 					{
-						Servers(playerid, "Posisikan tulisan spray, pastikan tidak jauh "ORANGE_E"5 meter "WHITE_E"darimu!");
+						Custom(playerid, "TAGS: "WHITE_E"Posisikan tulisan spray, pastikan tidak jauh "ORANGE_E"5 meter "WHITE_E"darimu!");
 						EditDynamicObject(playerid, editing_object[playerid]);
 					}
 					case 1: // Editing Text
@@ -18424,7 +18690,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					case 5: // Toggle bold
 					{
 						SetPVarInt(playerid, "TagsBold", !GetPVarInt(playerid, "TagsBold"));
-						Servers(playerid, "Tulisan berganti menjadi "YELLOW_E"%s", GetPVarInt(playerid, "TagsBold") ? ("bold") : ("reguler"));
+						Custom(playerid, "TAGS: "WHITE_E"Tulisan berganti menjadi "YELLOW_E"%s", GetPVarInt(playerid, "TagsBold") ? ("bold") : ("reguler"));
 
 						Tags_Menu(playerid);
 						Tags_ObjectSync(playerid);
@@ -18516,7 +18782,7 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 
 			if(Tags_IsExists(index) && TagsData[index][tagPlayerID] == pData[playerid][pID])
 			{
-				Servers(playerid, "Pergi ke tujuan waypoint yang telah dibuat.");
+				Custom(playerid, "TAGS: "WHITE_E"Pergi ke tujuan waypoint yang telah dibuat.");
 				SetPlayerRaceCheckpoint(playerid, 1, TagsData[index][tagPosition][0], TagsData[index][tagPosition][1], TagsData[index][tagPosition][2], 0, 0, 0, 2.0);
 			}
 		}
@@ -18538,6 +18804,51 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 		}
 		return 1;
 	}
+	if(dialogid == DIALOG_CONFISCATE_BISNIS)
+	{
+		if(!response)
+		{
+			DeletePVar(playerid, "ConfiscateBisnisID");
+			return 1;
+		}
+		
+		new bid = GetPVarInt(playerid, "ConfiscateBisnisID");
+		DeletePVar(playerid, "ConfiscateBisnisID");
+		
+		if(!Iter_Contains(Bisnis, bid))
+			return Error(playerid, "Invalid business ID.");
+		
+		// ✅ HANYA UBAH STATUS LOCKED JADI 2 (GOVERNMENT CONFISCATED)
+		bData[bid][bLocked] = 2;
+		
+		// Transfer uang bisnis ke city treasury
+		ServerMoney += bData[bid][bMoney];
+		new confiscatedMoney = bData[bid][bMoney];
+		bData[bid][bMoney] = 0;
+		
+		// Save ke database
+		new query[256];
+		mysql_format(g_SQL, query, sizeof(query), 
+			"UPDATE bisnis SET locked='2', money='0' WHERE ID='%d'", bid);
+		mysql_tquery(g_SQL, query);
+		
+		Bisnis_Refresh(bid);
+		
+		// Notifikasi
+		Info(playerid, "You have confiscated business ID %d (%s)", bid, bData[bid][bName]);
+		Info(playerid, "Owner: %s | Money transferred to city: %s", bData[bid][bOwner], FormatMoney(confiscatedMoney));
+		
+		// Log
+		new logstr[256];
+		format(logstr, sizeof(logstr), "[SITA BIZ] %s confiscated business ID %d (%s) owned by %s | Money: $%d",pData[playerid][pName], bid, bData[bid][bName], bData[bid][bOwner], confiscatedMoney);
+		LogServer("Business", logstr);
+		
+		// Broadcast ke faction
+		SendFactionMessage(2, COLOR_RADIO, "CONFISCATE: %s has confiscated business '%s' (ID: %d) owned by %s",pData[playerid][pName], bData[bid][bName], bid, bData[bid][bOwner]);
+		
+		return 1;
+	}
+
 	if(dialogid == DIALOG_NONRPNAME)
 	{
 		if(response)

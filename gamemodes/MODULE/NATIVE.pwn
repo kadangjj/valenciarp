@@ -145,7 +145,7 @@ UpdatePlayerData(playerid)
 	{
 		if(IsATruck(GetPlayerVehicleID(playerid)))
 		{
-			RemovePlayerFromVehicle(playerid);
+			//RemovePlayerFromVehicle(playerid);
 			GetPlayerPos(playerid, pData[playerid][pPosX], pData[playerid][pPosY], pData[playerid][pPosZ]);
 			pData[playerid][pPosZ] = pData[playerid][pPosZ]+0.4;
 		}
@@ -198,7 +198,6 @@ UpdatePlayerData(playerid)
 	
 	mysql_format(g_SQL, cQuery, sizeof(cQuery), "%s`username` = '%e', ", cQuery, pData[playerid][pName]);
 	mysql_format(g_SQL, cQuery, sizeof(cQuery), "%s`adminname` = '%e', ", cQuery, pData[playerid][pAdminname]);
-	mysql_format(g_SQL, cQuery, sizeof(cQuery), "%s`twittername` = '%e', ", cQuery, pData[playerid][pTwittername]);
 	mysql_format(g_SQL, cQuery, sizeof(cQuery), "%s`ip` = '%s', ", cQuery, PlayerIP);
 	//mysql_format(g_SQL, cQuery, sizeof(cQuery), "%s`email` = '%s', ", cQuery, pData[playerid][pEmail]);
 	mysql_format(g_SQL, cQuery, sizeof(cQuery), "%s`admin` = '%d', ", cQuery, pData[playerid][pAdmin]);
@@ -222,8 +221,6 @@ UpdatePlayerData(playerid)
 	mysql_format(g_SQL, cQuery, sizeof(cQuery), "%s`phonekuota` = '%d', ", cQuery, pData[playerid][pKuota]);
 	mysql_format(g_SQL, cQuery, sizeof(cQuery), "%s`phonecredit` = '%d', ", cQuery, pData[playerid][pPhoneCredit]);
 	mysql_format(g_SQL, cQuery, sizeof(cQuery), "%s`phonebook` = '%d', ", cQuery, pData[playerid][pPhoneBook]);
-	mysql_format(g_SQL, cQuery, sizeof(cQuery), "%s`twitter` = '%d', ", cQuery, pData[playerid][pTwitter]);
-	mysql_format(g_SQL, cQuery, sizeof(cQuery), "%s`twitterstatus` = '%d', ", cQuery, pData[playerid][pTwitterStatus]);
 	mysql_format(g_SQL, cQuery, sizeof(cQuery), "%s`wt` = '%d', ", cQuery, pData[playerid][pWT]);
 	mysql_format(g_SQL, cQuery, sizeof(cQuery), "%s`hours` = '%d', ", cQuery, pData[playerid][pHours]);
 	mysql_format(g_SQL, cQuery, sizeof(cQuery), "%s`minutes` = '%d', ", cQuery, pData[playerid][pMinutes]);
@@ -287,6 +284,7 @@ UpdatePlayerData(playerid)
 	mysql_format(g_SQL, cQuery, sizeof(cQuery), "%s`gas` = '%d', ", cQuery, pData[playerid][pGas]);
 	mysql_format(g_SQL, cQuery, sizeof(cQuery), "%s`bandage` = '%d', ", cQuery, pData[playerid][pBandage]);
 	mysql_format(g_SQL, cQuery, sizeof(cQuery), "%s`gps` = '%d', ", cQuery, pData[playerid][pGPS]);
+	mysql_format(g_SQL, cQuery, sizeof(cQuery), "%s`cigarette` = '%d', ", cQuery, pData[playerid][pCigarette]);
 	mysql_format(g_SQL, cQuery, sizeof(cQuery), "%s`material` = '%d', ", cQuery, pData[playerid][pMaterial]);
 	mysql_format(g_SQL, cQuery, sizeof(cQuery), "%s`component` = '%d', ", cQuery, pData[playerid][pComponent]);
 	mysql_format(g_SQL, cQuery, sizeof(cQuery), "%s`food` = '%d', ", cQuery, pData[playerid][pFood]);
@@ -488,6 +486,7 @@ ResetVariables(playerid)
 	
 	pData[playerid][pMission] = -1;
 	pData[playerid][pHauling] = -1;
+	pData[playerid][pDealerHauling] = -1;
 	
 	pData[playerid][pFacInvite] = -1;
 	pData[playerid][pFacOffer] = -1;
@@ -786,11 +785,15 @@ GetStaffRank(playerid)
 	}
 	else if(pData[playerid][pAdmin] == 5)
 	{
-		name = ""RED_E"Management";
+		name = ""RED_E"Head Administrator";
 	}
 	else if(pData[playerid][pAdmin] == 6)
 	{
-		name = ""RED_E"Head Administrator";
+		name = ""RED_E"Management";
+	}
+	else if(pData[playerid][pAdmin] == 7)
+	{
+		name = ""RED_E"Management";
 	}
 	else if(pData[playerid][pHelper] == 1 && pData[playerid][pAdmin] == 0)
 	{
@@ -847,7 +850,7 @@ SendStaffMessage(color, const str[], {Float,_}:...)
         foreach (new i : Player)
         {
             if(pData[i][pAdmin] >= 1 || pData[i][pHelper] >= 1) {
-                SendClientMessageEx(i, color, "[STAFF MSG] "YELLOW_E"%s", string);
+                SendClientMessageEx(i, color, "STAFF MSG: "YELLOW_E"%s", string);
             }
         }
         return 1;
@@ -855,7 +858,7 @@ SendStaffMessage(color, const str[], {Float,_}:...)
     foreach (new i : Player)
     {
         if(pData[i][pAdmin] >= 1 || pData[i][pHelper] >= 1) {
-            SendClientMessageEx(i, color, "[STAFF MSG] "YELLOW_E"%s", string);
+            SendClientMessageEx(i, color, "STAFF MSG: "YELLOW_E"%s", string);
         }
     }
     return 1;
@@ -1538,7 +1541,7 @@ DisplayStats(playerid, p2)
 	
 	format(header,sizeof(header),""YELLOW_E"%s "WHITE_E"(RegPID:%d)",  pData[p2][pName], pData[p2][pID]);
     format(gstr,sizeof(gstr),""PINK_R"In Character"WHITE_E"\n");
-    format(gstr,sizeof(gstr),"%sGender: ["WBLUE_E"%s"WHITE_E"] | Money: ["LG_E"$%s"WHITE_E"] | Bank: ["LG_E"$%s"WHITE_E"] | Rekening Bank: ["WBLUE_E"%d"WHITE_E"]\n", gstr,(pData[p2][pGender] == 2) ? ("Female") : ("Male") , FormatMoney(pData[p2][pMoney]), FormatMoney(pData[p2][pBankMoney]), pData[p2][pBankRek]);
+    format(gstr,sizeof(gstr),"%sGender: ["WBLUE_E"%s"WHITE_E"] | Money: ["GREEN_E"%s"WHITE_E"] | Bank: ["GREEN_E"%s"WHITE_E"] | Rekening Bank: ["WBLUE_E"%d"WHITE_E"]\n", gstr,(pData[p2][pGender] == 2) ? ("Female") : ("Male") , FormatMoney(pData[p2][pMoney]), FormatMoney(pData[p2][pBankMoney]), pData[p2][pBankRek]);
     format(gstr,sizeof(gstr),"%sPhone Number: ["WBLUE_E"%d"WHITE_E"] | Birdthdate: ["WBLUE_E"%s"WHITE_E"] | Job: ["WBLUE_E"%s / %s"WHITE_E"]\n", gstr, pData[p2][pPhone], pData[p2][pAge], GetJobName(pData[p2][pJob]), GetJobName(pData[p2][pJob2]));
     format(gstr,sizeof(gstr),"%sFaction: ["WBLUE_E"%s"WHITE_E"] | Family: ["WBLUE_E"%s"WHITE_E"] | Phone Status : [%s]\n\n", gstr, fac, fname, pstatus);
 	format(gstr,sizeof(gstr),"%s"PINK_R"Out of Character"WHITE_E"\n", gstr);
@@ -1553,7 +1556,7 @@ DisplayStats(playerid, p2)
 	{
 		format(gstr,sizeof(gstr),"%sVIP Level: [%s{FFFFFF}] | VIP Time: [None]\n", gstr, GetVipRank(p2));
 	}
-	format(gstr,sizeof(gstr),"%sInterior: [%d] | Virtual World: [%d] | Register Date: ["YELLOW_E"%s"WHITE_E"]", gstr, GetPlayerInterior(p2), GetPlayerVirtualWorld(p2), pData[p2][pRegDate]);
+	format(gstr,sizeof(gstr),"%sInterior: [%d] | Virtual World: [%d] | Register Date: ["YELLOW_E"%s"WHITE_E"]\nProperty list moved to {ffff00}'/myproperty' {ffffff}or {ffff00}'/mp'", gstr, GetPlayerInterior(p2), GetPlayerVirtualWorld(p2), pData[p2][pRegDate]);
 	ShowPlayerDialog(playerid, DIALOG_STATS, DIALOG_STYLE_MSGBOX, header, gstr, "Close", "");
 	return 1;
 }
@@ -1562,11 +1565,11 @@ DisplayItems(playerid, p2)
 {
 	new weaponid, ammo, mstr[512], lstr[2048];
 	format(mstr, sizeof(mstr), "Items (%s)", pData[p2][pName]);
-    format(lstr, sizeof(lstr), "Name\tAmount\n"GREEN_E"Money\t"GREEN_E"$%s\n", FormatMoney(pData[p2][pMoney]));
+    format(lstr, sizeof(lstr), "Name\tAmount\n"GREEN_E"Money\t"GREEN_E"%s\n", FormatMoney(pData[p2][pMoney]));
 	
 	if(pData[p2][pRedMoney] > 0)
 	{
-		format(lstr, sizeof(lstr), "%s{FF0000}Red Money\t{FF0000}$%s\n", lstr, FormatMoney(pData[p2][pRedMoney]));
+		format(lstr, sizeof(lstr), "%s{FF0000}Red Money\t{FF0000}%s\n", lstr, FormatMoney(pData[p2][pRedMoney]));
 	}
 	if(pData[p2][pIDCardTime] > 0)
 	{
@@ -1583,6 +1586,10 @@ DisplayItems(playerid, p2)
 	if(pData[p2][pSparepart] > 0)
 	{
 		format(lstr, sizeof(lstr), "%sSparepart\t%d\n", lstr, pData[p2][pSparepart]);
+	}
+	if(pData[p2][pCigarette] > 0)
+	{
+		format(lstr, sizeof(lstr), "%sCigarette\t%d\n", lstr, pData[p2][pCigarette]);
 	}
 	if(pData[p2][pFlashlight] > 0)
 	{
@@ -1824,10 +1831,10 @@ BanPlayerMSG(playerid, adminid, reason[], bool:serverBan = false)
 	SendClientMessage(playerid, COLOR_GREY, mstr);
 	format(mstr, sizeof(mstr), ""RED_E"Server: "GREY_E"The time is %02d:%02d (%02d/%02d/%d)", hours, minutes, months, days, years);
 	SendClientMessage(playerid, COLOR_GREY, mstr);
-	SendClientMessage(playerid, COLOR_GREY, ""RED_E"Server: "GREY_E"Go to nfs-server.pe.hu/forums to appeal your ban. Include a screenshot of your ban.");
+	SendClientMessage(playerid, COLOR_GREY, ""RED_E"Server: "GREY_E"Go to forum.valenciaroleplay.my.id to appeal your ban. Include a screenshot of your ban.");
 	GameTextForPlayer(playerid, "~r~~h~Banned!", 4000, 5);
 
-	format(lstr, sizeof(lstr), ""RED_E"You have been banned!\n\n"LB2_E"Ban Info:\n"RED_E"Name: "GREY2_E"%s\n"RED_E"IP: "GREY2_E"%s\n"RED_E"Admin: "GREY2_E"%s\n"RED_E"Ban Reason: "GREY2_E"%s\n"RED_E"Ban Date: "GREY2_E"%02d:%02d (%02d/%02d/%d)\n\n"WHITE_E"Feel that you were wrongfully banned? Appeal at nfs-server.pe.hu/forums", pData[playerid][pName], pData[playerid][pIP], pData[adminid][pAdminname], reason, hours, minutes, months, days, years);
+	format(lstr, sizeof(lstr), ""RED_E"You have been banned!\n\n"LB2_E"Ban Info:\n"RED_E"Name: "GREY2_E"%s\n"RED_E"IP: "GREY2_E"%s\n"RED_E"Admin: "GREY2_E"%s\n"RED_E"Ban Reason: "GREY2_E"%s\n"RED_E"Ban Date: "GREY2_E"%02d:%02d (%02d/%02d/%d)\n\n"WHITE_E"Feel that you were wrongfully banned? Appeal at forum.valenciaroleplay.my.id", pData[playerid][pName], pData[playerid][pIP], pData[adminid][pAdminname], reason, hours, minutes, months, days, years);
 	ShowPlayerDialog(playerid, DIALOG_UNUSED, DIALOG_STYLE_MSGBOX, ""RED_E"BANNED", lstr, "Exit", "");
 }
 
@@ -2776,11 +2783,16 @@ new GeneralGPS[][GPS_INFO] = {
 	{"All Saints General Hospital", 1172.1090, -1323.3334, 15.4026},
 	{"Los Santos Fire Departement - Headquarter", 1760.4398, -1436.4520, 13.5339},
 	{"Lafayette Bank", 1462.8563, -1012.8082, 26.8438},
-	{"Los Santos Police Departement - Metropolitan Division", 615.2851, -597.5526, 17.2305},
-	{"Los Santos Police Departement - Harbor Station", 2308.5417, -1633.3348, 14.8270},
-	{"Los Santos Police Departement - Wilshire Station", 826.7471, -1587.9579, 13.5469},
-	{"Los Santos Sheriff Departement", 2275.8157, -2559.8896, 13.5469},
-	{"Los Santos Impound Center", 2404.8418, -2183.9094, 13.5469}
+	{"San Andreas News Agency", 649.10, -1360.75, 226.13},
+	{"Mechanic Center", 1793.7285,-1713.3325,13.7036},
+	{"Fish Factory", 2843.9133, -1516.6660, 11.3011},
+	{"Automotive Recycling Center - Scrap Vehicle", 2415.4207, -2467.8943, 13.6250},
+	{"Los Santos Insurance Center", 1335.0966, -1266.0402, 13.5469},
+	{"Department of Motor Vehicles", 2062.8577, -1897.4104, 13.5538},
+	{"Rental Vehicle Center", 545.6571, -1293.0920, 17.2422},
+	{"Stadium Pier Harbor", 2988.2114, -2053.7246, 1.2459}
+
+
 };
 
 // GPS Jobs Data
@@ -3251,6 +3263,282 @@ stock strreplace(string[], const search[], const replacement[], bool:ignorecase 
     return copies;
 }
 
+stock SendConfirmation(targetid, fromid, type[], data = 0)
+{
+    // Simpan data konfirmasi
+    format(pData[targetid][pConfirmType], 32, "%s", type);
+    pData[targetid][pConfirmFrom] = fromid;
+    pData[targetid][pConfirmData] = data;
+
+    // Kirim pesan sesuai tipe menggunakan Info()
+    if(!strcmp(type, "faction", true))
+    {
+        Info(targetid, "%s sent a faction invite. Press 'Y' or 'N'", ReturnName(fromid));
+    }
+    else if(!strcmp(type, "family", true))
+    {
+        Info(targetid, "%s sent a family invite. Press 'Y' or 'N'", ReturnName(fromid));
+    }
+    else if(!strcmp(type, "drag", true))
+    {
+        Info(targetid, "%s wants to drag you. Press 'Y' or 'N'", ReturnName(fromid));
+    }
+    else if(!strcmp(type, "frisk", true))
+    {
+         Info(targetid, "%s wants to frisk you. Press 'Y' or 'N'", ReturnName(fromid));
+    }
+    else if(!strcmp(type, "inspect", true))
+    {
+         Info(targetid, "%s wants to inspect your body condition. Press 'Y' or 'N'", ReturnName(fromid));
+    }
+    else if(!strcmp(type, "reqloc", true))
+    {
+         Info(targetid, "%s is requesting your location. Press 'Y' or 'N'", ReturnName(fromid));
+    }
+    else if(!strcmp(type, "dice", true))
+    {
+        Info(targetid, "%s invites you to play dice (Bet: "GREEN_E"%s"WHITE_E"). Press 'Y' or 'N'", ReturnName(fromid), FormatMoney(data));
+    }
+    else if(!strcmp(type, "rob", true))
+    {
+        Info(targetid, "%s invites you to join the robbery team. Press 'Y' or 'N'", ReturnName(fromid));
+    }
+    return 1;
+}
+
+// ==================== PROCESS CONFIRMATION ====================
+stock ProcessConfirmation(playerid, bool:accepted)
+{
+    new type[32];
+    format(type, sizeof(type), "%s", pData[playerid][pConfirmType]);
+    new fromid = pData[playerid][pConfirmFrom];
+    new data = pData[playerid][pConfirmData];
+    
+    // Clear konfirmasi data
+    pData[playerid][pConfirmType][0] = 0;
+    pData[playerid][pConfirmFrom] = INVALID_PLAYER_ID;
+    pData[playerid][pConfirmData] = 0;
+    
+    // Validasi player masih online
+    if(!IsPlayerConnected(fromid) && !strfind(type, "job", true))
+        return Error(playerid, "Player offerer is no longer online.");
+    
+    // ==================== FACTION ====================
+    if(!strcmp(type, "faction", true))
+    {
+        if(accepted)
+        {
+            pData[playerid][pFaction] = pData[playerid][pFacInvite];
+            pData[playerid][pFactionRank] = 1;
+            Info(playerid, "Anda telah menerima undangan faction dari %s", ReturnName(fromid));
+            Info(fromid, "%s telah menerima undangan faction Anda", ReturnName(playerid));
+            pData[playerid][pFacInvite] = 0;
+            pData[playerid][pFacOffer] = -1;
+        }
+        else
+        {
+            Info(playerid, "Anda menolak undangan faction dari %s", ReturnName(fromid));
+            Info(fromid, "%s menolak undangan faction Anda", ReturnName(playerid));
+            pData[playerid][pFacInvite] = 0;
+            pData[playerid][pFacOffer] = -1;
+        }
+    }
+    
+    // ==================== FAMILY ====================
+    else if(!strcmp(type, "family", true))
+    {
+        if(accepted)
+        {
+            pData[playerid][pFamily] = pData[playerid][pFamInvite];
+            pData[playerid][pFamilyRank] = 1;
+            Info(playerid, "Anda telah menerima undangan family dari %s", ReturnName(fromid));
+            Info(fromid, "%s telah menerima undangan family Anda", ReturnName(playerid));
+            pData[playerid][pFamInvite] = 0;
+            pData[playerid][pFamOffer] = -1;
+        }
+        else
+        {
+            Info(playerid, "Anda menolak undangan family dari %s", ReturnName(fromid));
+            Info(fromid, "%s menolak undangan family Anda", ReturnName(playerid));
+            pData[playerid][pFamInvite] = 0;
+            pData[playerid][pFamOffer] = -1;
+        }
+    }
+    
+    // ==================== DRAG ====================
+    else if(!strcmp(type, "drag", true))
+    {
+        if(accepted)
+        {
+            if(!NearPlayer(playerid, fromid, 5.0))
+                return Error(playerid, "Anda harus berada dekat dengan player!");
+            
+            pData[playerid][pDragged] = 1;
+            pData[playerid][pDraggedBy] = fromid;
+            pData[playerid][pDragTimer] = SetTimerEx("DragUpdate", 1000, true, "ii", fromid, playerid);
+            SendNearbyMessage(fromid, 30.0, COLOR_PURPLE, "* %s memegang %s dan mulai menyeretnya, (/undrag).", ReturnName(fromid), ReturnName(playerid));
+        }
+        else
+        {
+            Info(playerid, "Anda menolak permintaan drag dari %s", ReturnName(fromid));
+            Info(fromid, "%s menolak permintaan drag Anda", ReturnName(playerid));
+            DeletePVar(playerid, "DragBy");
+        }
+    }
+    
+    // ==================== FRISK ====================
+    else if(!strcmp(type, "frisk", true))
+    {
+        if(accepted)
+        {
+            if(!NearPlayer(playerid, fromid, 5.0))
+                return Error(playerid, "Anda harus berada dekat dengan player!");
+            
+            DisplayItems(playerid, fromid);
+            Info(playerid, "Anda menerima permintaan frisk dari %s.", ReturnName(fromid));
+            Info(fromid, "%s menerima permintaan frisk Anda.", ReturnName(playerid));
+            pData[playerid][pFriskOffer] = INVALID_PLAYER_ID;
+        }
+        else
+        {
+            Info(playerid, "Anda menolak permintaan frisk dari %s.", ReturnName(fromid));
+            Info(fromid, "%s menolak permintaan frisk Anda.", ReturnName(playerid));
+            pData[playerid][pFriskOffer] = INVALID_PLAYER_ID;
+        }
+    }
+    
+    // ==================== INSPECT ====================
+    else if(!strcmp(type, "inspect", true))
+    {
+        if(accepted)
+        {
+            if(!NearPlayer(playerid, fromid, 5.0))
+                return Error(playerid, "Anda harus berada dekat dengan player!");
+            
+            new hstring[512], info[512];
+            new hh = pData[playerid][pHead];
+            new hp = pData[playerid][pPerut];
+            new htk = pData[playerid][pRHand];
+            new htka = pData[playerid][pLHand];
+            new hkk = pData[playerid][pRFoot];
+            new hkka = pData[playerid][pLFoot];
+            
+            format(hstring, sizeof(hstring), "Bagian Tubuh\tKondisi\n{ffffff}Kepala\t{7fffd4}%d.0%%\n{ffffff}Perut\t{7fffd4}%d.0%%\n{ffffff}Tangan Kanan\t{7fffd4}%d.0%%\n{ffffff}Tangan Kiri\t{7fffd4}%d.0%%\n", hh, hp, htk, htka);
+            strcat(info, hstring);
+            format(hstring, sizeof(hstring), "{ffffff}Kaki Kanan\t{7fffd4}%d.0%%\n{ffffff}Kaki Kiri\t{7fffd4}%d.0%%\n", hkk, hkka);
+            strcat(info, hstring);
+            
+            ShowPlayerDialog(fromid, DIALOG_HEALTH, DIALOG_STYLE_TABLIST_HEADERS, "Health Condition", info, "Oke", "");
+            Info(playerid, "Anda menerima permintaan inspect dari %s.", ReturnName(fromid));
+            pData[playerid][pInsOffer] = INVALID_PLAYER_ID;
+        }
+        else
+        {
+            Info(playerid, "Anda menolak permintaan inspect dari %s.", ReturnName(fromid));
+            Info(fromid, "%s menolak permintaan inspect Anda.", ReturnName(playerid));
+            pData[playerid][pInsOffer] = INVALID_PLAYER_ID;
+        }
+    }
+    
+    // ==================== REQLOC ====================
+    else if(!strcmp(type, "reqloc", true))
+    {
+        if(accepted)
+        {
+            new Float:sX, Float:sY, Float:sZ;
+            GetPlayerPos(playerid, sX, sY, sZ);
+            SetPlayerCheckpoint(fromid, sX, sY, sZ, 5.0);
+            Servers(playerid, "Berbagi lokasi dengan %s telah diterima.", ReturnName(fromid));
+            Servers(fromid, "Lokasi %s telah ditandai.", ReturnName(playerid));
+            pData[playerid][pLocOffer] = INVALID_PLAYER_ID;
+        }
+        else
+        {
+            Info(playerid, "Anda menolak permintaan lokasi dari %s.", ReturnName(fromid));
+            Info(fromid, "%s menolak permintaan lokasi Anda.", ReturnName(playerid));
+            pData[playerid][pLocOffer] = INVALID_PLAYER_ID;
+        }
+    }
+    
+    // ==================== DICE ====================
+    else if(!strcmp(type, "dice", true))
+    {
+        if(accepted)
+        {
+            new money = data;
+            
+            if(GetPlayerMoney(playerid) < money || GetPlayerMoney(fromid) < money)
+            {
+                Error(playerid, "Salah satu pemain tidak memiliki cukup uang.");
+                Error(fromid, "Salah satu pemain tidak memiliki cukup uang.");
+                pData[playerid][pDiceOffer] = INVALID_PLAYER_ID;
+                pData[playerid][pDiceMoney] = 0;
+                return 1;
+            }
+            
+            // Mulai permainan dadu
+            new dice1 = random(6) + 1, dice2 = random(6) + 1;
+            new dice3 = random(6) + 1, dice4 = random(6) + 1;
+            new playerTotal = dice1 + dice2, otherTotal = dice3 + dice4;
+            
+            SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "* %s melempar dadu: %d dan %d (Total: %d)", ReturnName(playerid), dice1, dice2, playerTotal);
+            SendNearbyMessage(playerid, 30.0, COLOR_PURPLE, "* %s melempar dadu: %d dan %d (Total: %d)", ReturnName(fromid), dice3, dice4, otherTotal);
+            
+            // Tentukan pemenang
+            if(playerTotal > otherTotal)
+            {
+                GivePlayerMoneyEx(fromid, -money);
+                GivePlayerMoneyEx(playerid, money);
+                SendClientMessageEx(playerid, COLOR_WHITE, "Anda menang! Menerima "GREEN_E"%s"WHITE_E" dari %s.", FormatMoney(money), ReturnName(fromid));
+                SendClientMessageEx(fromid, COLOR_WHITE, "Anda kalah. Kehilangan "RED_E"%s"WHITE_E" untuk %s.", FormatMoney(money), ReturnName(playerid));
+            }
+            else if(otherTotal > playerTotal)
+            {
+                GivePlayerMoneyEx(playerid, -money);
+                GivePlayerMoneyEx(fromid, money);
+                SendClientMessageEx(fromid, COLOR_WHITE, "Anda menang! Menerima "GREEN_E"%s"WHITE_E" dari %s.", FormatMoney(money), ReturnName(playerid));
+                SendClientMessageEx(playerid, COLOR_WHITE, "Anda kalah. Kehilangan "RED_E"%s"WHITE_E" untuk %s.", FormatMoney(money), ReturnName(fromid));
+            }
+            else
+            {
+                SendClientMessage(playerid, COLOR_YELLOW, "Permainan seri.");
+                SendClientMessage(fromid, COLOR_YELLOW, "Permainan seri.");
+            }
+            
+            pData[playerid][pDiceOffer] = INVALID_PLAYER_ID;
+            pData[playerid][pDiceMoney] = 0;
+        }
+        else
+        {
+            Info(playerid, "Anda menolak permintaan dadu dari %s.", ReturnName(fromid));
+            Info(fromid, "%s menolak permintaan dadu Anda.", ReturnName(playerid));
+            pData[playerid][pDiceOffer] = INVALID_PLAYER_ID;
+            pData[playerid][pDiceMoney] = 0;
+        }
+    }
+    
+    // ==================== ROB ====================
+    else if(!strcmp(type, "rob", true))
+    {
+        if(accepted)
+        {
+            Info(playerid, "Anda menerima undangan tim perampokan dari %s.", ReturnName(fromid));
+            Info(fromid, "%s telah menerima undangan tim perampokan Anda.", ReturnName(playerid));
+            pData[playerid][pRobOffer] = INVALID_PLAYER_ID;
+            pData[playerid][pMemberRob] = 1;
+            pData[fromid][pRobMember] += 1;
+            RobMember += 1;
+        }
+        else
+        {
+            Info(playerid, "Anda menolak undangan tim perampokan dari %s.", ReturnName(fromid));
+            Info(fromid, "%s menolak undangan tim perampokan Anda.", ReturnName(playerid));
+            pData[playerid][pRobOffer] = INVALID_PLAYER_ID;
+        }
+    }
+    
+    return 1;
+}
 ReplaceString(text[])
 {
     new replace[128];
@@ -3298,21 +3586,22 @@ FormatMoney(Float:amount, delimiter[2]=".", comma[2]=",")
 {
 	#define MAX_MONEY_String 16
 	new txt[MAX_MONEY_String];
-	format(txt, MAX_MONEY_String, "%d", floatround(amount));
+	format(txt, MAX_MONEY_String, "$%d", floatround(amount));
 	new l = strlen(txt);
-	if (amount < 0) // -
+	
+	if (amount < 0) // Untuk angka negatif
 	{
-		if (l > 2) strins(txt,delimiter,l-2);
-		if (l > 5) strins(txt,comma,l-5);
-		if (l > 8) strins(txt,comma,l-8);
+		if (l > 4) strins(txt, delimiter, l-2);  // Delimiter untuk 2 digit terakhir
+		if (l > 7) strins(txt, comma, l-5);      // Ribuan
+		if (l > 10) strins(txt, comma, l-8);     // Jutaan
 	}
-	else
-	{//1000000
-		if (l > 2) strins(txt,delimiter,l-2);
-		if (l > 5) strins(txt,comma,l-5);
-		if (l > 9) strins(txt,comma,l-8);
+	else // Untuk angka positif
+	{
+		if (l > 3) strins(txt, delimiter, l-2);  // Delimiter untuk 2 digit terakhir
+		if (l > 6) strins(txt, comma, l-5);      // Ribuan
+		if (l > 9) strins(txt, comma, l-8);      // Jutaan
 	}
-//	if (l <= 2) format(txt,sizeof( szStr ),"00,%s",txt);
+	
 	return txt;
 }
 

@@ -573,8 +573,10 @@ CMD:finvite(playerid, params[])
 		
 	pData[otherid][pFamInvite] = pData[playerid][pFamily];
 	pData[otherid][pFamOffer] = playerid;
-	Servers(playerid, "Anda telah menginvite %s untuk menjadi anggota family.", pData[otherid][pName]);
-	Servers(otherid, "%s telah menginvite anda untuk menjadi anggota family. Type: /accept family or /deny family!", pData[playerid][pName]);
+	SendConfirmation(otherid, playerid, "family", 0); // ✅ data = 0
+
+	Info(playerid, "Anda telah menginvite %s untuk menjadi anggota family.", pData[otherid][pName]);
+	
 	return 1;
 }
 

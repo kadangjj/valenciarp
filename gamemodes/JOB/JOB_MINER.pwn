@@ -293,7 +293,7 @@ Player_DropLog(playerid, type, death_drop = 0)
 		LogData[id][logSeconds] = LOG_LIFETIME;
 		LogData[id][logObjID] = CreateDynamicObject(3929, x, y, z - 0.65, 0.0, 0.0, random(360));
 	  	SetDynamicObjectMaterial(LogData[id][logObjID], 0, 2936, "kmb_rckx", "larock256", RGBAToARGB(0xB87333FF));
-		format(label, sizeof(label), "Log (%d - %s)\n"WHITE_E"Dropped By "GREEN_E"$%s\n"WHITE_E"%s\nUse /ore pickup.", id, typename, LogData[id][logDroppedBy], ConvertToMinutes(LOG_LIFETIME));
+		format(label, sizeof(label), "Log (%d - %s)\n"WHITE_E"Dropped By "GREEN_E"%s\n"WHITE_E"%s\nUse /ore pickup.", id, typename, LogData[id][logDroppedBy], ConvertToMinutes(LOG_LIFETIME));
 		LogData[id][logLabel] = CreateDynamic3DTextLabel(label, COLOR_GREEN, x, y, z, 5.0, .testlos = 1);
 		
 		LogData[id][logTimer] = SetTimerEx("RemoveLog", 1000, true, "i", id);
@@ -323,7 +323,7 @@ function RemoveLog(tid)
 	    LogData[tid][logSeconds]--;
 
         new label[128];
-	    format(label, sizeof(label), "Log (%d - %s)\n"WHITE_E"Dropped By "GREEN_E"$%s\n"WHITE_E"%s\nUse /ore pickup.", tid, typename, LogData[tid][logDroppedBy], ConvertToMinutes(LogData[tid][logSeconds]));
+	    format(label, sizeof(label), "Log (%d - %s)\n"WHITE_E"Dropped By "GREEN_E"%s\n"WHITE_E"%s\nUse /ore pickup.", tid, typename, LogData[tid][logDroppedBy], ConvertToMinutes(LogData[tid][logSeconds]));
 		UpdateDynamic3DTextLabelText(LogData[tid][logLabel], COLOR_GREEN, label);
 	}
 	else if(LogData[tid][logSeconds] == 1) 
@@ -689,7 +689,7 @@ CMD:ore(playerid, params[])
 				{
 					type = "Unknown";
 				}
-				format(string, sizeof(string), "%s%s\t%d\t{2ECC71}$%d\n", string, type, LogStorage[vehicleid][i], harga);
+				format(string, sizeof(string), "%s%s\t%d\t{2ECC71}%s\n", string, type, LogStorage[vehicleid][i], FormatMoney(harga));
 			}
 			format(title, sizeof(title), "Loaded Ores {E74C3C}(%d/%d)", Vehicle_LogCount(vehicleid), LOG_LIMIT);
 			ShowPlayerDialog(playerid, DIALOG_UNUSED, DIALOG_STYLE_TABLIST_HEADERS, title, string, "Close", "");
@@ -703,7 +703,7 @@ CMD:ore(playerid, params[])
 			if(!IsPlayerInRangeOfPoint(playerid, 4.0, 298.0443, 907.1157, 20.4363)) return Error(playerid, "You're not near a miner warehouse.");
 			new cash = Vehicle_GetOreValue(vehicleid), carid = -1;
 			if(cash < 1) return Error(playerid, "This vehicle ore is empty!");
-			Info(playerid, "Sold "BLUE_E"%d "WHITE_E"ores and earned "LG_E"$%s", Vehicle_LogCount(vehicleid), FormatMoney(cash));
+			Info(playerid, "Sold "BLUE_E"%d "WHITE_E"ores and earned "LG_E"%s", Vehicle_LogCount(vehicleid), FormatMoney(cash));
 			RawComponent += LogStorage[vehicleid][0] + 150;
 			GasOil += LogStorage[vehicleid][1] + 100;
 			GivePlayerMoneyEx(playerid, cash);
@@ -714,7 +714,7 @@ CMD:ore(playerid, params[])
 				pvData[carid][cMetal] = 0;
 				pvData[carid][cCoal] = 0;
 			}
-			pData[playerid][pJobTime] += 150;
+			pData[playerid][pJobTime] += 400;
 		}
 	}
 	else return Error(playerid, "You are not miner job.");

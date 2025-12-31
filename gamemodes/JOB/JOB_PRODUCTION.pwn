@@ -195,7 +195,7 @@ CMD:sellproduct(playerid, params[])
 		RemovePlayerAttachedObject(playerid, 9);
 		SetPlayerSpecialAction(playerid, SPECIAL_ACTION_NONE);
 		pData[playerid][CarryProduct] = 0;
-		GivePlayerMoneyEx(playerid, 55000);
+		AddPlayerSalary(playerid, "Production", 55000);
 		
 		Product += 10;
 		Server_MinMoney(55000);
@@ -207,8 +207,9 @@ CMD:sellproduct(playerid, params[])
 		RemovePlayerAttachedObject(playerid, 9);
 		SetPlayerSpecialAction(playerid, SPECIAL_ACTION_NONE);
 		pData[playerid][CarryProduct] = 0;
-		GivePlayerMoneyEx(playerid, 65000);
-		
+		//GivePlayerMoneyEx(playerid, 65000);
+		AddPlayerSalary(playerid, "Production", 65000);
+
 		Product += 10;
 		Server_MinMoney(65000);
 		Info(playerid, "Anda menjual 10 product baju dengan harga "GREEN_E"$650.00");
@@ -219,11 +220,11 @@ CMD:sellproduct(playerid, params[])
 		RemovePlayerAttachedObject(playerid, 9);
 		SetPlayerSpecialAction(playerid, SPECIAL_ACTION_NONE);
 		pData[playerid][CarryProduct] = 0;
-		GivePlayerMoneyEx(playerid, 100000);
+		AddPlayerSalary(playerid, "Production", 90000);
 		
 		Product += 10;
 		Server_MinMoney(100000);
-		Info(playerid, "Anda menjual 10 product equipment dengan harga "GREEN_E"$1,000.00");
+		Info(playerid, "Anda menjual 10 product equipment dengan harga "GREEN_E"$900.00");
 		pData[playerid][pJobTime] += 480;
 	}
 	return 1;

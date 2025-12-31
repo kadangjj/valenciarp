@@ -164,7 +164,7 @@ CMD:voucher(playerid, params[])
 					format(VoucData[vo][voucDonature], 16, pData[playerid][pName]);
 					Voucher_Save(vo);
 					
-					Info(playerid, "Voucher claimed. VIP: %d | VIP TIME: %d days | money: $%s | gold: %d | claimby: %s.", VoucData[vo][voucVIP], dayz, FormatMoney(VoucData[vo][voucMoney]), VoucData[vo][voucGold], pData[playerid][pName]);
+					Info(playerid, "Voucher claimed. VIP: %d | VIP TIME: %d days | money: %s | gold: %d | claimby: %s.", VoucData[vo][voucVIP], dayz, FormatMoney(VoucData[vo][voucMoney]), VoucData[vo][voucGold], pData[playerid][pName]);
 				}
 			}
 			else return Error(playerid, "Voucher has been expired!");

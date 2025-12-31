@@ -8,7 +8,7 @@ CreateJoinSmugglerPoint()
     CreateDynamic3DTextLabel(strings, COLOR_YELLOW, 977.34, -771.49, 112.20, 5.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 1); // SMUGGLER
 
     CreateDynamicPickup(1239, 23, 973.71, -764.56, 111.94+0.2, -1, -1, -1, 50);
-    format(strings, 128, "{ffffff}Weapon/Packet Delivery Point");
+    format(strings, 128, "{ffffff}Packet Delivery Point");
     CreateDynamic3DTextLabel(strings, COLOR_YELLOW, 973.71, -764.56, 112.34, 5.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID);
 }
 
@@ -22,7 +22,7 @@ CMD:deliverypacket(playerid, params[])
 	
 	InfoTD_MSG(playerid, 3000, "Delivering Packet..");
 	ApplyAnimation(playerid,"BOMBER","BOM_Plant",4.0,0 ,0,0,0,0,1);
-	new bonus = RandomEx(1000, 1920);
+	new bonus = RandomEx(100000, 192000);
 	new Price = bonus+2;
 	GivePlayerMoneyEx(playerid, Price);
 	RemovePlayerAttachedObject(playerid, 3);

@@ -113,13 +113,13 @@ function CheckBanUCP(playerid)
 			if(banTime_Int == 0)
 			{
 				new lstr[512];
-				format(lstr, sizeof(lstr), "{FF0000}You are banned from this server!\n\n"LB2_E"Ban Info:\n{FF0000}Name UCP: {778899}%s\n{FF0000}IP: {778899}%s\n{FF0000}Admin: {778899}%s\n{FF0000}Ban Date: {778899}%s\n{FF0000}Ban Reason: {778899}%s\n{FF0000}Ban Time: {778899}Permanent\n\n{FFFFFF}Merasa tidak bersalah terkena banned? Appeal di NewDawn-rp.xyz", BannedName, PlayerIP, PlayerName, ReturnDate(banDate), Reason);
+				format(lstr, sizeof(lstr), "{FF0000}You are banned from this server!\n\n"LB2_E"Ban Info:\n{FF0000}Name UCP: {778899}%s\n{FF0000}IP: {778899}%s\n{FF0000}Admin: {778899}%s\n{FF0000}Ban Date: {778899}%s\n{FF0000}Ban Reason: {778899}%s\n{FF0000}Ban Time: {778899}Permanent\n\n{FFFFFF}Merasa tidak bersalah terkena banned? Appeal di valenciasamp.id", BannedName, PlayerIP, PlayerName, ReturnDate(banDate), Reason);
 				ShowPlayerDialog(playerid, DIALOG_UNUSED, DIALOG_STYLE_MSGBOX, ""RED_E"BANNED", lstr, "Exit", "");
 			}
 			else
 			{
 				new lstr[512];
-				format(lstr, sizeof(lstr), "{FF0000}You are banned from this server!\n\n"LB2_E"Ban Info:\n{FF0000}Name UCP: {778899}%s\n{FF0000}IP: {778899}%s\n{FF0000}Admin: {778899}%s\n{FF0000}Ban Date: {778899}%s\n{FF0000}Ban Reason: {778899}%s\n\n{FFFFFF}Merasa tidak bersalah terkena banned? Appeal di Valencia-rp.xyz", BannedName, PlayerIP, PlayerName, ReturnDate(banDate), Reason);
+				format(lstr, sizeof(lstr), "{FF0000}You are banned from this server!\n\n"LB2_E"Ban Info:\n{FF0000}Name UCP: {778899}%s\n{FF0000}IP: {778899}%s\n{FF0000}Admin: {778899}%s\n{FF0000}Ban Date: {778899}%s\n{FF0000}Ban Reason: {778899}%s\n\n{FFFFFF}Merasa tidak bersalah terkena banned? Appeal di valenciasamp.id", BannedName, PlayerIP, PlayerName, ReturnDate(banDate), Reason);
 				ShowPlayerDialog(playerid, DIALOG_UNUSED, DIALOG_STYLE_MSGBOX, ""RED_E"BANNED", lstr, "Exit", "");
 			}
 			KickEx(playerid);
@@ -174,13 +174,13 @@ function CheckBanAccount(playerid, namachar[])
 			if(banTime_Int == 0)
 			{
 				new lstr[512];
-				format(lstr, sizeof(lstr), "{FF0000}You are account banned from this server!\n\n"LB2_E"Ban Info:\n{FF0000}Name : {778899}%s\n{FF0000}IP: {778899}%s\n{FF0000}Admin: {778899}%s\n{FF0000}Ban Date: {778899}%s\n{FF0000}Ban Reason: {778899}%s\n{FF0000}Ban Time: {778899}Permanent\n\n{FFFFFF}Merasa tidak bersalah terkena banned? Appeal di NewDawn-rp.xyz", BannedName, PlayerIP, PlayerName, ReturnDate(banDate), Reason);
+				format(lstr, sizeof(lstr), "{FF0000}You are account banned from this server!\n\n"LB2_E"Ban Info:\n{FF0000}Name : {778899}%s\n{FF0000}IP: {778899}%s\n{FF0000}Admin: {778899}%s\n{FF0000}Ban Date: {778899}%s\n{FF0000}Ban Reason: {778899}%s\n{FF0000}Ban Time: {778899}Permanent\n\n{FFFFFF}Merasa tidak bersalah terkena banned? Appeal di valenciasamp.id", BannedName, PlayerIP, PlayerName, ReturnDate(banDate), Reason);
 				ShowPlayerDialog(playerid, DIALOG_UNUSED, DIALOG_STYLE_MSGBOX, ""RED_E"BANNED", lstr, "Exit", "");
 			}
 			else
 			{
 				new lstr[512];
-				format(lstr, sizeof(lstr), "{FF0000}You are account banned from this server!\n\n"LB2_E"Ban Info:\n{FF0000}Name : {778899}%s\n{FF0000}IP: {778899}%s\n{FF0000}Admin: {778899}%s\n{FF0000}Ban Date: {778899}%s\n{FF0000}Ban Reason: {778899}%s\n\n{FFFFFF}Merasa tidak bersalah terkena banned? Appeal di NewDawn-rp.xyz", BannedName, PlayerIP, PlayerName, ReturnDate(banDate), Reason);
+				format(lstr, sizeof(lstr), "{FF0000}You are account banned from this server!\n\n"LB2_E"Ban Info:\n{FF0000}Name : {778899}%s\n{FF0000}IP: {778899}%s\n{FF0000}Admin: {778899}%s\n{FF0000}Ban Date: {778899}%s\n{FF0000}Ban Reason: {778899}%s\n\n{FFFFFF}Merasa tidak bersalah terkena banned? Appeal di valenciasamp.id", BannedName, PlayerIP, PlayerName, ReturnDate(banDate), Reason);
 				ShowPlayerDialog(playerid, DIALOG_UNUSED, DIALOG_STYLE_MSGBOX, ""RED_E"BANNED", lstr, "Exit", "");
 			}
 			KickEx(playerid);
@@ -191,7 +191,7 @@ function CheckBanAccount(playerid, namachar[])
 }
 function AssignPlayerData(playerid)
 {
-	new aname[MAX_PLAYER_NAME], name[MAX_PLAYER_NAME], ucp[22], twname[MAX_PLAYER_NAME], age[128], ip[128], regdate[50], lastlogin[50];
+	new aname[MAX_PLAYER_NAME], name[MAX_PLAYER_NAME], ucp[22], age[128], ip[128], regdate[50], lastlogin[50];
 	
 	cache_get_value_name_int(0, "reg_id", pData[playerid][pID]);
 	if(pData[playerid][pID] < 1)
@@ -207,8 +207,6 @@ function AssignPlayerData(playerid)
 	format(pData[playerid][pName], MAX_PLAYER_NAME, "%s", name);
 	cache_get_value_name(0, "adminname", aname);
 	format(pData[playerid][pAdminname], MAX_PLAYER_NAME, "%s", aname);
-	cache_get_value_name(0, "twittername", twname);
-	format(pData[playerid][pTwittername], MAX_PLAYER_NAME, "%s", twname);
 	cache_get_value_name(0, "ip", ip);
 	format(pData[playerid][pIP], 128, "%s", ip);
 	//cache_get_value_name(0, "email", email);
@@ -240,8 +238,6 @@ function AssignPlayerData(playerid)
 	cache_get_value_name_int(0, "phonecredit", pData[playerid][pPhoneCredit]);
 	cache_get_value_name_int(0, "phonebook", pData[playerid][pPhoneBook]);
 	cache_get_value_name_int(0, "phonebook", pData[playerid][pPhoneBook]);
-	cache_get_value_name_int(0, "twitter", pData[playerid][pTwitter]);
-	cache_get_value_name_int(0, "twitterstatus", pData[playerid][pTwitterStatus]);
 	cache_get_value_name_int(0, "wt", pData[playerid][pWT]);
 	cache_get_value_name_int(0, "hours", pData[playerid][pHours]);
 	cache_get_value_name_int(0, "minutes", pData[playerid][pMinutes]);
@@ -306,6 +302,7 @@ function AssignPlayerData(playerid)
 	cache_get_value_name_int(0, "bandage", pData[playerid][pBandage]);
 	cache_get_value_name_int(0, "etoll", pData[playerid][pEToll]);
 	cache_get_value_name_int(0, "gps", pData[playerid][pGPS]);
+	cache_get_value_name_int(0, "cigarette", pData[playerid][pCigarette]);
 	cache_get_value_name_int(0, "material", pData[playerid][pMaterial]);
 	cache_get_value_name_int(0, "component", pData[playerid][pComponent]);
 	cache_get_value_name_int(0, "food", pData[playerid][pFood]);
@@ -428,10 +425,31 @@ function AssignPlayerData(playerid)
 	
 	
 	MySQL_LoadPlayerToys(playerid);
-	SetTimerEx("LoadPlayerVehicle", 3000, false, "d", playerid); // ← Delay 3 detik
+	SetTimerEx("LoadPlayerVehicle", 3000, false, "d", playerid); // Delay 1 detik
 
 	SetSpawnInfo(playerid, NO_TEAM, pData[playerid][pSkin], pData[playerid][pPosX], pData[playerid][pPosY], pData[playerid][pPosZ], pData[playerid][pPosA], 0, 0, 0, 0, 0, 0);
 	SpawnPlayer(playerid);
+
+	 // Destroy label lama jika ada
+    if(IsValidDynamic3DTextLabel(PlayerLabel[playerid]))
+    {
+        DestroyDynamic3DTextLabel(PlayerLabel[playerid]);
+    }
+    
+    // Buat label baru
+    new labeltext[128];
+    format(labeltext, sizeof(labeltext), "%s (%d)", GetRPName(playerid), playerid);
+    PlayerLabel[playerid] = CreateDynamic3DTextLabel(labeltext, COLOR_WHITE, 0.0, 0.0, 0.0, 10.0, playerid, INVALID_VEHICLE_ID, 0, -1, -1, -1, 10.0);
+    
+    // Panggil timer sesuai kondisi
+    if(pData[playerid][pAdminDuty])
+    {
+        defer LabelAdmin(playerid);
+    }
+    else
+    {
+        defer LabelNormal(playerid);
+    }
 	
 	foreach(new ii : Player)
 	{
@@ -612,24 +630,7 @@ function InfoTD_Hide(playerid)
 	PlayerTextDrawHide(playerid, InfoTD[playerid]);
 }
 
-//---------[ Twitter Function ]---------
-function a_ChangeTwitterName(otherplayer, playerid, twname[])
-{
-	if(cache_num_rows() > 0)
-	{
-		// Name Exists
-		Error(playerid, "Akun "DARK_E"'%s' "GREY_E"Telah ada! Harap gunakan yang lain", twname);
-	}
-	else
-	{
-		new query[512];
-	    format(query, sizeof(query), "UPDATE players SET twittername='%e' WHERE reg_id=%d", twname, pData[otherplayer][pID]);
-		mysql_tquery(g_SQL, query);
-		format(pData[otherplayer][pTwittername], MAX_PLAYER_NAME, "%s", twname);
-		Servers(playerid, "You has set twitter name player %s to %s", pData[otherplayer][pName], twname);
-	}
-    return true;
-}
+
 
 //---------[Admin Function ]----------
 
@@ -660,7 +661,7 @@ function LoadStats(playerid, PlayersName[])
 	else
 	{
 		new email[40], admin, helper, level, levelup, vip, viptime, coin, regdate[40], lastlogin[40], money, bmoney, brek,
-			jam, menit, detik, gender, age[40], faction, family, warn, job, job2, int, world, ucp[30], reg_id, phonestatus, phone, characterstory, twitter[40];
+			jam, menit, detik, gender, age[40], faction, family, warn, job, job2, int, world, ucp[30], reg_id, phonestatus, phone, characterstory;
 		cache_get_value_index(0, 0, email);
 		cache_get_value_index_int(0, 1, admin);
 		cache_get_value_index_int(0, 2, helper);
@@ -691,7 +692,6 @@ function LoadStats(playerid, PlayersName[])
 		cache_get_value_index_int(0, 27, phone);
 		cache_get_value_index_int(0, 28, phonestatus);
 		cache_get_value_index_int(0, 28, characterstory);
-		cache_get_value_index(0, 29, twitter);
 		
 
 		
@@ -766,7 +766,7 @@ function LoadStats(playerid, PlayersName[])
 
 		format(header,sizeof(header),"Statistics "WHITE_E"("BLUE_E"%s"WHITE_E")", ReturnTime());
 		format(gstr,sizeof(gstr),""RED_E"In Character"WHITE_E"\n");
-		format(gstr,sizeof(gstr),"%sGender: [%s] | Money: ["LG_E"$%s"WHITE_E"] | Bank: ["LG_E"$%s"WHITE_E"] | Rekening Bank: [%d]\n", gstr, (gender == 2) ? ("Female") : ("Male"), FormatMoney(money), FormatMoney(bmoney), brek);
+		format(gstr,sizeof(gstr),"%sGender: [%s] | Money: ["LG_E"%s"WHITE_E"] | Bank: ["LG_E"%s"WHITE_E"] | Rekening Bank: [%d]\n", gstr, (gender == 2) ? ("Female") : ("Male"), FormatMoney(money), FormatMoney(bmoney), brek);
 		format(gstr,sizeof(gstr),"%sPhone Number: [%d] | Birdthdate: [%s] | Job: [%s] | Job2: [%s]\n", gstr, phone, age, GetJobName(job), GetJobName(job2));
 		format(gstr,sizeof(gstr),"%sFaction: [%s] | Family: [%s] | Phone Status : [%s]\n\n", gstr, fac, fname, pstatus);
 		format(gstr,sizeof(gstr),"%s"RED_E"Out of Character"WHITE_E"\n", gstr);
@@ -1036,7 +1036,7 @@ function SearchRek2(playerid, rek)
 		//format(pData[playerid][pTransferName], 128, "%s" name);
 		pData[playerid][pTransferName] = name;
 		pData[playerid][pTransferRek] = brek;
-		format(mstr, sizeof(mstr), ""WHITE_E"No Rek Target: "YELLOW_E"%d\n"WHITE_E"Nama Target: "YELLOW_E"%s\n"WHITE_E"Jumlah: "GREEN_E"$%s\n\n"WHITE_E"Anda yakin akan melanjutkan mentransfer?", brek, name, FormatMoney(pData[playerid][pTransfer]));
+		format(mstr, sizeof(mstr), ""WHITE_E"No Rek Target: "YELLOW_E"%d\n"WHITE_E"Nama Target: "YELLOW_E"%s\n"WHITE_E"Jumlah: "GREEN_E"%s\n\n"WHITE_E"Anda yakin akan melanjutkan mentransfer?", brek, name, FormatMoney(pData[playerid][pTransfer]));
 		ShowPlayerDialog(playerid, DIALOG_BANKCONFIRM, DIALOG_STYLE_MSGBOX, ""LB_E"Bank", mstr, "Transfer", "Cancel");
 	}
 	return true;
@@ -1106,6 +1106,16 @@ function SetPlayerToUnfreeze(playerid, Float:x, Float:y, Float:z, Float:a)
     TogglePlayerControllable(playerid, 1);
     return 1;
 }*/
+stock CheckPlayerWeaponRestriction(playerid)
+{
+    if(pData[playerid][pPlayerCS] == 0) // Jika tidak punya character story
+    {
+        // Hapus semua senjata dari player
+        ResetPlayerWeapons(playerid);
+        return 1;
+    }
+    return 0;
+}
 
 //==========[ Whitelist System ]
 
@@ -1209,45 +1219,42 @@ IsPlayerOnline(const name[], &id = INVALID_PLAYER_ID)
 	return 0;
 }
 
+stock IsFirearmWeapon(weaponid)
+{
+    // Firearms only (22-38)
+    if(weaponid >= 22 && weaponid <= 38) return 1;
+    return 0;
+}
+
 stock FailSideJob(playerid, vehicleid)
 {
     if(pData[playerid][pSideJob] <= 0) return;
 
     new model = GetVehicleModel(vehicleid);
-
-    if(pData[playerid][pSweeper] > 0 && model == 574)
+    
+    // Cek apakah ini kendaraan sidejob yang benar
+    new bool:isJobVehicle = false;
+    if(pData[playerid][pSweeper] > 0 && model == 574) isJobVehicle = true;
+    if(pData[playerid][pBus] > 0 && model == 431) isJobVehicle = true;
+    if(pData[playerid][pMower] > 0 && model == 572) isJobVehicle = true;
+    
+    // Jika bukan kendaraan sidejob, return
+    if(!isJobVehicle) return;
+    
+    // Beri waktu 10 detik
+    Custom(playerid, "SIDEJOB: "WHITE_E"Kamu punya waktu 10 detik untuk kembali ke kendaraan atau sidejob akan gagal.");
+    
+    // Set countdown
+    pData[playerid][pFailSideJobCountdown] = 10;
+    
+    // Kill timer lama jika ada
+    if(pData[playerid][pFailSideJobTimer] != 0) 
     {
-        pData[playerid][pSweeper] = 0;
-        Info(playerid, "Sidejob Sweeper gagal karena kamu keluar dari kendaraan.");
-        SweeperRouteAUsed = 0;
-        SweeperRouteBUsed = 0;
-        SweeperRouteCUsed = 0;
+        KillTimer(pData[playerid][pFailSideJobTimer]);
     }
-
-    if(pData[playerid][pBus] > 0 && model == 431)
-    {
-        pData[playerid][pBus] = 0;
-        Info(playerid, "Sidejob Bus gagal karena kamu keluar dari kendaraan.");
-        BusRouteAUsed = 0;
-        BusRouteBUsed = 0;
-    }
-
-    if(pData[playerid][pMower] > 0 && model == 572)
-    {
-        pData[playerid][pMower] = 0;
-        Info(playerid, "Sidejob Mower gagal karena kamu keluar dari kendaraan.");
-    }
-
-    // Reset job umum
-    pData[playerid][pSideJob] = 0;
-    pData[playerid][pCheckPoint] = CHECKPOINT_NONE;
-    DisablePlayerRaceCheckpoint(playerid);
-    PlayerUsingSweeperRoute[playerid] = 0;
-
-    if(vehicleid > 0)
-    {
-        SetTimerEx("RespawnPV", 1000, false, "d", vehicleid);
-    }
+    
+    // Mulai countdown
+    pData[playerid][pFailSideJobTimer] = SetTimerEx("CountdownFailJob", 1000, true, "ii", playerid, vehicleid);
 }
 
 /*SendSMS(playerid, phoneNumber, text[])

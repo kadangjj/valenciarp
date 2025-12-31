@@ -1,5 +1,5 @@
 // Server Define
-#define TEXT_GAMEMODE	"VL v1.2.3 Forge"
+#define TEXT_GAMEMODE	"VL v1.2.7 Forge"
 #define TEXT_WEBURL		"valenciaroleplay.id"
 #define TEXT_LANGUAGE	"Indonesia/English"
 #define SERVER_BOT      "ValenciaBot"
@@ -30,11 +30,13 @@
 #define Servers(%1,%2) SendClientMessageEx(%1, ARWIN, "SERVER: "WHITE_E""%2)
 #define Info(%1,%2) SendClientMessageEx(%1, ARWIN, "INFO: "WHITE_E""%2)
 #define Vehicle(%1,%2) SendClientMessageEx(%1, ARWIN, "VEHICLE: "WHITE_E""%2)
-#define Usage(%1,%2) SendClientMessage(%1, ARWIN , "USAGE: "WHITEP_E""%2)
-#define Error(%1,%2) SendClientMessageEx(%1, COLOR_GREY3, ""RED_E"[!] "GREY3_E""%2)
+#define Usage(%1,%2) SendClientMessage(%1, COLOR_GREY3 , "USAGE: "GREY3_E""%2)
+#define Error(%1,%2) SendClientMessageEx(%1, COLOR_GREY3, ""GREY3_E"ERROR: "GREY3_E""%2)
 #define AdminCMD(%1,%2) SendClientMessageEx(%1, COLOR_RED , "AdmCmd: "WHITEP_E""%2)
 #define Gps(%1,%2) SendClientMessageEx(%1, COLOR_GREY3, ""COLOR_GPS"GPS: "WHITE_E""%2)
-#define PermissionError(%0) SendClientMessage(%0, COLOR_RED, "ERROR: "WHITE_E"Kamu tidak memiliki akses untuk melakukan command ini!")
+#define PermissionError(%0) SendClientMessage(%0, COLOR_GREY3, "ERROR: "GREY3_E"Kamu tidak memiliki akses untuk melakukan command ini!")
+#define Custom(%0,%1) SendClientMessageEx(%0, ARWIN , %1)
+
 #define SCM SendClientMessage
 #define SM(%0,%1) \
     SendClientMessageEx(%0, COLOR_YELLOW, %1)

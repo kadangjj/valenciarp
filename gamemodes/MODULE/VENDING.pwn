@@ -110,7 +110,7 @@ Vending_RefreshText(vid)
 		}
 		else if(VendingData[vid][vendingX] != 0 && VendingData[vid][vendingY] != 0 && VendingData[vid][vendingZ] != 0)
 		{
-			format(tstr, sizeof(tstr), "[ID: %d]\n"WHITE_E"This Vending Machine is for sell\nPrice: "GREEN_E"$%s\n"WHITE_E"Type /buy to purchase", vid, FormatMoney(VendingData[vid][vendingPrice]));
+			format(tstr, sizeof(tstr), "[ID: %d]\n"WHITE_E"This Vending Machine is for sell\nPrice: "GREEN_E"%s\n"WHITE_E"Type /buy to purchase", vid, FormatMoney(VendingData[vid][vendingPrice]));
 			VendingData[vid][vendingText] = CreateDynamic3DTextLabel(tstr, COLOR_YELLOW, VendingData[vid][vendingX], VendingData[vid][vendingY], VendingData[vid][vendingZ]+1.0, 5.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, VendingData[vid][vendingWorld], VendingData[vid][vendingInterior], -1, 10.0);
         }
 	}

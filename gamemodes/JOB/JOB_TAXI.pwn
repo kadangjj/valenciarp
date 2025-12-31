@@ -24,6 +24,7 @@ CMD:taxiduty(playerid, params[])
 		{
 			pData[playerid][pTaxiDuty] = 1;
 			SetPlayerColor(playerid, COLOR_YELLOW);
+			
 			foreach(new pid : Player)
 			{
 				if(pData[pid][pTogLog] == 1)
@@ -117,7 +118,7 @@ function FareUpdate(playerid, passanger)
 	new Float:totdistance = GetDistanceBetweenPoints(pData[playerid][pFareOldX],pData[playerid][pFareOldY],pData[playerid][pFareOldZ], pData[playerid][pFareNewX],pData[playerid][pFareNewY],pData[playerid][pFareNewZ]);
     if(totdistance > 300.0)
     {
-		new argo = RandomEx(4, 10);
+		new argo = RandomEx(4000, 10000);
 	    pData[playerid][pTotalFare] = pData[playerid][pTotalFare]+argo;
 		format(formatted,128,"%s", FormatMoney(pData[playerid][pTotalFare]));
 		TextDrawShowForPlayer(playerid, DPvehfare[playerid]);

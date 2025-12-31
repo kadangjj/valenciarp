@@ -109,7 +109,66 @@ Kado_Delete(kid)
     
     return 1;
 }
-
+CMD:createkadorandom(playerid, params[])
+{
+    if(pData[playerid][pAdmin] < 5)
+        return PermissionError(playerid);
+    
+    new amount;
+    if(sscanf(params, "d", amount))
+        return Usage(playerid, "/createkadorandom [amount]");
+    
+    if(amount < 1 || amount > 50)
+        return Error(playerid, "Amount must be between 1-50!");
+    
+    new Float:x, Float:y, Float:z;
+    GetPlayerPos(playerid, x, y, z);
+    
+    new created = 0;
+    for(new i = 0; i < amount; i++)
+    {
+        new kid = Iter_Free(Kados);
+        if(kid == -1)
+        {
+            Error(playerid, "Can't add any more christmas gifts. Created: %d", created);
+            break;
+        }
+        
+        // Random position dalam radius 50 meter dari player
+        new Float:randX = x + float(random(100) - 50); // -50 to +50
+        new Float:randY = y + float(random(100) - 50); // -50 to +50
+        new Float:randZ = z; // Gunakan Z player (atau bisa set manual seperti z - 1.0)
+        
+        KadoData[kid][kadoX] = randX;
+        KadoData[kid][kadoY] = randY;
+        KadoData[kid][kadoZ] = randZ;
+        KadoData[kid][kadoRX] = 0.0;
+        KadoData[kid][kadoRY] = 0.0;
+        KadoData[kid][kadoRZ] = float(random(360));
+        
+        new label[128];
+        format(label, sizeof(label), "{00FF00}Christmas Gift (%d)\n{FFFFFF}/claimgift", kid);
+        KadoData[kid][kadoLabel] = CreateDynamic3DTextLabel(label, COLOR_GREEN, KadoData[kid][kadoX], KadoData[kid][kadoY], KadoData[kid][kadoZ] + 0.5, 5.0);
+        KadoData[kid][kadoObjID] = CreateDynamicObject(19054, KadoData[kid][kadoX], KadoData[kid][kadoY], KadoData[kid][kadoZ], KadoData[kid][kadoRX], KadoData[kid][kadoRY], KadoData[kid][kadoRZ]);
+        
+        KadoData[kid][kadoTaken] = false;
+        
+        Iter_Add(Kados, kid);
+        
+        new query[512];
+        mysql_format(g_SQL, query, sizeof(query), "INSERT INTO kados SET id='%d', posx='%f', posy='%f', posz='%f', posrx='%f', posry='%f', posrz='%f'", 
+            kid, KadoData[kid][kadoX], KadoData[kid][kadoY], KadoData[kid][kadoZ], KadoData[kid][kadoRX], KadoData[kid][kadoRY], KadoData[kid][kadoRZ]);
+        mysql_tquery(g_SQL, query);
+        
+        created++;
+    }
+    
+    Servers(playerid, "Successfully created %d random christmas gifts in 50m radius!", created);
+    new str[150];
+    format(str, sizeof(str), "[Kado] %s created %d random christmas gifts!", GetRPName(playerid), created);
+    LogServer("Admin", str);
+    return 1;
+}
 //-------[ Commands ]----------
 
 CMD:createkado(playerid, params[])
@@ -242,65 +301,78 @@ CMD:kadolist(playerid, params[])
 
 CMD:claimgift(playerid, params[])
 {
-    new kid = GetClosestKado(playerid, 2.0);
-    
-    if(kid == -1)
-        return Error(playerid, "You're not near any christmas gift!");
-    
-    if(KadoData[kid][kadoTaken])
-        return Error(playerid, "This gift has already been taken!");
-    
-    // Random hadiah
-    new hadiah = random(4); // 0-3 (4 jenis hadiah)
-    
-    switch(hadiah)
-    {
-        case 0: // VIP
-        {
-            new viplevel = random(4); // 0-3
-            new vipdays = 1 + random(15); // 1-15 hari
-            
-            pData[playerid][pVip] = viplevel;
-            pData[playerid][pVipTime] = vipdays * 86400; // Convert ke detik
-            
-            Servers(playerid, "Selamat Anda mendapat VIP Level %d selama %d hari!", viplevel, vipdays);
-        }
-        case 1: // Money
-        {
-            new money = 1000 + random(100000); // $1,000 - $100,000
-            
-            GivePlayerMoneyEx(playerid, money);
-            
-            Servers(playerid, "Selamat Anda mendapat uang {FFFF00}$%s{FFFFFF}!", FormatMoney(money));
-        }
-        case 2: // Gold
-        {
-            new gold = 10 + random(41); // 10-50 gold
-            
-            pData[playerid][pGold] += gold;
-            
-            Servers(playerid, "Selamat Anda mendapat {FFFF00}%d Gold{FFFFFF}!", gold);
-        }
-        case 3: // Combo (Money + Gold)
-        {
-            new money = 5000 + random(50000);
-            new gold = 50 + random(450);
-            
-            GivePlayerMoneyEx(playerid, money);
-            pData[playerid][pGold] += gold;
-            
-            Servers(playerid, "Selamat Anda mendapat {FFFF00}$%s {FFFFFF}dan {FFFF00}%d Gold{FFFFFF}!", FormatMoney(money), gold);
-        }
-    }
-    
-    // Sound effect
-    PlayerPlaySound(playerid, 1057, 0.0, 0.0, 0.0);
-    
-    // Animation
-    ApplyAnimation(playerid, "BOMBER", "BOM_Plant", 4.1, 0, 0, 0, 0, 0);
-    
-    // Hapus kado secara permanen
-    Kado_Delete(kid);
-    
-    return 1;
+	new kid = GetClosestKado(playerid, 2.0);
+	
+	if(kid == -1)
+		return Error(playerid, "You're not near any christmas gift!");
+	
+	if(KadoData[kid][kadoTaken])
+		return Error(playerid, "This gift has already been taken!");
+	
+	// Random hadiah
+	new hadiah = random(4); // 0-3 (4 jenis hadiah)
+	
+	switch(hadiah)
+	{
+		case 0: // VIP
+		{
+			new viplevel = random(2); // 0-3
+			new vipdays = 1 + random(2); // 1-15 hari
+			
+			pData[playerid][pVip] = viplevel;
+			pData[playerid][pVipTime] = gettime() + (vipdays * 86400);
+			
+			Servers(playerid, "Anda mendapat VIP Level %d selama %d hari!", viplevel, vipdays);
+			
+			new str[150];
+			format(str, sizeof(str), "[Christmas Gift]: %s mendapat VIP Level %d (%d hari) dari kado!", GetRPName(playerid), viplevel, vipdays);
+			LogServer("Gift", str);
+		}
+		case 1: // Money
+		{
+			new money = 1000 + random(100000); // $1,000 - $100,000
+			
+			GivePlayerMoneyEx(playerid, money);
+			
+			Servers(playerid, "Anda mendapat uang {FFFF00}%s{FFFFFF}!", FormatMoney(money));
+			
+			new str[150];
+			format(str, sizeof(str), "[Christmas Gift]: %s mendapat %s dari kado!", GetRPName(playerid), FormatMoney(money));
+			LogServer("Gift", str);
+		}
+		case 2: // Gold
+		{
+			new gold = 10 + random(41); // 10-50 gold
+			
+			pData[playerid][pGold] += gold;
+			
+			Servers(playerid, "Anda mendapat {FFFF00}%d Gold{FFFFFF}!", gold);
+			
+			new str[150];
+			format(str, sizeof(str), "[Christmas Gift]: %s mendapat %d Gold dari kado!", GetRPName(playerid), gold);
+			LogServer("Gift", str);
+		}
+		case 3: // Combo (Money + Gold)
+		{
+			new money = 5000 + random(50000); // $5,000 - $55,000
+			new gold = 50 + random(41); // 50-500 gold
+			
+			GivePlayerMoneyEx(playerid, money);
+			pData[playerid][pGold] += gold;
+			
+			Servers(playerid, "Anda mendapat {FFFF00}%s {FFFFFF}dan {FFFF00}%d Gold{FFFFFF}!", FormatMoney(money), gold);
+			
+			new str[150];
+			format(str, sizeof(str), "[Christmas Gift]: %s mendapat %s + %d Gold dari kado!", GetRPName(playerid), FormatMoney(money), gold);
+			LogServer("Gift", str);
+		}
+	}
+	
+	// Sound effect
+	PlayerPlaySound(playerid, 1057, 0.0, 0.0, 0.0);
+	ApplyAnimation(playerid, "BOMBER", "BOM_Plant", 4.1, 0, 0, 0, 0, 0);
+	// Hapus kado secara permanen
+	Kado_Delete(kid);
+	
+	return 1;
 }

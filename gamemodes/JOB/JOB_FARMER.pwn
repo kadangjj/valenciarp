@@ -402,7 +402,7 @@ CMD:plant(playerid, params[])
 		pData[playerid][pPotato] = 0;
 		pData[playerid][pWheat] = 0;
 		pData[playerid][pOrange] = 0;
-		Info(playerid, "You selling "RED_E"%d kg "WHITE_E"all plant to "GREEN_E"$%s", total, FormatMoney(pay));
+		Info(playerid, "You selling "RED_E"%d kg "WHITE_E"all plant to "GREEN_E"%s", total, FormatMoney(pay));
 	}
 	return 1;
 }
@@ -419,7 +419,7 @@ CMD:sellmarijuana(playerid, params[])
 	Marijuana += total;
 	Server_MinMoney(pay);
 	
-	Info(playerid, "You selling "RED_E"%d kg "WHITE_E"marijuana to "GREEN_E"$%s", total, FormatMoney(pay));
+	Info(playerid, "You selling "RED_E"%d kg "WHITE_E"marijuana to "GREEN_E"%s", total, FormatMoney(pay));
 	pData[playerid][pMarijuana] = 0;
 	return 1;
 }
@@ -432,10 +432,10 @@ CMD:price(playerid, params[])
 		new mstr[512], tstr[64];
 		format(tstr, sizeof(tstr), ""WHITE_E"My Food: "GREEN_E"%d", pData[playerid][pFood]);
 		format(mstr, sizeof(mstr), "Name\tPrice\n\
-		"WHITE_E"Sprunk\t"GREEN_E"$%s\n\
-		"WHITE_E"Snack\t"GREEN_E"$%s\n\
-		"WHITE_E"Ice Cream Orange\t"GREEN_E"$%s\n\
-		"WHITE_E"Hotdog\t"GREEN_E"$%s", FormatMoney(pData[playerid][pPrice1]), FormatMoney(pData[playerid][pPrice2]), FormatMoney(pData[playerid][pPrice3]), FormatMoney(pData[playerid][pPrice4]));
+		"WHITE_E"Sprunk\t"GREEN_E"%s\n\
+		"WHITE_E"Snack\t"GREEN_E"%s\n\
+		"WHITE_E"Ice Cream Orange\t"GREEN_E"%s\n\
+		"WHITE_E"Hotdog\t"GREEN_E"%s", FormatMoney(pData[playerid][pPrice1]), FormatMoney(pData[playerid][pPrice2]), FormatMoney(pData[playerid][pPrice3]), FormatMoney(pData[playerid][pPrice4]));
 		ShowPlayerDialog(playerid, DIALOG_EDIT_PRICE, DIALOG_STYLE_TABLIST_HEADERS, tstr, mstr, "Edit", "Close");
 	}
 	else return Error(playerid, "You are not farmer job!");
@@ -464,10 +464,10 @@ CMD:offer(playerid, params[])
 		new mstr[512], tstr[64];
 		format(tstr, sizeof(tstr), ""WHITE_E"Food Stock: "GREEN_E"%d", pData[playerid][pFood]);
 		format(mstr, sizeof(mstr), "Name\tPrice\n\
-		"WHITE_E"Sprunk\t"GREEN_E"$%s\n\
-		"WHITE_E"Snack\t"GREEN_E"$%s\n\
-		"WHITE_E"Ice Cream Orange\t"GREEN_E"$%s\n\
-		"WHITE_E"Hotdog\t"GREEN_E"$%s", FormatMoney(pData[playerid][pPrice1]), FormatMoney(pData[playerid][pPrice2]), FormatMoney(pData[playerid][pPrice3]), FormatMoney(pData[playerid][pPrice4]));
+		"WHITE_E"Sprunk\t"GREEN_E"%s\n\
+		"WHITE_E"Snack\t"GREEN_E"%s\n\
+		"WHITE_E"Ice Cream Orange\t"GREEN_E"%s\n\
+		"WHITE_E"Hotdog\t"GREEN_E"%s", FormatMoney(pData[playerid][pPrice1]), FormatMoney(pData[playerid][pPrice2]), FormatMoney(pData[playerid][pPrice3]), FormatMoney(pData[playerid][pPrice4]));
 		ShowPlayerDialog(otherid, DIALOG_OFFER, DIALOG_STYLE_TABLIST_HEADERS, tstr, mstr, "Buy", "Close");
 	}
 	else return Error(playerid, "You are not farmer job!");

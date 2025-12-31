@@ -106,7 +106,7 @@ Player_DropLumber(playerid, death_drop = 0)
 		LumberData[id][lumberSeconds] = LUMBER_LIFETIME;
 		LumberData[id][lumberObjID] = CreateDynamicObject(19793, x, y, z - 0.9, 0.0, 0.0, a);
 		
-		format(label, sizeof(label), "Lumber (%d)\n"WHITE_E"Dropped By "GREEN_E"$%s\n"WHITE_E"%s\nUse /lumber pickup.", id, LumberData[id][lumberDroppedBy], ConvertToMinutes(LUMBER_LIFETIME));
+		format(label, sizeof(label), "Lumber (%d)\n"WHITE_E"Dropped By "GREEN_E"%s\n"WHITE_E"%s\nUse /lumber pickup.", id, LumberData[id][lumberDroppedBy], ConvertToMinutes(LUMBER_LIFETIME));
 		LumberData[id][lumberLabel] = CreateDynamic3DTextLabel(label, COLOR_GREEN, x, y, z - 0.7, 5.0, .testlos = 1);
 		
 		LumberData[id][lumberTimer] = SetTimerEx("RemoveLumber", 1000, true, "i", id);
@@ -537,12 +537,12 @@ CMD:lumber(playerid, params[])
 			GivePlayerMoneyEx(playerid, LumberPrice);
 			Server_MinMoney(LumberPrice);
 			Material += 10;
-			pData[playerid][pJobTime] += 48;
-			Info(playerid, "Sold a lumber for "GREEN_E"$%s.", FormatMoney(LumberPrice));
+			pData[playerid][pJobTime] += 60;
+			Info(playerid, "Sold a lumber for "GREEN_E"%s.", FormatMoney(LumberPrice));
 			// done
 		}
 	}
-	else return Error(playerid, "anda bukan pekerja lumber!");
+	else return Error(playerid, "Anda bukan pekerja lumber!");
 	return 1;
 }
 
@@ -631,7 +631,7 @@ function RemoveLumber(tid)
 	    LumberData[tid][lumberSeconds]--;
 
         new label[128];
-	    format(label, sizeof(label), "Lumber (%d)\n"WHITE_E"Dropped By "GREEN_E"$%s\n"WHITE_E"%s\nUse /lumber pickup.", tid, LumberData[tid][lumberDroppedBy], ConvertToMinutes(LumberData[tid][lumberSeconds]));
+	    format(label, sizeof(label), "Lumber (%d)\n"WHITE_E"Dropped By "GREEN_E"%s\n"WHITE_E"%s\nUse /lumber pickup.", tid, LumberData[tid][lumberDroppedBy], ConvertToMinutes(LumberData[tid][lumberSeconds]));
 		UpdateDynamic3DTextLabelText(LumberData[tid][lumberLabel], COLOR_GREEN, label);
 	}
 	else if(LumberData[tid][lumberSeconds] == 1) 

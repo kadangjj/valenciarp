@@ -75,7 +75,7 @@ stock GetNearestDroppedItem(playerid, Float:range = 2.0)
     return -1;
 }
 
-stock CreateDroppedItem(const itemtype[], amount, Float:x, Float:y, Float:z, interior, virtualworld, bool:savetodb = true)
+stock CreateDroppedItem(const itemtype[], amount, Float:x, Float:y, Float:z, interior, virtualworld/*, bool:savetodb = true*/)
 {
     new id = Iter_Free(DroppedItems);
     if(id == INVALID_ITERATOR_SLOT) return -1;
@@ -97,11 +97,11 @@ stock CreateDroppedItem(const itemtype[], amount, Float:x, Float:y, Float:z, int
     new labeltext[128];
     format(labeltext, sizeof(labeltext), "{FFFF00}%s\n{FFFFFF}Amount: {00FF00}%d\n{FFFFFF}Press {FFFF00}'N' {FFFFFF}to pickup", 
            GetItemDisplayName(itemtype), amount);
-    DropItemData[id][dItemLabel] = CreateDynamic3DTextLabel(labeltext, 0xFFFFFFFF, x, y, z, 2.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, virtualworld, interior);
+    DropItemData[id][dItemLabel] = CreateDynamic3DTextLabel(labeltext, 0xFFFFFFFF, x, y, z - 0.25, 2.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, virtualworld, interior);    
     
     Iter_Add(DroppedItems, id);
     
-    if(savetodb)
+   /* if(savetodb)
     {
         new query[256];
         mysql_format(g_SQL, query, sizeof(query), 
@@ -110,7 +110,7 @@ stock CreateDroppedItem(const itemtype[], amount, Float:x, Float:y, Float:z, int
         new Cache:result = mysql_query(g_SQL, query);
         DropItemData[id][dItemDBID] = cache_insert_id();
         cache_delete(result);
-    }
+    }*/
     
     return id;
 }
@@ -144,8 +144,8 @@ stock CreateDroppedWeapon(weaponid, ammo, Float:x, Float:y, Float:z, interior, v
     new labeltext[128];
     format(labeltext, sizeof(labeltext), "{FFFF00}%s\n{FFFFFF}Ammo: {00FF00}%d\n{FFFFFF}Press {FFFF00}'N' {FFFFFF}to pickup", 
            ReturnWeaponName(weaponid), ammo);
-    DropItemData[id][dItemLabel] = CreateDynamic3DTextLabel(labeltext, 0xFFFFFFFF, x, y, z, 2.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, virtualworld, interior);
-    
+    // Untuk object kecil (item drop), posisinya sedikit di bawah
+    DropItemData[id][dItemLabel] = CreateDynamic3DTextLabel(labeltext, 0xFFFFFFFF, x, y, z - 0.25, 2.0, INVALID_PLAYER_ID, INVALID_VEHICLE_ID, 0, virtualworld, interior);    
     Iter_Add(DroppedItems, id);
     
     // Save to database
@@ -186,7 +186,7 @@ stock DeleteDroppedItem(itemid)
     return 1;
 }
 
-stock LoadDroppedItems()
+/*stock LoadDroppedItems()
 {
     new query[128];
     mysql_format(g_SQL, query, sizeof(query), "SELECT * FROM dropped_items");
@@ -228,7 +228,7 @@ stock LoadDroppedItems()
     
     cache_delete(result);
     return 1;
-}
+}*/
 
 // COMMAND: /drop
 CMD:drop(playerid, params[])
@@ -318,7 +318,7 @@ CMD:drop(playerid, params[])
     if(!valid)
         return Error(playerid, "You don't have enough %s!", GetItemDisplayName(itemtype));
     
-    CreateDroppedItem(itemtype, amount, x, y, z, GetPlayerInterior(playerid), GetPlayerVirtualWorld(playerid), true);
+    CreateDroppedItem(itemtype, amount, x, y, z, GetPlayerInterior(playerid), GetPlayerVirtualWorld(playerid));
     
     ApplyAnimation(playerid, "GRENADE", "WEAPON_throwu", 4.1, 0, 0, 0, 0, 0);
     Info(playerid, "You dropped %d %s on the ground.", amount, GetItemDisplayName(itemtype));

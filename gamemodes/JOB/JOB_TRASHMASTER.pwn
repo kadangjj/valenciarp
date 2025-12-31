@@ -75,7 +75,7 @@ ptask TrashmasterTimer[1000](playerid)
             }
             
             //  AddPlayerSalary(playerid, "Public Service (Trashmaster)", list, cash);	
-            SendClientMessageEx(playerid, COLOR_ARWIN, "SIDEJOB: {ffffff}Trashmaster sidejob failed, {3BBD44}$%s {ffffff}has been issued for your next paycheck", FormatMoney(cash));
+            SendClientMessageEx(playerid, COLOR_ARWIN, "SIDEJOB: {ffffff}Trashmaster sidejob failed, {3BBD44}%s {ffffff}has been issued for your next paycheck", FormatMoney(cash));
             SendClientMessageEx(playerid, COLOR_ARWIN, "SALARY: {ffffff}Your salary statement has been updated, please check {ffff00}'/mysalary'");
             
             DeletePVar(playerid, "TrashCollected");

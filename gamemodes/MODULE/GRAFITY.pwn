@@ -329,7 +329,7 @@ CMD:tags(playerid, params[])
 				return Error(playerid, "~r~ERROR: ~w~Ini bukan tag milikmu!.");
 
 			Tags_Delete(index);
-			Servers(playerid, "Spray tag didekatmu telah dihapus!");
+			Custom(playerid, "TAGS: "WHITE_E"Spray tag didekatmu telah dihapus!");
 		}
 		else Error(playerid, "Tidak ada tag didekatmu!");
 	}

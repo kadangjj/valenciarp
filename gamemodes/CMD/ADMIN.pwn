@@ -41,9 +41,9 @@ CMD:acmds(playerid)
 	}
 	
  	
-	strcat(line3, "\n"BLUE_E"New Dawn:RP "WHITE_E"- Anti-Cheat is actived.\n\
+	strcat(line3, "\n"BLUE_E"Valencia Roleplay "WHITE_E"- Anti-Cheat is actived.\n\
 	"PINK_E"NOTE: All admin commands log is saved in database! | Abuse Commands? Kick And Demote Premanent!.");
-	ShowPlayerDialog(playerid, DIALOG_UNUSED, DIALOG_STYLE_MSGBOX, ""ORANGE_E"New Dawn:RP: "YELLOW_E"Staff Commands", line3, "OK","");
+	ShowPlayerDialog(playerid, DIALOG_UNUSED, DIALOG_STYLE_MSGBOX, ""ORANGE_E"Valencia Roleplay: "YELLOW_E"Staff Commands", line3, "OK","");
 	return true;
 }
 
@@ -109,13 +109,13 @@ CMD:makequiz(playerid, params[])
 		
 		format(string, sizeof(string), "{7fffd4}[QUIZ]: {ffff00}%s?", str);
 		SendClientMessageToAll(0xFFFF00FF, string);
-		format(string, sizeof(string), "{ffff00}Hadiah: "GREEN_E"$%s {ffff00}| Jawab dengan /answer [jawaban]", FormatMoney(qprs));
+		format(string, sizeof(string), "{ffff00}Hadiah: "GREEN_E"%s {ffff00}| Jawab dengan /answer [jawaban]", FormatMoney(qprs));
 		SendClientMessageToAll(0xFFFF00FF, string);
 		
 		quiz = 1;
 		
 		new dc[500];
-		format(dc, sizeof(dc), "```[QUIZ] %s membuat quiz dengan hadiah $%s```", ReturnName(playerid), FormatMoney(qprs));
+		format(dc, sizeof(dc), "```[QUIZ] %s membuat quiz dengan hadiah %s```", ReturnName(playerid), FormatMoney(qprs));
 		SendDiscordMessage(1, dc);
 	}
 	else if(!strcmp(tmp, "answer", true))
@@ -150,7 +150,7 @@ CMD:makequiz(playerid, params[])
 		pr *= 100; // Convert ke cents
 		qprs = pr;
 		
-		format(string, sizeof(string), "Hadiah berhasil diset: {00FF00}$%s", FormatMoney(pr));
+		format(string, sizeof(string), "Hadiah berhasil diset: {00FF00}%s", FormatMoney(pr));
 		SendClientMessage(playerid, -1, string);
 		Info(playerid, "Sekarang buat pertanyaan dengan /makequiz question [pertanyaan]");
 	}
@@ -191,7 +191,7 @@ CMD:answer(playerid, params[])
 	{
 		GivePlayerMoneyEx(playerid, qprs);
 		
-		format(string, sizeof(string), "[QUIZ]: %s menjawab dengan benar '%s' dan mendapat "GREEN_E"$%s!", 
+		format(string, sizeof(string), "[QUIZ]: %s menjawab dengan benar '%s' dan mendapat "GREEN_E"%s!", 
 			ReturnName(playerid), answers, FormatMoney(qprs));
 		SendClientMessageToAll(0xFFFF00FF, string);
 		
@@ -203,7 +203,7 @@ CMD:answer(playerid, params[])
 		
 		// Discord notification
 		new dc[500];
-		format(dc, sizeof(dc), "```[QUIZ] %s menjawab dengan benar dan mendapat $%s```", 
+		format(dc, sizeof(dc), "```[QUIZ] %s menjawab dengan benar dan mendapat %s```", 
 			ReturnName(playerid), FormatMoney(qprs));
 		SendDiscordMessage(1, dc);
 	}
@@ -295,9 +295,9 @@ CMD:hcmds(playerid)
 	strcat(line3, "\n\n"WHITE_E"Head Helper Commands:"LB2_E"\n\
 	/respawnsapd /respawnsags /respawnsamd /respawnsana /respawnjobs\n");
  	
-	strcat(line3, "\n"BLUE_E"New Dawn:RP "WHITE_E"- Anti-Cheat is actived.\n\
+	strcat(line3, "\n"BLUE_E"Valencia Roleplay "WHITE_E"- Anti-Cheat is actived.\n\
 	"PINK_E"NOTE: All admin commands log is saved in database! | Abuse Commands? Kick And Demote Premanent!.");
-	ShowPlayerDialog(playerid, DIALOG_UNUSED, DIALOG_STYLE_MSGBOX, ""ORANGE_E"New Dawn:RP: "YELLOW_E"Staff Commands", line3, "OK","");
+	ShowPlayerDialog(playerid, DIALOG_UNUSED, DIALOG_STYLE_MSGBOX, ""ORANGE_E"Valencia Roleplay"YELLOW_E"Staff Commands", line3, "OK","");
 	return true;
 }
 
@@ -547,7 +547,7 @@ CMD:togooc(playerid, params[])
     }
     else
     {
-        SendClientMessageToAllEx(COLOR_ADMCMD, "AdmCmd: Admin %s has enabled global OOC chat (DON'T SPAM).", pData[playerid][pAdminname]);
+        SendClientMessageToAllEx(COLOR_ADMCMD, "AdmCmd: Admin %s has enabled global OOC chat.", pData[playerid][pAdminname]);
         TogOOC = 0;
     }
     return 1;
@@ -572,8 +572,10 @@ CMD:o(playerid, params[])
             else if(pData[playerid][pAdmin] == 2) SendClientMessageEx(i, COLOR_WHITE, "(( {FF0000}[ADMIN JR] %s{FFFFFF}: %s {FFFFFF}))", pData[playerid][pAdminname], ColouredText(params));
             else if(pData[playerid][pAdmin] == 3) SendClientMessageEx(i, COLOR_WHITE, "(( {FF0000}[ADMIN] %s{FFFFFF}: %s {FFFFFF}))", pData[playerid][pAdminname], ColouredText(params));
             else if(pData[playerid][pAdmin] == 4) SendClientMessageEx(i, COLOR_WHITE, "(( {FF0000}[ADMIN SR] %s{FFFFFF}: %s {FFFFFF}))", pData[playerid][pAdminname], ColouredText(params));
-            else if(pData[playerid][pAdmin] == 5) SendClientMessageEx(i, COLOR_WHITE, "(( {FF0000}[HEAD ADMIN] %s{FFFFFF}: %s {FFFFFF}))", pData[playerid][pAdminname], ColouredText(params));
-            else if(pData[playerid][pAdmin] == 6) SendClientMessageEx(i, COLOR_WHITE, "(( {FF0000}[CEO] %s{FFFFFF}: %s {FFFFFF}))", pData[playerid][pAdminname], ColouredText(params));
+            else if(pData[playerid][pAdmin] == 5) SendClientMessageEx(i, COLOR_WHITE, "(( {FF0000}[Head Administrator] %s{FFFFFF}: %s {FFFFFF}))", pData[playerid][pAdminname], ColouredText(params));
+            else if(pData[playerid][pAdmin] == 6) SendClientMessageEx(i, COLOR_WHITE, "(( {FF0000}[Management] %s{FFFFFF}: %s {FFFFFF}))", pData[playerid][pAdminname], ColouredText(params));
+			else if(pData[playerid][pAdmin] == 7) SendClientMessageEx(i, COLOR_WHITE, "(( {FF0000}[Management] %s{FFFFFF}: %s {FFFFFF}))", pData[playerid][pAdminname], ColouredText(params));
+
 			else if(pData[playerid][pHelper] > 0 && pData[playerid][pAdmin] == 0)
 			{
 				SendClientMessageEx(i, COLOR_WHITE, "(( {00FF00}[HELPER] %s{FFFFFF}: %s {FFFFFF}))", pData[playerid][pAdminname], ColouredText(params));
@@ -855,27 +857,13 @@ CMD:spec(playerid, params[])
 			return PermissionError(playerid);
 
     if(!isnull(params) && !strcmp(params, "off", true))
-    {
-        if(GetPlayerState(playerid) != PLAYER_STATE_SPECTATING)
-            return Error(playerid, "You are not spectating any player.");
-
-		pData[pData[playerid][pSpec]][playerSpectated]--;
-        PlayerSpectatePlayer(playerid, INVALID_PLAYER_ID);
-        PlayerSpectateVehicle(playerid, INVALID_VEHICLE_ID);
-
-        SetSpawnInfo(playerid, 0, pData[playerid][pSkin], pData[playerid][pPosX], pData[playerid][pPosY], pData[playerid][pPosZ], pData[playerid][pPosA], 0, 0, 0, 0, 0, 0);
-        TogglePlayerSpectating(playerid, false);
-		pData[playerid][pSpec] = -1;
-		PlayerTextDrawHide(playerid, SpecBG[playerid]);
-		PlayerTextDrawHide(playerid, SpecName[playerid]);
-		PlayerTextDrawHide(playerid, SpecCash[playerid]);
-		PlayerTextDrawHide(playerid, SpecHP[playerid]);
-		PlayerTextDrawHide(playerid, SpecAP[playerid]);
-		PlayerTextDrawHide(playerid, SpecInt[playerid]);
-		PlayerTextDrawHide(playerid, SpecWorld[playerid]);
-
-        return Servers(playerid, "You are no longer in spectator mode.");
-    }
+	{
+		if(GetPlayerState(playerid) != PLAYER_STATE_SPECTATING)
+			return Error(playerid, "You are not spectating any player.");
+		
+		StopSpectate(playerid);
+		return Servers(playerid, "You are no longer in spectator mode.");
+	}
 	new otherid;
     if(sscanf(params, "u", otherid))
         return Usage(playerid, "/spectate [playerid/PartOfName] - Type '/spec off' to stop spectating.");
@@ -918,7 +906,7 @@ CMD:spec(playerid, params[])
 			new string[212];
 			format(string, 212, "~g~%s (%d)", ReturnName(otherid), otherid);
 			PlayerTextDrawSetString(playerid, SpecName[playerid], string);
-			format(string, 212, "~w~Cash: ~y~$%s", FormatMoney(pData[otherid][pMoney]));
+			format(string, 212, "~w~Cash: ~y~%s", FormatMoney(pData[otherid][pMoney]));
 			PlayerTextDrawSetString(playerid, SpecCash[playerid], string);
 			format(string, 212, "~w~HP: ~y~%.1f", pData[otherid][pHealth]);
 			PlayerTextDrawSetString(playerid, SpecHP[playerid], string);
@@ -943,7 +931,7 @@ CMD:spec(playerid, params[])
 			new string[212];
 			format(string, 212, "~g~%s (%d)", ReturnName(otherid), otherid);
 			PlayerTextDrawSetString(playerid, SpecName[playerid], string);
-			format(string, 212, "~w~Cash: ~y~$%s", FormatMoney(pData[otherid][pMoney]));
+			format(string, 212, "~w~Cash: ~y~%s", FormatMoney(pData[otherid][pMoney]));
 			PlayerTextDrawSetString(playerid, SpecCash[playerid], string);
 			format(string, 212, "~w~HP: ~y~%.1f", pData[otherid][pHealth]);
 			PlayerTextDrawSetString(playerid, SpecHP[playerid], string);
@@ -969,7 +957,7 @@ CMD:spec(playerid, params[])
 		new string[212];
 		format(string, 212, "~g~%s (%d)", ReturnName(otherid), otherid);
 		PlayerTextDrawSetString(playerid, SpecName[playerid], string);
-		format(string, 212, "~w~Cash: ~y~$%s", FormatMoney(pData[otherid][pMoney]));
+		format(string, 212, "~w~Cash: ~y~%s", FormatMoney(pData[otherid][pMoney]));
 		PlayerTextDrawSetString(playerid, SpecCash[playerid], string);
 		format(string, 212, "~w~HP: ~y~%.1f", pData[otherid][pHealth]);
 		PlayerTextDrawSetString(playerid, SpecHP[playerid], string);
@@ -993,6 +981,32 @@ CMD:spec(playerid, params[])
     SendStaffMessage(COLOR_ARWIN, "%s now spectating %s (ID: %d).", pData[playerid][pAdminname], pData[otherid][pName], otherid);
     Servers(playerid, "You are now spectating %s (ID: %d).", pData[otherid][pName], otherid);
     pData[playerid][pSpec] = otherid;
+    return 1;
+}
+
+stock StopSpectate(playerid)
+{
+    if(pData[playerid][pSpec] != -1)
+    {
+        if(IsPlayerConnected(pData[playerid][pSpec]))
+            pData[pData[playerid][pSpec]][playerSpectated]--;
+    }
+    
+    PlayerSpectatePlayer(playerid, INVALID_PLAYER_ID);
+    PlayerSpectateVehicle(playerid, INVALID_VEHICLE_ID);
+    
+    SetSpawnInfo(playerid, 0, pData[playerid][pSkin], pData[playerid][pPosX], pData[playerid][pPosY], pData[playerid][pPosZ], pData[playerid][pPosA], 0, 0, 0, 0, 0, 0);
+    TogglePlayerSpectating(playerid, false);
+    pData[playerid][pSpec] = -1;
+    
+    PlayerTextDrawHide(playerid, SpecBG[playerid]);
+    PlayerTextDrawHide(playerid, SpecName[playerid]);
+    PlayerTextDrawHide(playerid, SpecCash[playerid]);
+    PlayerTextDrawHide(playerid, SpecHP[playerid]);
+    PlayerTextDrawHide(playerid, SpecAP[playerid]);
+    PlayerTextDrawHide(playerid, SpecInt[playerid]);
+    PlayerTextDrawHide(playerid, SpecWorld[playerid]);
+    
     return 1;
 }
 
@@ -1161,7 +1175,7 @@ CMD:ostats(playerid, params[])
 
 		if(!strcmp(PlayerName, name, true))
 		{
-			Error(playerid, "Player is online, you can use /stats on them.");
+			Error(playerid, "Player is online, you can use /astats on them.");
 	  		return 1;
 	  	}
 	}
@@ -1171,7 +1185,7 @@ CMD:ostats(playerid, params[])
     new cQuery[600];
 
 	strcat(cVar, "email,admin,helper,level,levelup,vip,vip_time,gold,reg_date,last_login,money,bmoney,brek,hours,minutes,seconds,");
-	strcat(cVar, "gender,age,faction,family,warn,job,job2,interior,world,ucp,reg_id,phone,phonestatus, twittername");
+	strcat(cVar, "gender,age,faction,family,warn,job,job2,interior,world,ucp,reg_id,phone,phonestatus");
 
 	mysql_format(g_SQL, cQuery, sizeof(cQuery), "SELECT %s FROM players WHERE username='%e' LIMIT 1", cVar, name);
 	mysql_tquery(g_SQL, cQuery, "LoadStats", "is", playerid, name);
@@ -1507,8 +1521,9 @@ CMD:jail(playerid, params[])
    		if(pData[playerid][pHelper] < 2)
      		return PermissionError(playerid);
 
-	new reason[60], timeSec, otherid;
-	if(sscanf(params, "uD(15)S(*)[60]", otherid, timeSec, reason))
+	new otherid, timeSec, reason[128];
+	
+	if(sscanf(params, "uds[60]", otherid, timeSec, reason))
 	{
 	    Usage(playerid, "/jail <ID/Name> <time in minutes> <reason>)");
 	    return true;
@@ -1520,7 +1535,7 @@ CMD:jail(playerid, params[])
 	if(pData[otherid][pJail] > 0)
 	{
 	    Servers(playerid, "%s(%i) is already jailed (gets out in %d minutes)", pData[otherid][pName], otherid, pData[otherid][pJailTime]);
-	    Info(playerid, "/unjail <ID/Name> to unjail.");
+	   // Info(playerid, "/unjail <ID/Name> to unjail.");
 	    return true;
 	}
 	if(pData[otherid][pSpawned] == 0)
@@ -1528,7 +1543,7 @@ CMD:jail(playerid, params[])
 	    Error(playerid, "%s(%i) isn't spawned!", pData[otherid][pName], otherid);
 	    return true;
 	}
-	if(reason[0] != '*' && strlen(reason) > 60)
+	if(strlen(reason) > 60)
 	{
 	 	Error(playerid, "Reason too long! Must be smaller than 60 characters!");
 	   	return true;
@@ -1541,28 +1556,20 @@ CMD:jail(playerid, params[])
 	    	return 1;
 	  	}
 	}
+	
 	pData[otherid][pJail] = 1;
 	pData[otherid][pJailTime] = timeSec * 60;
 	JailPlayer(otherid);
-	if(reason[0] == '*')
-	{
-		SendClientMessageToAllEx(COLOR_ADMCMD, "AdmCmd: Admin %s has jailed player %s for %d minutes.", pData[playerid][pAdminname], pData[otherid][pName], timeSec);
-		new str[150];
-		format(str,sizeof(str),"Admin: %s memberi %s jail selama %d menit!", GetRPName(playerid), GetRPName(otherid), timeSec);
-		LogServer("Admin", str);
-	}
-	else
-	{
-		SendClientMessageToAllEx(COLOR_ADMCMD, "AdmCmd: Admin %s has jailed player %s for %d minutes.", pData[playerid][pAdminname], pData[otherid][pName], timeSec);
-		SendClientMessageToAllEx(COLOR_ADMCMD, "Reason: %s", reason);
+	
+	SendClientMessageToAllEx(COLOR_ADMCMD, "AdmCmd: Admin %s has jailed player %s for %d minutes.", pData[playerid][pAdminname], pData[otherid][pName], timeSec);
+	SendClientMessageToAllEx(COLOR_ADMCMD, "Reason: %s", reason);
 
-		new str[150];
-		format(str,sizeof(str),"Admin: %s memberi %s jail selama %d menit. Alasan: %s!", GetRPName(playerid), GetRPName(otherid), timeSec, reason);
-		LogServer("Admin", str);
-	}
+	new str[150];
+	format(str, sizeof(str), "Admin: %s memberi %s jail selama %d menit. Alasan: %s!", GetRPName(playerid), GetRPName(otherid), timeSec, reason);
+	LogServer("Admin", str);
+	
 	return 1;
 }
-
 
 CMD:unjail(playerid, params[])
 {
@@ -3007,50 +3014,55 @@ CMD:setvip(playerid, params[])
 	if(pData[playerid][pAdmin] < 6)
 		return PermissionError(playerid);
 	
-	new alevel, dayz, otherid, tmp[64];
+	new otherid, dayz, alevel, tmp[64];
 	if(sscanf(params, "udd", otherid, dayz, alevel))
 	{
-	    Usage(playerid, "/setvip <ID/Name> <time (in days) 0 for permanent> <level 0 - 3>");
-	    return true;
-	}
-	if(!IsPlayerConnected(otherid))
-        return Error(playerid, "The player has not logged in yet!");
-	if(alevel > 3)
-		return Error(playerid, "Level can't be higher than 3!");
-	if(alevel < 0)
-		return Error(playerid, "Level can't be lower than 0!");
-	if(dayz < 0)
-		return Error(playerid, "Time can't be lower than 0!");
-		
-	if(pData[otherid][IsLoggedIn] == false)
-	{
-		Error(playerid, "Player %s(%i) isn't logged in!", pData[otherid][pName], otherid);
+		Usage(playerid, "/setvip <ID/Name> <time (in days) 0 for permanent> <level 0 - 3>");
 		return true;
 	}
 	
-	if(pData[playerid][pAdmin] < 5 && dayz > 7)
-		return Error(playerid, "Anda hanya bisa menset 1 - 7 hari!");
+	if(!IsPlayerConnected(otherid))
+		return Error(playerid, "The player has not logged in yet!");
+	
+	if(pData[otherid][IsLoggedIn] == false)
+		return Error(playerid, "Player %s(%i) isn't logged in!", pData[otherid][pName], otherid);
+	
+	if(alevel < 0 || alevel > 3)
+		return Error(playerid, "Level must be between 0 - 3!");
+	
+	if(dayz < 0)
+		return Error(playerid, "Time can't be lower than 0!");
+	
+	if(pData[playerid][pAdmin] < 6 && dayz > 30)
+		return Error(playerid, "Anda hanya bisa menset 1 - 30 hari!");
 	
 	pData[otherid][pVip] = alevel;
+	
 	if(dayz == 0)
 	{
 		pData[otherid][pVipTime] = 0;
 		SendClientMessageToAllEx(COLOR_ADMCMD, "AdmCmd: Admin %s has set VIP to %s(%d) to level %s permanent time!", pData[playerid][pAdminname], pData[otherid][pName], otherid, GetVipRank(otherid));
+		
 		new str[150];
-		format(str,sizeof(str),"Admin: %s menyetel VIP ke %s, permanen jenis %s!", GetRPName(playerid), GetRPName(otherid), GetVipRank(otherid));
+		format(str, sizeof(str), "Admin: %s menyetel VIP ke %s, permanen jenis %s!", GetRPName(playerid), GetRPName(otherid), GetVipRank(otherid));
 		LogServer("Admin", str);
+		
+		format(tmp, sizeof(tmp), "Level %d (Permanent)", alevel);
 	}
 	else
 	{
 		pData[otherid][pVipTime] = gettime() + (dayz * 86400);
 		SendClientMessageToAllEx(COLOR_ADMCMD, "AdmCmd: Admin %s has set VIP to %s(%d) for %d days to level %s!", pData[playerid][pAdminname], pData[otherid][pName], otherid, dayz, GetVipRank(otherid));
+		
 		new str[150];
-		format(str,sizeof(str),"Admin: %s menyetel VIP ke %s selama %d hari jenis %s!", GetRPName(playerid), GetRPName(otherid), dayz, GetVipRank(otherid));
+		format(str, sizeof(str), "Admin: %s menyetel VIP ke %s selama %d hari jenis %s!", GetRPName(playerid), GetRPName(otherid), dayz, GetVipRank(otherid));
 		LogServer("Admin", str);
+		
+		format(tmp, sizeof(tmp), "Level %d (%d days)", alevel, dayz);
 	}
 	
-	format(tmp, sizeof(tmp), "%d(%d days)", alevel, dayz);
 	StaffCommandLog("SETVIP", playerid, otherid, tmp);
+	
 	return 1;
 }
 
@@ -3443,7 +3455,9 @@ CMD:setplate(playerid, params[])
 {
     new vehid;
     new customPlate[128];
-
+	if(pData[playerid][pAdmin] < 2)
+		return PermissionError(playerid);
+		
     // Parsing parameter: "ds[32]", di mana "s[32]" adalah string untuk custom plate
     if (sscanf(params, "ds[128]", vehid, customPlate)) 
     {
@@ -3479,6 +3493,22 @@ CMD:setplate(playerid, params[])
     return Servers(playerid, "Vehicle with ID %d not found", vehid);
 }
 
+CMD:setadminname(playerid, params[])
+{
+	if(pData[playerid][pAdmin] < 2)
+		return PermissionError(playerid);
+	
+	new aname[128], otherid, query[128];
+	if(sscanf(params, "us[128]", otherid, aname))
+	{
+	    Usage(playerid, "/setadminname <ID/Name> <admin name>");
+	    return true;
+	}
+	
+	mysql_format(g_SQL, query, sizeof(query), "SELECT adminname FROM players WHERE adminname='%s'", aname);
+	mysql_tquery(g_SQL, query, "a_ChangeAdminName", "iis", otherid, playerid, aname);
+	return 1;
+}
 
 CMD:setmoney(playerid, params[])
 {
@@ -3503,12 +3533,12 @@ CMD:setmoney(playerid, params[])
 	Servers(otherid, "Admin %s telah mengset uang anda menjadi %s!", pData[playerid][pAdminname], FormatMoney(strval(totalcash)));
 
 	new str[150];
-	format(str, sizeof(str), "Admin: %s menyetel uang $%s ke %s!", GetRPName(playerid), FormatMoney(strval(totalcash)), GetRPName(otherid)); // FIXED: Hapus ))
+	format(str, sizeof(str), "Admin: %s menyetel uang %s ke %s!", GetRPName(playerid), FormatMoney(strval(totalcash)), GetRPName(otherid)); // FIXED: Hapus ))
 
 	LogServer("Admin", str);
 
 	new dc[500];
-	format(dc, sizeof(dc), "```[ADMCMD] Admin: %s menyetel uang $%s ke %s```", GetRPName(playerid), FormatMoney(strval(totalcash)), GetRPName(otherid)); // FIXED: Hapus ))
+	format(dc, sizeof(dc), "```[ADMCMD] Admin: %s menyetel uang %s ke %s```", GetRPName(playerid), FormatMoney(strval(totalcash)), GetRPName(otherid)); // FIXED: Hapus ))
 	SendDiscordMessage(1, dc);
 	
 	format(tmp, sizeof(tmp), "%d", strval(totalcash));
@@ -3538,12 +3568,12 @@ CMD:givemoney(playerid, params[])
 	Servers(otherid, "Admin %s telah memberikan uang kepada anda dengan jumlah %s!", pData[playerid][pAdminname], FormatMoney(strval(totalcash)));
 
 	new str[150];
-	format(str, sizeof(str), "Admin: %s memberikan uang $%s ke %s!", GetRPName(playerid), FormatMoney(strval(totalcash)), GetRPName(otherid)); // FIXED
+	format(str, sizeof(str), "Admin: %s memberikan uang %s ke %s!", GetRPName(playerid), FormatMoney(strval(totalcash)), GetRPName(otherid)); // FIXED
 
 	LogServer("Admin", str);
 
 	new dc[500];
-	format(dc, sizeof(dc), "```[ADMCMD] Admin: %s memberikan uang $%s ke %s```", GetRPName(playerid), FormatMoney(strval(totalcash)), GetRPName(otherid)); // FIXED
+	format(dc, sizeof(dc), "```[ADMCMD] Admin: %s memberikan uang %s ke %s```", GetRPName(playerid), FormatMoney(strval(totalcash)), GetRPName(otherid)); // FIXED
 	SendDiscordMessage(1, dc);
 	
 	format(tmp, sizeof(tmp), "%d", strval(totalcash));
@@ -3572,15 +3602,15 @@ CMD:givemoneyall(playerid, params[])
     foreach(new pid : Player)
     {
         GivePlayerMoneyEx(pid, strval(totalcash));
-        Servers(pid, "Admin %s telah memberikan "GREEN_E"$%s"WHITE_E" kepada semua player online.", pData[playerid][pAdminname], FormatMoney(strval(totalcash)));
+        Servers(pid, "Admin %s telah memberikan "GREEN_E"%s"WHITE_E" kepada semua player online.", pData[playerid][pAdminname], FormatMoney(strval(totalcash)));
     }
     
     new str[150];
-    format(str, sizeof(str), "Admin %s memberikan uang sejumlah $%s kepada semua player.", GetRPName(playerid), FormatMoney(strval(totalcash))); // FIXED: Pindah keluar loop
+    format(str, sizeof(str), "Admin %s memberikan uang sejumlah %s kepada semua player.", GetRPName(playerid), FormatMoney(strval(totalcash))); // FIXED: Pindah keluar loop
     LogServer("Admin", str);
 
     new dc[500];
-    format(dc, sizeof(dc), "```[ADMCMD] Admin %s memberikan uang sejumlah $%s kepada semua player.```", GetRPName(playerid), FormatMoney(strval(totalcash))); // FIXED
+    format(dc, sizeof(dc), "```[ADMCMD] Admin %s memberikan uang sejumlah %s kepada semua player.```", GetRPName(playerid), FormatMoney(strval(totalcash))); // FIXED
     SendDiscordMessage(1, dc);
     
     return 1;
@@ -3608,11 +3638,11 @@ CMD:setbankmoney(playerid, params[])
 	Servers(otherid, "Admin %s telah mengset uang rekening bank anda menjadi %s!", pData[playerid][pAdminname], FormatMoney(strval(totalcash)));
 	
 	new str[150];
-	format(str, sizeof(str), "Admin: %s menyetel uang bank $%s ke %s!", GetRPName(playerid), FormatMoney(strval(totalcash)), GetRPName(otherid)); // FIXED
+	format(str, sizeof(str), "Admin: %s menyetel uang bank %s ke %s!", GetRPName(playerid), FormatMoney(strval(totalcash)), GetRPName(otherid)); // FIXED
 	LogServer("Admin", str);
 	
 	new dc[500];
-	format(dc, sizeof(dc), "```[ADMCMD] Admin %s menyetel uang bank $%s ke %s```", GetRPName(playerid), FormatMoney(strval(totalcash)), GetRPName(otherid)); // FIXED
+	format(dc, sizeof(dc), "```[ADMCMD] Admin %s menyetel uang bank %s ke %s```", GetRPName(playerid), FormatMoney(strval(totalcash)), GetRPName(otherid)); // FIXED
 	SendDiscordMessage(1, dc);
 
 	format(tmp, sizeof(tmp), "%d", strval(totalcash));
@@ -3642,11 +3672,11 @@ CMD:givebankmoney(playerid, params[])
 	Servers(otherid, "Admin %s telah memberikan uang rekening bank kepada anda dengan jumlah %s!", pData[playerid][pAdminname], FormatMoney(strval(totalcash)));
 
 	new str[150];
-	format(str, sizeof(str), "Admin: %s memberikan uang bank $%s ke %s!", GetRPName(playerid), FormatMoney(strval(totalcash)), GetRPName(otherid)); // FIXED
+	format(str, sizeof(str), "Admin: %s memberikan uang bank %s ke %s!", GetRPName(playerid), FormatMoney(strval(totalcash)), GetRPName(otherid)); // FIXED
 	LogServer("Admin", str);
 
 	new dc[500];
-	format(dc, sizeof(dc), "```[ADMCMD] Admin %s memberikan uang bank $%s ke %s```", GetRPName(playerid), FormatMoney(strval(totalcash)), GetRPName(otherid)); // FIXED
+	format(dc, sizeof(dc), "```[ADMCMD] Admin %s memberikan uang bank %s ke %s```", GetRPName(playerid), FormatMoney(strval(totalcash)), GetRPName(otherid)); // FIXED
 	SendDiscordMessage(1, dc);
 	
 	format(tmp, sizeof(tmp), "%d", strval(totalcash));
@@ -3930,7 +3960,7 @@ CMD:setprice(playerid, params[])
 		price *= 100;
         MaterialPrice = price;
 		Server_Save();
-        SendAdminMessage(COLOR_RED, "%s set material price to "GREEN_E"$%s", pData[playerid][pAdminname], FormatMoney(price));
+        SendAdminMessage(COLOR_RED, "%s set material price to "GREEN_E"%s", pData[playerid][pAdminname], FormatMoney(price));
     }
 	else if(!strcmp(name, "lumberprice", true))
     {
@@ -3944,7 +3974,7 @@ CMD:setprice(playerid, params[])
 		price *= 100;
         LumberPrice = price;
 		Server_Save();
-        SendAdminMessage(COLOR_RED, "%s set lumber price to "GREEN_E"$%s", pData[playerid][pAdminname], FormatMoney(price));
+        SendAdminMessage(COLOR_RED, "%s set lumber price to "GREEN_E"%s", pData[playerid][pAdminname], FormatMoney(price));
     }
 	else if(!strcmp(name, "marijuanaprice", true))
     {
@@ -3958,7 +3988,7 @@ CMD:setprice(playerid, params[])
 		price *= 100;
         MarijuanaPrice = price;
 		Server_Save();
-        SendAdminMessage(COLOR_RED, "%s set marijuana price to "GREEN_E"$%s", pData[playerid][pAdminname], FormatMoney(price));
+        SendAdminMessage(COLOR_RED, "%s set marijuana price to "GREEN_E"%s", pData[playerid][pAdminname], FormatMoney(price));
     }
 	else if(!strcmp(name, "seedprice", true))
     {
@@ -3972,7 +4002,7 @@ CMD:setprice(playerid, params[])
 		price *= 100;
         SeedPrice = price;
 		Server_Save();
-        SendAdminMessage(COLOR_RED, "%s set seed price to "GREEN_E"$%s", pData[playerid][pAdminname], FormatMoney(price));
+        SendAdminMessage(COLOR_RED, "%s set seed price to "GREEN_E"%s", pData[playerid][pAdminname], FormatMoney(price));
     }
 	else if(!strcmp(name, "componentprice", true))
     {
@@ -3986,7 +4016,7 @@ CMD:setprice(playerid, params[])
 		price *= 100;
         ComponentPrice = price;
 		Server_Save();
-        SendAdminMessage(COLOR_RED, "%s set component price to "GREEN_E"$%s", pData[playerid][pAdminname], FormatMoney(price));
+        SendAdminMessage(COLOR_RED, "%s set component price to "GREEN_E"%s", pData[playerid][pAdminname], FormatMoney(price));
     }
 	else if(!strcmp(name, "metalprice", true))
     {
@@ -4000,7 +4030,7 @@ CMD:setprice(playerid, params[])
 		price *= 100;
         MetalPrice = price;
 		Server_Save();
-        SendAdminMessage(COLOR_RED, "%s set metal price to "GREEN_E"$%s", pData[playerid][pAdminname], FormatMoney(price));
+        SendAdminMessage(COLOR_RED, "%s set metal price to "GREEN_E"%s", pData[playerid][pAdminname], FormatMoney(price));
     }
 	else if(!strcmp(name, "gasoilprice", true))
     {
@@ -4014,7 +4044,7 @@ CMD:setprice(playerid, params[])
 		price *= 100;
         GasOilPrice = price;
 		Server_Save();
-        SendAdminMessage(COLOR_RED, "%s set gasoil price to "GREEN_E"$%s", pData[playerid][pAdminname], FormatMoney(price));
+        SendAdminMessage(COLOR_RED, "%s set gasoil price to "GREEN_E"%s", pData[playerid][pAdminname], FormatMoney(price));
     }
 	else if(!strcmp(name, "coalprice", true))
     {
@@ -4028,7 +4058,7 @@ CMD:setprice(playerid, params[])
 		price *= 100;
         CoalPrice = price;
 		Server_Save();
-        SendAdminMessage(COLOR_RED, "%s set coal price to "GREEN_E"$%s", pData[playerid][pAdminname], FormatMoney(price));
+        SendAdminMessage(COLOR_RED, "%s set coal price to "GREEN_E"%s", pData[playerid][pAdminname], FormatMoney(price));
     }
 	else if(!strcmp(name, "productprice", true))
     {
@@ -4042,7 +4072,7 @@ CMD:setprice(playerid, params[])
 		price *= 100;
         ProductPrice = price;
 		Server_Save();
-        SendAdminMessage(COLOR_RED, "%s set product price to "GREEN_E"$%s", pData[playerid][pAdminname], FormatMoney(price));
+        SendAdminMessage(COLOR_RED, "%s set product price to "GREEN_E"%s", pData[playerid][pAdminname], FormatMoney(price));
     }
 	else if(!strcmp(name, "medicineprice", true))
     {
@@ -4056,7 +4086,7 @@ CMD:setprice(playerid, params[])
 		price *= 100;
         MedicinePrice = price;
 		Server_Save();
-        SendAdminMessage(COLOR_RED, "%s set medicine price to "GREEN_E"$%s", pData[playerid][pAdminname], FormatMoney(price));
+        SendAdminMessage(COLOR_RED, "%s set medicine price to "GREEN_E"%s", pData[playerid][pAdminname], FormatMoney(price));
     }
 	else if(!strcmp(name, "medkitprice", true))
     {
@@ -4070,7 +4100,7 @@ CMD:setprice(playerid, params[])
 		price *= 100;
         MedkitPrice = price;
 		Server_Save();
-        SendAdminMessage(COLOR_RED, "%s set medkit price to "GREEN_E"$%s", pData[playerid][pAdminname], FormatMoney(price));
+        SendAdminMessage(COLOR_RED, "%s set medkit price to "GREEN_E"%s", pData[playerid][pAdminname], FormatMoney(price));
     }
 	else if(!strcmp(name, "foodprice", true))
     {
@@ -4084,7 +4114,7 @@ CMD:setprice(playerid, params[])
 		price *= 100;
         FoodPrice = price;
 		Server_Save();
-        SendAdminMessage(COLOR_RED, "%s set food price to "GREEN_E"$%s", pData[playerid][pAdminname], FormatMoney(price));
+        SendAdminMessage(COLOR_RED, "%s set food price to "GREEN_E"%s", pData[playerid][pAdminname], FormatMoney(price));
     }
 	else if(!strcmp(name, "fishprice", true))
     {
@@ -4098,7 +4128,7 @@ CMD:setprice(playerid, params[])
 		price *= 100;
         FishPrice = price;
 		Server_Save();
-        SendAdminMessage(COLOR_RED, "%s set fish price to "GREEN_E"$%s", pData[playerid][pAdminname], FormatMoney(price));
+        SendAdminMessage(COLOR_RED, "%s set fish price to "GREEN_E"%s", pData[playerid][pAdminname], FormatMoney(price));
     }
 	else if(!strcmp(name, "gsprice", true))
     {
@@ -4120,7 +4150,7 @@ CMD:setprice(playerid, params[])
 			}
 		}
 		Server_Save();
-        SendAdminMessage(COLOR_RED, "%s set gs price to "GREEN_E"$%s", pData[playerid][pAdminname], FormatMoney(price));
+        SendAdminMessage(COLOR_RED, "%s set gs price to "GREEN_E"%s", pData[playerid][pAdminname], FormatMoney(price));
     }
     else if(!strcmp(name, "obatprice", true))
     {
@@ -4134,7 +4164,7 @@ CMD:setprice(playerid, params[])
 		price *= 100;
         ObatPrice = price;
 		Server_Save();
-        SendAdminMessage(COLOR_RED, "%s set obat price to "GREEN_E"$%s", pData[playerid][pAdminname], FormatMoney(price));
+        SendAdminMessage(COLOR_RED, "%s set obat price to "GREEN_E"%s", pData[playerid][pAdminname], FormatMoney(price));
     }
 	else if(!strcmp(name, "rawcomponent", true))
     {
@@ -4148,7 +4178,7 @@ CMD:setprice(playerid, params[])
 		price *= 100;
         RawComponent = price;
 		Server_Save();
-        SendAdminMessage(COLOR_RED, "%s set rawcomponent price to "GREEN_E"$%s", pData[playerid][pAdminname], FormatMoney(price));
+        SendAdminMessage(COLOR_RED, "%s set rawcomponent price to "GREEN_E"%s", pData[playerid][pAdminname], FormatMoney(price));
     }
 	else if(!strcmp(name, "potatoprice", true))
     {
@@ -4162,7 +4192,7 @@ CMD:setprice(playerid, params[])
 		price *= 100;
         PotatoPrice = price;
 		Server_Save();
-        SendAdminMessage(COLOR_RED, "%s set potato price to "GREEN_E"$%s", pData[playerid][pAdminname], FormatMoney(price));
+        SendAdminMessage(COLOR_RED, "%s set potato price to "GREEN_E"%s", pData[playerid][pAdminname], FormatMoney(price));
     }
 	else if(!strcmp(name, "orangeprice", true))
     {
@@ -4176,7 +4206,7 @@ CMD:setprice(playerid, params[])
 		price *= 100;
         OrangePrice = price;
 		Server_Save();
-        SendAdminMessage(COLOR_RED, "%s set orange price to "GREEN_E"$%s", pData[playerid][pAdminname], FormatMoney(price));
+        SendAdminMessage(COLOR_RED, "%s set orange price to "GREEN_E"%s", pData[playerid][pAdminname], FormatMoney(price));
     }
 	else if(!strcmp(name, "wheatprice", true))
     {
@@ -4190,7 +4220,7 @@ CMD:setprice(playerid, params[])
 		price *= 100;
         WheatPrice = price;
 		Server_Save();
-        SendAdminMessage(COLOR_RED, "%s set wheat price to "GREEN_E"$%s", pData[playerid][pAdminname], FormatMoney(price));
+        SendAdminMessage(COLOR_RED, "%s set wheat price to "GREEN_E"%s", pData[playerid][pAdminname], FormatMoney(price));
     }
 	return 1;
 }
@@ -5098,12 +5128,13 @@ CMD:aclaimpv(playerid, params[])
 
 	foreach(new i : PVehicles)
 	{
-		if(pvData[i][cClaim] > 0 && pvData[i][cClaimTime] > 0)
+		// ✅ Cek hanya cClaim > 0, gak perlu cek cClaimTime
+		if(pvData[i][cClaim] > 0)
 		{
 			if(pvData[i][cOwner] == pData[otherid][pID])
 			{
 				pvData[i][cClaim] = 0;
-				pvData[i][cClaimTime] = 0;
+				pvData[i][cClaimTime] = 0; // Reset claim time juga
 				
 				OnPlayerVehicleRespawn(i);
 				pvData[i][cPosX] = 1290.7111;
@@ -5119,12 +5150,12 @@ CMD:aclaimpv(playerid, params[])
 				Info(playerid, "Kamu telah mengclaim kendaraan player %s dengan model %s", ReturnName(otherid), GetVehicleModelName(pvData[i][cModel]));
 				Info(otherid, "Kamu telah mengclaim kendaraan dengan model %s di bantu oleh admin %s", GetVehicleModelName(pvData[i][cModel]), pData[playerid][pAdminname]);
 			}
-			//else return Error(playerid, "This vehicle ID does not belong to you! use /mypv to find the ID.");
 		}
 	}
+	
 	if(found == 0)
 	{
-		Info(playerid, "Sekarang belum saatnya anda mengclaim kendaraan anda!");
+		Error(playerid, "Player %s tidak memiliki kendaraan yang sedang dalam claim!", ReturnName(otherid));
 	}
 	else
 	{
