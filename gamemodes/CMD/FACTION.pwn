@@ -1163,7 +1163,7 @@ CMD:confiscate(playerid, params[])
     if(sscanf(params, "d", bid))
         return Usage(playerid, "/confiscate [bisnis id]");
 
-    if(IsPlayerInRangeOfPoint(playerid, 2.5, bData[bid][bExtposX], bData[bid][bExtposY], bData[bid][bExtposZ]))
+    if(!IsPlayerInRangeOfPoint(playerid, 2.5, bData[bid][bExtposX], bData[bid][bExtposY], bData[bid][bExtposZ]))
 		return Error(playerid, "You are not near the business");
 
     if(!Iter_Contains(Bisnis, bid))

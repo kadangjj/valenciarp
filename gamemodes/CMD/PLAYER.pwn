@@ -2929,41 +2929,45 @@ CMD:call(playerid, params[])
 	if(pData[playerid][pPhoneStatus] == 0) return Error(playerid, "Your phone is turned off.");
 	if(pData[playerid][pPhoneCredit] <= 0) return Error(playerid, "You do not have a phone credits!");
 	
-	Usage(playerid, "/call [phone number] 933 - Taxi or Mechanic Call | 911 - Emergency Call");
+	if(sscanf(params, "d", ph)) // PENTING: Parse input!
+		return Usage(playerid, "/call [phone number] | 933 - Taxi or Mechanic | 911 - Emergency Call");
 	
-	// 911 Emergency Call - Set status menunggu konfirmasi
+	// 911 Emergency Call
 	if(ph == 911)
 	{
 		if(pData[playerid][pCallTime] >= gettime())
 			return Error(playerid, "You must wait %d seconds before sending another call.", pData[playerid][pCallTime] - gettime());
 		
-		// Set player sedang dalam proses 911 call
 		SetPVarInt(playerid, "Calling911", 1);
-		Custom(playerid, "SERVICE: "WHITE_E"911 Emergency Call 'police' or 'paramedic'");
+		Custom(playerid, "SERVICE: "WHITE_E"911 Emergency Call - Type 'police' or 'paramedic'");
 		return 1;
 	}
 	
-	// 933 Taxi Call
-	if(ph == 911)
+	// 933 Service Call
+	if(ph == 933) // PERBAIKAN: Ganti dari 911 jadi 933!
 	{
 		if(pData[playerid][pCallTime] >= gettime())
 			return Error(playerid, "You must wait %d seconds before sending another call.", pData[playerid][pCallTime] - gettime());
 		
-		// Set player sedang dalam proses 933 call
 		SetPVarInt(playerid, "Calling933", 1);
-		Custom(playerid, "SERVICE: "WHITE_E"933 Service Call 'taxi' or 'mechanic'");
+		Custom(playerid, "SERVICE: "WHITE_E"933 Service Call - Type 'taxi' or 'mechanic'");
 		return 1;
 	}
 	
 	// Regular phone call
 	if(ph == pData[playerid][pPhone]) return Error(playerid, "Nomor sedang sibuk!");
+	
 	foreach(new ii : Player)
 	{
 		if(pData[ii][pPhone] == ph)
 		{
-			if(pData[ii][IsLoggedIn] == false || !IsPlayerConnected(ii)) return Error(playerid, "This number is not actived!");
-			if(pData[ii][pPhoneStatus] == 0) return Error(playerid, "Cannot make the call, the targeted phone is inactive.");
-			if(IsPlayerInRangeOfPoint(ii, 20, 2179.9531,-1009.7586,1021.6880))
+			if(pData[ii][IsLoggedIn] == false || !IsPlayerConnected(ii)) 
+				return Error(playerid, "This number is not actived!");
+				
+			if(pData[ii][pPhoneStatus] == 0) 
+				return Error(playerid, "Cannot make the call, the targeted phone is inactive.");
+				
+			if(IsPlayerInRangeOfPoint(ii, 20, 2179.9531, -1009.7586, 1021.6880))
 				return Error(playerid, "Anda tidak dapat melakukan ini, orang yang dituju sedang berada di OOC Zone");
 
 			if(pData[ii][pCall] == INVALID_PLAYER_ID)
@@ -2972,20 +2976,19 @@ CMD:call(playerid, params[])
 				
 				SendClientMessageEx(playerid, COLOR_YELLOW, "[CELLPHONE to %d] "WHITE_E"phone begins to ring, please wait for answer!", ph);
 				SendClientMessageEx(ii, COLOR_YELLOW, "[CELLPHONE from %d] "WHITE_E"Your phonecell is ringing, type '/p' to answer it!", pData[playerid][pPhone]);
-				PlayerPlaySound(playerid, 3600, 0,0,0);
-				PlayerPlaySound(ii, 6003, 0,0,0);
+				PlayerPlaySound(playerid, 3600, 0, 0, 0);
+				PlayerPlaySound(ii, 6003, 0, 0, 0);
 				SetPlayerSpecialAction(playerid, SPECIAL_ACTION_USECELLPHONE);
 				SendNearbyMessage(playerid, 20.0, COLOR_PURPLE, "* %s takes out a cellphone and calling someone.", ReturnName(playerid));
 				return 1;
 			}
 			else
 			{
-				Error(playerid, "Nomor ini sedang sibuk.");
-				return 1;
+				return Error(playerid, "Nomor ini sedang sibuk.");
 			}
 		}
 	}
-	return 1;
+	return Error(playerid, "Phone number not found!");
 }
 
 CMD:p(playerid, params[])

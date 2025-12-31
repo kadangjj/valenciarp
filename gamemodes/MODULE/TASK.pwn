@@ -204,22 +204,34 @@ ptask PlayerDelay[1000](playerid)
 	if(pData[playerid][pSweeperTime] > 0)
 	{
 		pData[playerid][pSweeperTime]--;
-		Custom(playerid, "SIDEJOB: "WHITE_E"You can now work again as a "YELLOW_E"Sweeper (Sidejob)");
+		if(pData[playerid][pSweeperTime] == 0) // Cek kalau baru habis
+		{
+			Custom(playerid, "SIDEJOB: "WHITE_E"You can now work again as a "YELLOW_E"Sweeper (Sidejob)");
+		}
 	}
 	if(pData[playerid][pForklifterTime] > 0)
 	{
 		pData[playerid][pForklifterTime]--;
-		Custom(playerid, "SIDEJOB: "WHITE_E"You can now work again as a "YELLOW_E"Forklifter (Sidejob)");
+		if(pData[playerid][pForklifterTime] == 0)
+		{
+			Custom(playerid, "SIDEJOB: "WHITE_E"You can now work again as a "YELLOW_E"Forklifter (Sidejob)");
+		}
 	}
 	if(pData[playerid][pBusTime] > 0)
 	{
 		pData[playerid][pBusTime]--;
-		Custom(playerid, "SIDEJOB: "WHITE_E"You can now work again as a "YELLOW_E"Bus Driver (Sidejob)");
+		if(pData[playerid][pBusTime] == 0)
+		{
+			Custom(playerid, "SIDEJOB: "WHITE_E"You can now work again as a "YELLOW_E"Bus Driver (Sidejob)");
+		}
 	}
 	if(pData[playerid][pMowerTime] > 0)
 	{
 		pData[playerid][pMowerTime]--;
-		Custom(playerid, "SIDEJOB: "WHITE_E"You can now work again as a "YELLOW_E"Mower (Sidejob)");
+		if(pData[playerid][pMowerTime] == 0)
+		{
+			Custom(playerid, "SIDEJOB: "WHITE_E"You can now work again as a "YELLOW_E"Mower (Sidejob)");
+		}
 	}
 
 		// Duty Delay
